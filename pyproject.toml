@@ -107,26 +107,32 @@ storage = [
     "google-cloud-storage>=2.18",
 ]
 
-# Async database drivers beyond SQLite. SQLite (aiosqlite) ships with the
-# framework; install the extra matching the database you plan to use,
-# e.g. `pip install orionis[pgsql]`.
+# Database drivers beyond SQLite (which ships with the framework via
+# aiosqlite). Each extra installs BOTH the async driver used by Connection
+# and the blocking (sync) driver used by Scheduler
 mysql = [
     "aiomysql>=0.2.0",
+    "pymysql>=1.1",
 ]
 pgsql = [
     "asyncpg>=0.30",
+    "psycopg2-binary>=2.9",
 ]
 oracle = [
     "oracledb>=2.5",
 ]
 sqlserver = [
     "aioodbc>=0.5",
+    "pyodbc>=5.0",
 ]
 database = [
     "aiomysql>=0.2.0",
+    "pymysql>=1.1",
     "asyncpg>=0.30",
+    "psycopg2-binary>=2.9",
     "oracledb>=2.5",
     "aioodbc>=0.5",
+    "pyodbc>=5.0",
 ]
 
 [dependency-groups]
