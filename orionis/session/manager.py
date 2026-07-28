@@ -6,8 +6,10 @@ from orionis.foundation.contracts.application import IApplication
 from orionis.session.contracts.session import ISession
 from orionis.session.entities.record import SessionRecord
 from orionis.session.session import Session
+from orionis.session.stores.cache import CacheSessionStore
 from orionis.session.stores.file import FileSessionStore
 from orionis.session.stores.memory import MemorySessionStore
+from orionis.support.facades.cache import Cache
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -187,9 +189,9 @@ class SessionManager:
         """
         driver = config.driver
         if driver == SessionDriver.FILE:
-            return FileSessionStore(
-                directory=base_path / config.files,
-            )
+            return FileSessionStore(directory=base_path / config.files)
+        if driver == SessionDriver.CACHE:
+            return CacheSessionStore(cache=Cache, store=config.cache)
         return MemorySessionStore()
 
     async def __restore(self, session_id: str) -> Session:
