@@ -16,7 +16,7 @@ class BootstrapSession(Session):
     # --- Defaults to SessionDriver.MEMORY.
     # ------------------------------------------------------------------------------
     driver: str | SessionDriver = field(
-        default_factory=lambda: Env.get("SESSION_DRIVER", SessionDriver.DATABASE),
+        default_factory=lambda: Env.get("SESSION_DRIVER", SessionDriver.MEMORY),
     )
 
     # ------------------------------------------------------------------------------
