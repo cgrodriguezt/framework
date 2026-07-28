@@ -47,6 +47,24 @@ class BootstrapSession(Session):
     )
 
     # ------------------------------------------------------------------------------
+    # connection : str | None, optional
+    # --- Database connection for session storage (database driver).
+    # --- Defaults to None.
+    # ------------------------------------------------------------------------------
+    connection: str | None = field(
+        default_factory=lambda: Env.get("SESSION_CONNECTION"),
+    )
+
+    # ------------------------------------------------------------------------------
+    # cache : str | None, optional
+    # --- Cache store for session storage (cache driver).
+    # --- Defaults to None.
+    # ------------------------------------------------------------------------------
+    cache: str | None = field(
+        default_factory=lambda: Env.get("SESSION_STORE"),
+    )
+
+    # ------------------------------------------------------------------------------
     # cookie : str, optional
     # --- Name of the session cookie.
     # --- Defaults to 'sessionid'.
