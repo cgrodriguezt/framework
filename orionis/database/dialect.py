@@ -31,7 +31,7 @@ _DRIVER_PACKAGES: dict[str, tuple[str, str]] = {
 
 # Map of Orionis driver names to SQLAlchemy dialects backed by a blocking
 # (synchronous) DBAPI driver. Used to build engines for consumers that
-# cannot use the async engine, such as APScheduler's SQLAlchemyJobStore.
+# cannot use the async engine, such as APScheduler's scheduleTaskStore.
 _SYNC_DIALECTS: dict[str, str] = {
     "sqlite": "sqlite",
     "mysql": "mysql+pymysql",
@@ -169,7 +169,7 @@ def buildSyncEngineUrl(config: dict[str, Any]) -> URL:
     Mirrors :func:`buildEngineUrl` but selects the SQLAlchemy dialect
     backed by a blocking DBAPI driver, suitable for consumers that
     require a synchronous engine, such as APScheduler's
-    ``SQLAlchemyJobStore``.
+    ``scheduleTaskStore``.
 
     Parameters
     ----------
