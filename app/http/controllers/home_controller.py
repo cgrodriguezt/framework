@@ -1,7 +1,6 @@
 from orionis.http import HTMLResponse
 from orionis.http.base import BaseController
-from orionis.support.facades.view import View
-from orionis.support.facades.session import Session
+from orionis.support.facades import View
 
 class HomeController(BaseController):
 
@@ -14,5 +13,4 @@ class HomeController(BaseController):
         HTMLResponse
             Rendered response for the welcome page.
         """
-        Session.put("foo", "bar")
         return await View.make("welcome")
