@@ -10,8 +10,7 @@ docs
 # ========================
 # Orionis - Utilities
 # ========================
-release.ps1
-pre-commit.ps1
+*.ps1
 push.py
 
 # ========================
