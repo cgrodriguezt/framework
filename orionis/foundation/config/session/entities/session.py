@@ -27,6 +27,10 @@ class Session(BaseEntity):
         Expire session on browser close (omits Max-Age). Defaults to False.
     files : str | None
         Path to session files (file driver). Defaults to 'storage/framework/sessions'.
+    connection : str | None
+        Database connection for session storage (database driver). Defaults to None.
+    cache : str | None
+        Cache store for session storage (cache driver). Defaults to None.
     cookie : str
         Name of the session cookie. Defaults to 'sessionid'.
     path : str
@@ -78,6 +82,24 @@ class Session(BaseEntity):
         metadata={
             "description": "Path to session files.",
             "default": "storage/framework/sessions",
+        },
+    )
+
+    # Database-driver: connection name used to persist session records.
+    connection: str | None = field(
+        default_factory=lambda: Env.get("DB_CONNECTION"),
+        metadata={
+            "description": "Database connection for session storage.",
+            "default": None,
+        },
+    )
+
+    # Cache-driver: named cache store used to persist session records.
+    cache: str | None = field(
+        default_factory=lambda: Env.get("CACHE_STORE"),
+        metadata={
+            "description": "Cache store for session storage.",
+            "default": None,
         },
     )
 
@@ -430,6 +452,68 @@ class Session(BaseEntity):
             error_msg = "files must be a non-empty string or None"
             raise ValueError(error_msg)
 
+    def __validateConnection(self) -> None:
+        """
+        Validate the *connection* field.
+
+        When provided the value must be a non-empty string naming a
+        database connection (database driver).
+
+        Parameters
+        ----------
+        self : Session
+            The Session instance being validated.
+
+        Returns
+        -------
+        None
+            No value is returned.
+
+        Raises
+        ------
+        ValueError
+            If *connection* is provided but is not a non-empty string.
+        """
+        # None means the driver will use the default database connection.
+        if self.connection is None:
+            return
+
+        # Reject blank strings or wrong types.
+        if not isinstance(self.connection, str) or not self.connection.strip():
+            error_msg = "connection must be a non-empty string or None"
+            raise ValueError(error_msg)
+
+    def __validateCache(self) -> None:
+        """
+        Validate the *cache* field.
+
+        When provided the value must be a non-empty string naming a
+        cache store (cache driver).
+
+        Parameters
+        ----------
+        self : Session
+            The Session instance being validated.
+
+        Returns
+        -------
+        None
+            No value is returned.
+
+        Raises
+        ------
+        ValueError
+            If *cache* is provided but is not a non-empty string.
+        """
+        # None means the driver will use the default cache store.
+        if self.cache is None:
+            return
+
+        # Reject blank strings or wrong types.
+        if not isinstance(self.cache, str) or not self.cache.strip():
+            error_msg = "cache must be a non-empty string or None"
+            raise ValueError(error_msg)
+
     def __post_init__(self) -> None:
         """Validate all fields after dataclass initialisation.
 
@@ -459,5 +543,7 @@ class Session(BaseEntity):
         self.__validatePath()
         self.__validateDomain()
         self.__validateFiles()
+        self.__validateConnection()
+        self.__validateCache()
 
 
