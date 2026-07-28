@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+
     from orionis.database.contracts.connection import IConnection
 
 
@@ -128,4 +130,40 @@ class IConnectionManager(ABC):
         -------
         None
             This method does not return a value.
+        """
+
+    @abstractmethod
+    def sqlAlchemyJobStore(
+        self,
+        name: str | None = None,
+        *,
+        tablename: str = "apscheduler_jobs",
+    ) -> SQLAlchemyJobStore:
+        """
+        Build an APScheduler ``SQLAlchemyJobStore`` for a connection.
+
+        APScheduler's ``SQLAlchemyJobStore`` always operates through a
+        blocking SQLAlchemy engine, so the returned store is backed by a
+        synchronous DBAPI driver rather than the async engine used by
+        :meth:`connection`.
+
+        Parameters
+        ----------
+        name : str or None, optional
+            Connection name as declared in the database configuration,
+            or ``None`` for the default connection.
+        tablename : str, optional
+            Name of the table used to persist scheduled jobs.
+
+        Returns
+        -------
+        SQLAlchemyJobStore
+            Job store bound to a synchronous engine for the connection.
+
+        Raises
+        ------
+        ConnectionNotFoundException
+            If the connection is not declared in the configuration.
+        MissingDatabaseDependencyException
+            If the synchronous driver package is not installed.
         """
