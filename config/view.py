@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from orionis.foundation.config.view.entities.view import View
+from orionis.foundation.config.view import View
 from orionis.environment import Env
 
 @dataclass(frozen=True, kw_only=True)
