@@ -2,7 +2,8 @@ import asyncio
 import functools
 import inspect
 import logging
-from typing import Self, TYPE_CHECKING
+from typing import Literal, Self, TYPE_CHECKING
+from orionis.database.contracts.manager import IConnectionManager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.core.contracts.reactor import IReactor
@@ -16,6 +17,7 @@ from orionis.console.enums.states import ScheduleStates
 from orionis.failure.contracts.catch import ICatch
 from orionis.support.facades.logger import Log
 from orionis.support.facades.datetime import DateTime
+from orionis.support.facades.reactor import Reactor
 from orionis.console.entities.task_event import TaskEvent as TaskEventEntity
 
 if TYPE_CHECKING:
@@ -23,6 +25,41 @@ if TYPE_CHECKING:
     from apscheduler.events import JobEvent as APJobEvent
     from apscheduler.events import SchedulerEvent as APSchedulerEvent
     from orionis.console.entities.task import Task as TaskEntity
+
+
+async def _executeScheduledCommand(
+    signature: str,
+    args: list[str] | None = None,
+) -> int:
+    """
+    Execute a scheduled command signature through the Reactor facade.
+
+    Parameters
+    ----------
+    signature : str
+        The command signature to execute.
+    args : list of str, optional
+        Arguments to pass to the command. Defaults to an empty list.
+
+    Returns
+    -------
+    int
+        The result of the reactor call, typically an exit code or status.
+
+    Notes
+    -----
+    Used as the callable registered with APScheduler jobs instead of a
+    bound instance method. Persistent job stores (e.g. the "database"
+    job store) serialize the job's callable as a textual reference
+    (``module:function``); a bound method forces APScheduler to also
+    pickle the owning instance (``self``) to restore it, which drags in
+    the whole dependency graph (Reactor/Application) and fails on
+    unpicklable objects such as a ``mappingproxy``. Resolving the reactor
+    through the ``Reactor`` facade avoids that entirely.
+    """
+    # Delegate to the pinned reactor facade, resolved dynamically at call time
+    return await Reactor.call(signature, args or [])
+
 
 class Schedule(ISchedule):
 
@@ -34,6 +71,7 @@ class Schedule(ISchedule):
         self,
         reactor: IReactor,
         exception_handler: ICatch,
+        connection_manager: IConnectionManager,
     ) -> None:
         """
         Initialize the Schedule instance.
@@ -44,6 +82,8 @@ class Schedule(ISchedule):
             Reactor instance for command execution.
         exception_handler : ICatch
             Exception handler for managing errors.
+        connection_manager : IConnectionManager
+            Connection manager for database interactions.
 
         Returns
         -------
@@ -52,7 +92,10 @@ class Schedule(ISchedule):
         """
         self.__reactor: IReactor = reactor
         self.__exception_handler: ICatch = exception_handler
+        self.__connection_manager: IConnectionManager = connection_manager
         self.__available_command_signatures: set[str] = set()
+        self.__job_store_type: Literal["memory", "database"] = "memory"
+        self.__job_store_tablename: str = "scheduler_tasks"
         self.__scheduler: AsyncIOScheduler | None = None
         self.__scheduler_listeners: dict[SchedulerEvent, Callable] = {}
         self.__tasks_listeners: dict[str, dict[TaskEvent, Callable]] = {}
@@ -290,7 +333,7 @@ class Schedule(ISchedule):
         event_entity = TaskEventEntity(
             code=code,
             signature=signature,
-            jobstore=getattr(event, "jobstore", None),
+            jobstore=getattr(event, "jobstore", self.__job_store_type),
             scheduled_run_times=getattr(event, "scheduled_run_times", None),
             scheduled_run_time=getattr(event, "scheduled_run_time", None),
             retval=getattr(event, "retval", None),
@@ -367,6 +410,54 @@ class Schedule(ISchedule):
             # Log errors that occur within the exception handler itself
             Log.error(f"Error in exception handler: {handler_error}")
 
+    def store(
+        self,
+        name: Literal["memory", "database"] = "memory",
+        tablename: str = "scheduler_tasks",
+    ) -> Self:
+        """
+        Select the job store backend used to persist scheduled tasks.
+
+        Parameters
+        ----------
+        name : Literal["memory", "database"], optional
+            The job store type to use during boot. Defaults to "memory".
+        tablename : str, optional
+            Name of the table used to persist scheduled jobs when ``name``
+            is "database". Defaults to "scheduler_tasks".
+
+        Returns
+        -------
+        Self
+            The Schedule instance for method chaining.
+
+        Raises
+        ------
+        RuntimeError
+            If the scheduler has already been booted.
+        ValueError
+            If ``name`` is not one of the supported job store types.
+        """
+        # Prevent switching job stores after the scheduler has been booted
+        if not self.isStopped():
+            error_msg = (
+                "The scheduler has already been booted, cannot change the job store."
+            )
+            raise RuntimeError(error_msg)
+
+        # Validate the provided job store type
+        if name not in ("memory", "database"):
+            error_msg = (
+                f"Unsupported job store type '{name}'. "
+                "Supported types are 'memory' and 'database'."
+            )
+            raise ValueError(error_msg)
+
+        # Store the selected job store type for later use during boot
+        self.__job_store_type = name
+        self.__job_store_tablename = tablename
+        return self
+
     async def boot(self) -> None:
         """
         Boot the scheduler and register all configured tasks.
@@ -398,6 +489,15 @@ class Schedule(ISchedule):
             jobstore="memory",
             alias="memory",
         )
+
+        # Add a database jobstore if the selected store type is "database"
+        if self.__job_store_type == "database":
+            self.__scheduler.add_jobstore(
+                jobstore=self.__connection_manager.scheduleTaskStore(
+                    tablename=self.__job_store_tablename,
+                ),
+                alias="database",
+            )
 
         # Register a global event listener to dispatch scheduler events
         self.__scheduler.add_listener(
@@ -433,7 +533,8 @@ class Schedule(ISchedule):
         scheduler = self.__scheduler
         tasks_listeners = self.__tasks_listeners
         running_tasks = self.__running_tasks
-        reactor_call = self._reactorCall
+        reactor_call = _executeScheduledCommand
+        job_store_type = self.__job_store_type
 
         # Register all jobs from the loaded task entities
         for task_entity in self.__tasks.values():
@@ -445,7 +546,11 @@ class Schedule(ISchedule):
                 for event_code, func in task_entity.listeners:
                     listener_map[event_code] = func
 
-            # Add the job to the scheduler with all configured parameters
+            # Add the job to the scheduler with all configured parameters.
+            # replace_existing=True reconciles the declarative task list with
+            # a persistent job store (e.g. "database"), where a job with the
+            # same id may already exist from a previous run and would
+            # otherwise raise ConflictingIdError.
             scheduler.add_job(
                 reactor_call,
                 trigger=task_entity.trigger,
@@ -457,7 +562,8 @@ class Schedule(ISchedule):
                 misfire_grace_time=task_entity.misfire_grace_time,
                 start_date=task_entity.start_date,
                 end_date=task_entity.end_date,
-                jobstore="memory",
+                jobstore=job_store_type,
+                replace_existing=True,
             )
             running_tasks.add(sig)
 
