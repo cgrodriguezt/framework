@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
+from orionis.cache.contracts.cache_manager import ICacheManager
 from orionis.foundation.config.session.enums.drivers import SessionDriver
 from orionis.foundation.config.session.entities.session import Session as SessionConfig
 from orionis.foundation.contracts.application import IApplication
@@ -9,7 +10,6 @@ from orionis.session.session import Session
 from orionis.session.stores.cache import CacheSessionStore
 from orionis.session.stores.file import FileSessionStore
 from orionis.session.stores.memory import MemorySessionStore
-from orionis.support.facades.cache import Cache
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -52,6 +52,7 @@ class SessionManager:
     def __init__(
         self,
         app: IApplication,
+        cache: ICacheManager,
     ) -> None:
         """
         Initialise the manager, pre-computing all request-invariant values.
@@ -60,6 +61,10 @@ class SessionManager:
         ----------
         app : IApplication
             The application instance.
+        cache : ICacheManager
+            The application's cache manager, injected so the cache-backed
+            store can be built without depending on the ``Cache`` facade's
+            pin state.
 
         Returns
         -------
@@ -72,6 +77,7 @@ class SessionManager:
         self._store: ISessionStore = self.__resolveStore(
             base_path=app.basePath,
             config=config,
+            cache=cache,
         )
         self._lifetime_delta: timedelta = timedelta(minutes=config.lifetime)
         self._cookie_name: str = config.cookie
@@ -170,7 +176,12 @@ class SessionManager:
         self._app.instance(ISession, session)
         self._app.instance(Session, session)
 
-    def __resolveStore(self, base_path: Path, config: SessionConfig) -> ISessionStore:
+    def __resolveStore(
+        self,
+        base_path: Path,
+        config: SessionConfig,
+        cache: ICacheManager,
+    ) -> ISessionStore:
         """
         Resolve and return the configured session store implementation.
 
@@ -180,6 +191,8 @@ class SessionManager:
             Base project path used to resolve file-store directories.
         config : SessionConfig
             Session configuration containing the selected driver.
+        cache : ICacheManager
+            The application's cache manager, used by the cache driver.
 
         Returns
         -------
@@ -191,7 +204,7 @@ class SessionManager:
         if driver == SessionDriver.FILE:
             return FileSessionStore(directory=base_path / config.files)
         if driver == SessionDriver.CACHE:
-            return CacheSessionStore(cache=Cache, store=config.cache)
+            return CacheSessionStore(cache=cache, store=config.cache)
         return MemorySessionStore()
 
     async def __restore(self, session_id: str) -> Session:
