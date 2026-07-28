@@ -4,10 +4,12 @@ from orionis.cache.contracts.cache_manager import ICacheManager
 from orionis.foundation.config.session.enums.drivers import SessionDriver
 from orionis.foundation.config.session.entities.session import Session as SessionConfig
 from orionis.foundation.contracts.application import IApplication
+from orionis.orm.resolver import ConnectionResolver
 from orionis.session.contracts.session import ISession
 from orionis.session.entities.record import SessionRecord
 from orionis.session.session import Session
 from orionis.session.stores.cache import CacheSessionStore
+from orionis.session.stores.database import DatabaseSessionStore
 from orionis.session.stores.file import FileSessionStore
 from orionis.session.stores.memory import MemorySessionStore
 
@@ -205,6 +207,11 @@ class SessionManager:
             return FileSessionStore(directory=base_path / config.files)
         if driver == SessionDriver.CACHE:
             return CacheSessionStore(cache=cache, store=config.cache)
+        if driver == SessionDriver.DATABASE:
+            return DatabaseSessionStore(
+                connection=ConnectionResolver.connection(config.connection),
+                table=config.table or "sessions",
+            )
         return MemorySessionStore()
 
     async def __restore(self, session_id: str) -> Session:
