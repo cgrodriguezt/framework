@@ -16,7 +16,7 @@ class BootstrapSession(Session):
     # --- Defaults to SessionDriver.MEMORY.
     # ------------------------------------------------------------------------------
     driver: str | SessionDriver = field(
-        default_factory=lambda: Env.get("SESSION_DRIVER", SessionDriver.FILE),
+        default_factory=lambda: Env.get("SESSION_DRIVER", SessionDriver.CACHE),
     )
 
     # ------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ class BootstrapSession(Session):
     # --- Defaults to None.
     # ------------------------------------------------------------------------------
     connection: str | None = field(
-        default_factory=lambda: Env.get("SESSION_CONNECTION"),
+        default_factory=lambda: Env.get("DB_CONNECTION"),
     )
 
     # ------------------------------------------------------------------------------
@@ -61,7 +61,7 @@ class BootstrapSession(Session):
     # --- Defaults to None.
     # ------------------------------------------------------------------------------
     cache: str | None = field(
-        default_factory=lambda: Env.get("SESSION_STORE"),
+        default_factory=lambda: Env.get("CACHE_STORE"),
     )
 
     # ------------------------------------------------------------------------------
