@@ -29,6 +29,8 @@ class Session(BaseEntity):
         Path to session files (file driver). Defaults to 'storage/framework/sessions'.
     connection : str | None
         Database connection for session storage (database driver). Defaults to None.
+    table : str | None
+        Database table for session storage (database driver). Defaults to 'sessions'.
     cache : str | None
         Cache store for session storage (cache driver). Defaults to None.
     cookie : str
@@ -91,6 +93,15 @@ class Session(BaseEntity):
         metadata={
             "description": "Database connection for session storage.",
             "default": None,
+        },
+    )
+
+    # Database-driver: table name used to persist session records.
+    table: str | None = field(
+        default_factory=lambda: Env.get("SESSION_TABLE", "sessions"),
+        metadata={
+            "description": "Database table for session storage.",
+            "default": "sessions",
         },
     )
 
@@ -483,6 +494,37 @@ class Session(BaseEntity):
             error_msg = "connection must be a non-empty string or None"
             raise ValueError(error_msg)
 
+    def __validateTable(self) -> None:
+        """
+        Validate the *table* field.
+
+        When provided the value must be a non-empty string naming the
+        database table used to persist session records (database driver).
+
+        Parameters
+        ----------
+        self : Session
+            The Session instance being validated.
+
+        Returns
+        -------
+        None
+            No value is returned.
+
+        Raises
+        ------
+        ValueError
+            If *table* is provided but is not a non-empty string.
+        """
+        # None means the driver will use its built-in default table name.
+        if self.table is None:
+            return
+
+        # Reject blank strings or wrong types.
+        if not isinstance(self.table, str) or not self.table.strip():
+            error_msg = "table must be a non-empty string or None"
+            raise ValueError(error_msg)
+
     def __validateCache(self) -> None:
         """
         Validate the *cache* field.
@@ -544,6 +586,7 @@ class Session(BaseEntity):
         self.__validateDomain()
         self.__validateFiles()
         self.__validateConnection()
+        self.__validateTable()
         self.__validateCache()
 
 
