@@ -60,9 +60,6 @@ class Scheduler(BaseScheduler):
         None
             This method does not return any value.
         """
-        # Define the storage mechanism for scheduled tasks
-        schedule.store("database", tablename="scheduler_tasks")
-
         # Register a test command that runs every ten seconds
         schedule.command("app:test", ["--name=Raul"])\
             .purpose("Test Route Command")\
