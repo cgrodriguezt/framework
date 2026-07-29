@@ -2,9 +2,10 @@ import asyncio
 import functools
 import inspect
 import logging
-from typing import Literal, Self, TYPE_CHECKING
+from typing import Self, TYPE_CHECKING
 from orionis.database.contracts.manager import IConnectionManager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.redis import RedisJobStore
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.entities.scheduler_event import (
@@ -15,6 +16,10 @@ from orionis.console.fluent.contracts.task import ITask
 from orionis.console.fluent.task import Task
 from orionis.console.enums.states import ScheduleStates
 from orionis.failure.contracts.catch import ICatch
+from orionis.foundation.config.scheduler.entities.scheduler import (
+    Scheduler as ConfigScheduler,
+)
+from orionis.foundation.contracts.application import IApplication
 from orionis.support.facades.logger import Log
 from orionis.support.facades.datetime import DateTime
 from orionis.support.facades.reactor import Reactor
@@ -25,7 +30,6 @@ if TYPE_CHECKING:
     from apscheduler.events import JobEvent as APJobEvent
     from apscheduler.events import SchedulerEvent as APSchedulerEvent
     from orionis.console.entities.task import Task as TaskEntity
-
 
 async def _executeScheduledCommand(
     signature: str,
@@ -60,7 +64,6 @@ async def _executeScheduledCommand(
     # Delegate to the pinned reactor facade, resolved dynamically at call time
     return await Reactor.call(signature, args or [])
 
-
 class Schedule(ISchedule):
 
     # ruff: noqa: BLE001, TC001
@@ -69,6 +72,7 @@ class Schedule(ISchedule):
 
     def __init__(
         self,
+        application: IApplication,
         reactor: IReactor,
         exception_handler: ICatch,
         connection_manager: IConnectionManager,
@@ -78,6 +82,8 @@ class Schedule(ISchedule):
 
         Parameters
         ----------
+        application : IApplication
+            Application instance.
         reactor : IReactor
             Reactor instance for command execution.
         exception_handler : ICatch
@@ -90,12 +96,15 @@ class Schedule(ISchedule):
         None
             This constructor does not return a value.
         """
+        self.__application: IApplication = application
+        self.__config: ConfigScheduler = ConfigScheduler(
+            **self.__application.config("scheduler"),
+        )
         self.__reactor: IReactor = reactor
         self.__exception_handler: ICatch = exception_handler
         self.__connection_manager: IConnectionManager = connection_manager
         self.__available_command_signatures: set[str] = set()
-        self.__job_store_type: Literal["memory", "database"] = "memory"
-        self.__job_store_tablename: str = "scheduler_tasks"
+        self.__job_store: str = self.__config.store
         self.__scheduler: AsyncIOScheduler | None = None
         self.__scheduler_listeners: dict[SchedulerEvent, Callable] = {}
         self.__tasks_listeners: dict[str, dict[TaskEvent, Callable]] = {}
@@ -170,6 +179,10 @@ class Schedule(ISchedule):
         # Cache locals to avoid repeated attribute lookups in the loop
         available = self.__available_command_signatures
         tasks = self.__tasks
+        default_random_delay = self.__config.jitter
+        default_max_instances = self.__config.max_instances
+        default_misfire_grace_time = self.__config.misfire_grace_time
+        default_coalesce = self.__config.coalesce
 
         # Validate and load each fluent task
         for signature, task in self.__fluent_tasks.items():
@@ -178,7 +191,12 @@ class Schedule(ISchedule):
                     f"Task signature '{signature}' is not available in the reactor."
                 )
                 raise ValueError(error_msg)
-            tasks[signature] = task.entity()
+            tasks[signature] = task.entity(
+                random_delay=default_random_delay,
+                max_instances=default_max_instances,
+                misfire_grace_time=default_misfire_grace_time,
+                coalesce=default_coalesce,
+            )
 
     async def info(self) -> list[dict]:
         """
@@ -200,6 +218,7 @@ class Schedule(ISchedule):
             {
                 "signature": signature,
                 "args": task.args,
+                "kwargs": task.kwargs,
                 "purpose": task.purpose,
                 "random_delay": task.random_delay,
                 "coalesce": task.coalesce,
@@ -318,6 +337,16 @@ class Schedule(ISchedule):
         if not signature:
             return
 
+        # Keep internal bookkeeping in sync with jobs that APScheduler itself
+        # removes (e.g. a one-shot DateTrigger job that already fired, or a
+        # job whose end_date was reached) and not only with removals made
+        # through removeTask()/removeAllTasks(). Without this, __running_tasks
+        # keeps a permanently stale signature after the job is gone.
+        if event.code == TaskEvent.REMOVED:
+            self.__running_tasks.discard(signature)
+            self.__paused_tasks.discard(signature)
+            self.__removed_tasks.add(signature)
+
         # Retrieve listeners for this specific task signature
         listener_for_signature = self.__tasks_listeners.get(signature)
         if listener_for_signature is None:
@@ -333,7 +362,7 @@ class Schedule(ISchedule):
         event_entity = TaskEventEntity(
             code=code,
             signature=signature,
-            jobstore=getattr(event, "jobstore", self.__job_store_type),
+            jobstore=getattr(event, "jobstore", self.__job_store),
             scheduled_run_times=getattr(event, "scheduled_run_times", None),
             scheduled_run_time=getattr(event, "scheduled_run_time", None),
             retval=getattr(event, "retval", None),
@@ -410,53 +439,62 @@ class Schedule(ISchedule):
             # Log errors that occur within the exception handler itself
             Log.error(f"Error in exception handler: {handler_error}")
 
-    def store(
-        self,
-        name: Literal["memory", "database"] = "memory",
-        tablename: str = "scheduler_tasks",
-    ) -> Self:
+    def __addConfiguredJobStore(self) -> None:
         """
-        Select the job store backend used to persist scheduled tasks.
+        Add the database or redis jobstore matching the configured driver.
 
-        Parameters
-        ----------
-        name : Literal["memory", "database"], optional
-            The job store type to use during boot. Defaults to "memory".
-        tablename : str, optional
-            Name of the table used to persist scheduled jobs when ``name``
-            is "database". Defaults to "scheduler_tasks".
+        `stores.database`/`stores.redis` default to None when not declared
+        in config, so this validates explicitly instead of letting an
+        AttributeError leak out of the config object when the selected
+        driver's dedicated section was never configured.
 
         Returns
         -------
-        Self
-            The Schedule instance for method chaining.
+        None
+            This method does not return a value. It registers the
+            corresponding jobstore on the running scheduler, if applicable.
 
         Raises
         ------
         RuntimeError
-            If the scheduler has already been booted.
-        ValueError
-            If ``name`` is not one of the supported job store types.
+            If the selected store is "database" or "redis" but its
+            dedicated configuration section is missing.
         """
-        # Prevent switching job stores after the scheduler has been booted
-        if not self.isStopped():
-            error_msg = (
-                "The scheduler has already been booted, cannot change the job store."
+        if self.__config.store == "database":
+            database_store = self.__config.stores.database
+            if database_store is None:
+                error_msg = (
+                    "The scheduler is configured to use the 'database' job "
+                    "store, but 'scheduler.stores.database' is not configured."
+                )
+                raise RuntimeError(error_msg)
+            self.__scheduler.add_jobstore(
+                jobstore=self.__connection_manager.scheduleTaskStore(
+                    name=database_store.connection,
+                    tablename=database_store.table,
+                ),
+                alias="database",
             )
-            raise RuntimeError(error_msg)
 
-        # Validate the provided job store type
-        if name not in ("memory", "database"):
-            error_msg = (
-                f"Unsupported job store type '{name}'. "
-                "Supported types are 'memory' and 'database'."
+        if self.__config.store == "redis":
+            redis_store = self.__config.stores.redis
+            if redis_store is None:
+                error_msg = (
+                    "The scheduler is configured to use the 'redis' job "
+                    "store, but 'scheduler.stores.redis' is not configured."
+                )
+                raise RuntimeError(error_msg)
+            self.__scheduler.add_jobstore(
+                jobstore=RedisJobStore(
+                    jobs_key=redis_store.key,
+                    run_times_key=redis_store.run_times_key,
+                    host=redis_store.host,
+                    port=redis_store.port,
+                    db=redis_store.db,
+                    password=redis_store.password,
+                ),
+                alias="redis",
             )
-            raise ValueError(error_msg)
-
-        # Store the selected job store type for later use during boot
-        self.__job_store_type = name
-        self.__job_store_tablename = tablename
-        return self
 
     async def boot(self) -> None:
         """
@@ -490,14 +528,9 @@ class Schedule(ISchedule):
             alias="memory",
         )
 
-        # Add a database jobstore if the selected store type is "database"
-        if self.__job_store_type == "database":
-            self.__scheduler.add_jobstore(
-                jobstore=self.__connection_manager.scheduleTaskStore(
-                    tablename=self.__job_store_tablename,
-                ),
-                alias="database",
-            )
+        # Add the database/redis jobstore matching the configured driver, if
+        # any. Extracted to keep boot()'s cognitive complexity in check.
+        self.__addConfiguredJobStore()
 
         # Register a global event listener to dispatch scheduler events
         self.__scheduler.add_listener(
@@ -525,32 +558,41 @@ class Schedule(ISchedule):
             ),
         )
 
-        # Start the scheduler and update its state
-        self.__state = ScheduleStates.RUNNING
-        self.__scheduler.start()
-
         # Cache locals to avoid repeated LOAD_ATTR in the loop
         scheduler = self.__scheduler
         tasks_listeners = self.__tasks_listeners
         running_tasks = self.__running_tasks
         reactor_call = _executeScheduledCommand
-        job_store_type = self.__job_store_type
 
         # Register all jobs from the loaded task entities
         for task_entity in self.__tasks.values():
             sig = task_entity.signature
 
-            # Register task-specific event listeners if any are defined
+            # Register task-specific event listeners if any are defined.
+            # Multiple .on()/.registerListener() calls for the same event on
+            # the same task would otherwise silently overwrite one another
+            # (dict assignment keeps only the last registration); warn so the
+            # collision is visible instead of a silent behavior change.
             if task_entity.listeners:
                 listener_map = tasks_listeners.setdefault(sig, {})
                 for event_code, func in task_entity.listeners:
+                    if event_code in listener_map:
+                        Log.warning(
+                            f"Task '{sig}' already has a listener registered "
+                            f"for event '{event_code.name}'; the previous "
+                            "listener is being replaced.",
+                        )
                     listener_map[event_code] = func
 
             # Add the job to the scheduler with all configured parameters.
-            # replace_existing=True reconciles the declarative task list with
-            # a persistent job store (e.g. "database"), where a job with the
-            # same id may already exist from a previous run and would
-            # otherwise raise ConflictingIdError.
+            # `replace_existing` comes from config (scheduler.replace_existing,
+            # defaults to True) and reconciles the declarative task list with
+            # a persistent job store (e.g. "database"/"redis"), where a job
+            # with the same id may already exist from a previous run and
+            # would otherwise raise ConflictingIdError. Because the scheduler
+            # has not been started yet (see below), APScheduler only queues
+            # these calls internally; nothing actually hits the jobstore or
+            # starts firing until start() runs.
             scheduler.add_job(
                 reactor_call,
                 trigger=task_entity.trigger,
@@ -562,13 +604,24 @@ class Schedule(ISchedule):
                 misfire_grace_time=task_entity.misfire_grace_time,
                 start_date=task_entity.start_date,
                 end_date=task_entity.end_date,
-                jobstore=job_store_type,
-                replace_existing=True,
+                jobstore=self.__job_store,
+                replace_existing=self.__config.replace_existing,
             )
             running_tasks.add(sig)
 
         # Suppress internal APScheduler logging to avoid duplicate logs
         self.__suppressApschedulerLogging()
+
+        # Start the scheduler only after every job has been successfully
+        # registered. Starting it earlier (before this loop) meant that, if
+        # add_job() raised for one job (e.g. ConflictingIdError against a
+        # persistent jobstore), jobs added earlier in the same iteration were
+        # already firing; the unhandled exception then tore down the whole
+        # command/event loop and abruptly cancelled those in-flight runs.
+        # APScheduler defers add_job() calls made before start() internally,
+        # so no job store I/O or execution happens until start() runs below.
+        self.__state = ScheduleStates.RUNNING
+        self.__scheduler.start()
 
     def on(
         self,
@@ -721,11 +774,15 @@ class Schedule(ISchedule):
                     error_msg = "Each argument must be a string."
                     raise TypeError(error_msg)
 
-        # Store the Task instance for fluent configuration
+        # Store the Task instance for fluent configuration. `purpose` must be
+        # passed by keyword: Task.__init__ signature is
+        # (signature, args, kwargs=None, purpose=None) — passing `purpose`
+        # positionally silently binds it to `kwargs` instead, corrupting the
+        # kwargs field and always dropping the task's purpose.
         self.__fluent_tasks[signature] = Task(
             signature,
             args or [],
-            purpose,
+            purpose=purpose,
         )
         return self.__fluent_tasks[signature]
 
@@ -1037,15 +1094,33 @@ class Schedule(ISchedule):
         Parameters
         ----------
         wait : int | None, optional
-            Time in seconds to wait before completing shutdown. Defaults to None.
+            Time in seconds to wait before completing shutdown. Defaults to
+            None, which keeps the previously configured grace period instead
+            of collapsing it to zero.
 
         Returns
         -------
         None
             This method does not return a value. It initiates graceful shutdown.
+
+        Raises
+        ------
+        TypeError
+            If `wait` is neither None nor a non-negative integer (bool is
+            explicitly rejected even though it is technically an int subtype).
         """
-        # Set the wait time for graceful shutdown process
-        self.__wait_to_shutdown = wait if isinstance(wait, int) and wait >= 0 else 0
+        # Only override the configured grace period (defaults to 0.5s, see
+        # __init__) when an explicit, valid value is provided. Unconditionally
+        # falling back to 0 whenever `wait` is None silently defeats the
+        # default grace period on every no-argument call, e.g. shutdown()
+        # from schedule:work on Ctrl+C.
+        if wait is not None:
+            if isinstance(wait, bool) or not isinstance(wait, int) or wait < 0:
+                error_msg = (
+                    "The 'wait' parameter must be a non-negative integer or None."
+                )
+                raise TypeError(error_msg)
+            self.__wait_to_shutdown = wait
 
         # Create and execute the shutdown task asynchronously
         self.__createManagedTask(self.__gracefulShutdown())
@@ -1069,6 +1144,20 @@ class Schedule(ISchedule):
         # Sleep briefly to allow any pending tasks to complete cleanup
         # before signaling shutdown completion
         await asyncio.sleep(self.__wait_to_shutdown)
+
+        # Give any in-flight listener tasks (scheduler/task event callbacks)
+        # a chance to finish before the scheduler and event loop are torn
+        # down, instead of abandoning them mid-execution. The currently
+        # running task (this very shutdown coroutine) is excluded to avoid
+        # awaiting on itself.
+        current_task = asyncio.current_task()
+        pending = tuple(
+            task
+            for task in self.__pending_listener_tasks
+            if not task.done() and task is not current_task
+        )
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
 
         # Execute scheduler shutdown without blocking the main thread
         # functools.partial avoids lambda allocation and closure overhead
