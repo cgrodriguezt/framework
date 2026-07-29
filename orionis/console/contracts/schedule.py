@@ -4,42 +4,10 @@ from typing import Self, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from typing import Literal
-
     from orionis.console.enums.events import SchedulerEvent
     from orionis.console.fluent.contracts.task import ITask
 
 class ISchedule(ABC):
-
-    @abstractmethod
-    def store(
-        self,
-        name: Literal["memory", "database"] = "memory",
-        tablename: str = "scheduler_tasks",
-    ) -> Self:
-        """
-        Select the job store backend used to persist scheduled tasks.
-
-        Parameters
-        ----------
-        name : Literal["memory", "database"], optional
-            The job store type to use during boot. Defaults to "memory".
-        tablename : str, optional
-            Name of the table used to persist scheduled jobs when ``name``
-            is "database". Defaults to "scheduler_tasks".
-
-        Returns
-        -------
-        Self
-            The Schedule instance for method chaining.
-
-        Raises
-        ------
-        RuntimeError
-            If the scheduler has already been booted.
-        ValueError
-            If ``name`` is not one of the supported job store types.
-        """
 
     @abstractmethod
     async def info(self) -> list[dict]:
