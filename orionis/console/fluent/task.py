@@ -38,12 +38,13 @@ class Task(ITask):
         self,
         signature: str,
         args: list[str] | None,
+        kwargs: dict | None = None,
         purpose: str | None = None,
     ) -> None:
         """
-        Initialize the Event instance.
+        Initialize the Task instance.
 
-        Set up the initial state of the Event, including its signature, arguments,
+        Set up the initial state of the Task, including its signature, arguments,
         purpose, and optional attributes such as random delay, start and end dates,
         trigger, details, listener, maximum instances, misfire grace time, and
         coalesce flag.
@@ -51,11 +52,11 @@ class Task(ITask):
         Parameters
         ----------
         signature : str
-            Unique identifier for the event. Must be a non-empty string.
+            Unique identifier for the task. Must be a non-empty string.
         args : list of str or None
-            List of arguments for the event. Defaults to an empty list if None.
+            List of arguments for the task. Defaults to an empty list if None.
         purpose : str or None, optional
-            Human-readable description or purpose of the event.
+            Human-readable description or purpose of the task.
 
         Returns
         -------
@@ -65,41 +66,45 @@ class Task(ITask):
         # Initialize the default timezone for the event using DateTime utility.
         self.__default_tz = DateTime.getZoneInfo()
 
-        # Store the event's unique signature
+        # Store the task's unique signature
         self.__signature: str = signature
 
-        # Store the event's arguments, defaulting to an empty list if None is provided
+        # Store the task's arguments, defaulting to an empty list if None is provided
         self.__args: list[str] | None = args if args is not None else []
 
-        # Store the event's purpose or description
+        # Store the task's keyword arguments,
+        # defaulting to an empty dict if None is provided
+        self.__kwargs: dict | None = kwargs if kwargs is not None else {}
+
+        # Store the task's purpose or description
         self.__purpose: str | None = purpose
 
-        # Initialize the random delay attribute (in seconds) as 0
-        self.__random_delay: int | None = 0
+        # Initialize the random delay attribute (in seconds) as None
+        self.__random_delay: int | None = None
 
-        # Initialize the start date for the event as None
+        # Initialize the start date for the task as None
         self.__start_date: datetime | None = None
 
-        # Initialize the end date for the event as None
+        # Initialize the end date for the task as None
         self.__end_date: datetime | None = None
 
-        # Initialize the trigger for the event as None
+        # Initialize the trigger for the task as None
         self.__trigger: CronTrigger | DateTrigger | IntervalTrigger | None = None
 
-        # Initialize the details for the event as None
+        # Initialize the details for the task as None
         self.__details: str | None = None
 
-        # Initialize list to hold event listeners
+        # Initialize list to hold task event listeners
         self.__listeners: list[Callable] = []
 
         # Initialize the maximum instances attribute as 1
-        self.__max_instances: int | None = 1
+        self.__max_instances: int | None = None
 
         # Initialize the misfire grace time attribute as None
         self.__misfire_grace_time: int | None = None
 
-        # Initialize the coalesce attribute as True
-        self.__coalesce: bool = True
+        # Initialize the coalesce attribute as None
+        self.__coalesce: bool | None = None
 
     def __datetime(
         self,
@@ -187,12 +192,30 @@ class Task(ITask):
             tzinfo=self.__default_tz,
         )
 
-    def entity(self) -> TaskEntity:
+    def entity(
+        self,
+        random_delay: int | None = 0,
+        max_instances: int | None = 1,
+        misfire_grace_time: int | None = 0,
+        *,
+        coalesce: bool | None = True,
+    ) -> TaskEntity:
         """
         Create and return a TaskEntity instance from the current Task.
 
         Collect all relevant attributes of the Task and encapsulate them in a
         TaskEntity object.
+
+        Parameters
+        ----------
+        random_delay : int | None, optional
+            Random delay in seconds before triggering. Defaults to 0.
+        max_instances : int | None, optional
+            Maximum concurrent instances allowed. Defaults to 1.
+        misfire_grace_time : int | None, optional
+            Grace period in seconds for misfired events. Defaults to 0.
+        coalesce : bool | None, optional
+            Whether to coalesce missed runs into a single run. Defaults to True.
 
         Returns
         -------
@@ -203,6 +226,18 @@ class Task(ITask):
         ------
         ValueError
             If signature or trigger is not set.
+
+        Notes
+        -----
+        A per-task value explicitly configured through the fluent API
+        (``.maxInstances()``, ``.coalesce()``, ``.misfireGraceTime()``,
+        ``.randomDelay()``) always takes precedence over the scheduler-level
+        default received here. Using ``or`` instead of an explicit ``is not
+        None`` check would silently discard the task override whenever the
+        scheduler-level default is truthy (which it is for every field by
+        default: ``coalesce=True``, ``max_instances=1``,
+        ``misfire_grace_time=30``), so that comparison must not be
+        reintroduced.
         """
         # Ensure both signature and trigger are set before creating the entity.
         if not (self.__signature and self.__trigger):
@@ -212,18 +247,36 @@ class Task(ITask):
             raise ValueError(error_msg)
 
         # Construct and return a TaskEntity with the current task's attributes.
+        # The task-level value (self.__xxx) wins whenever it was explicitly
+        # set; only an unset (None) attribute falls back to the scheduler's
+        # default, passed in via the corresponding parameter.
         return TaskEntity(
             signature=self.__signature,
             args=self.__args,
+            kwargs=self.__kwargs,
             purpose=self.__purpose,
-            random_delay=self.__random_delay,
+            random_delay=(
+                self.__random_delay
+                if self.__random_delay is not None
+                else random_delay
+            ),
             start_date=self.__start_date,
             end_date=self.__end_date,
             trigger=self.__trigger,
             details=self.__details,
-            max_instances=self.__max_instances,
-            misfire_grace_time=self.__misfire_grace_time,
-            coalesce=self.__coalesce,
+            max_instances=(
+                self.__max_instances
+                if self.__max_instances is not None
+                else max_instances
+            ),
+            misfire_grace_time=(
+                self.__misfire_grace_time
+                if self.__misfire_grace_time is not None
+                else misfire_grace_time
+            ),
+            coalesce=(
+                self.__coalesce if self.__coalesce is not None else coalesce
+            ),
             listeners=self.__listeners,
         )
 
@@ -448,6 +501,13 @@ class Task(ITask):
             secrets.randbelow(max_seconds + 1) if max_seconds > 0 else 0
         )
 
+        # If a trigger was already configured before this call (e.g. the fluent
+        # chain calls .everyMinutes() before .randomDelay()), the trigger was
+        # built with the jitter known at that time. Patch it in place so the
+        # random delay is never silently dropped due to call order.
+        if self.__trigger is not None and hasattr(self.__trigger, "jitter"):
+            self.__trigger.jitter = self.__random_delay
+
         # Return self to allow method chaining.
         return self
 
@@ -607,8 +667,10 @@ class Task(ITask):
         # Construct a datetime instance from the provided components.
         date = self.__datetime(year, month, day, hour, minute, second)
 
-        # Ensure random delay is not set for one-time execution.
-        if self.__random_delay > 0:
+        # Ensure random delay is not set for one-time execution. `__random_delay`
+        # defaults to None (randomDelay() was never called), so it must be
+        # guarded before the numeric comparison to avoid a TypeError.
+        if self.__random_delay and self.__random_delay > 0:
             error_msg = (
                 "Random delay cannot be applied to a one-time execution."
             )
@@ -663,7 +725,7 @@ class Task(ITask):
             raise ValueError(error_msg)
 
         # Ensure that random delay is not set for second-based intervals.
-        if self.__random_delay > 0:
+        if self.__random_delay and self.__random_delay > 0:
             error_msg = (
                 "Random delay (jitter) cannot be applied to second-based intervals."
             )
@@ -1054,7 +1116,8 @@ class Task(ITask):
 
         Set the event to execute at the specified second (0-59) of every five-minute
         interval. The scheduling window can be restricted by `start_date` and
-        `end_date`. If a random delay (jitter) is configured, it will be applied.
+        `end_date`. Random delay (jitter) is not applied to this schedule,
+        since it targets an exact second.
 
         Parameters
         ----------
@@ -1140,7 +1203,8 @@ class Task(ITask):
 
         This method sets the event to execute at the given second (0-59) of every
         fifteen-minute interval. The schedule can be limited by `start_date` and
-        `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
+        `end_date`. Random delay (jitter) is not applied to this schedule, since
+        it targets an exact second.
 
         Parameters
         ----------
@@ -1184,8 +1248,8 @@ class Task(ITask):
 
         Configures the event to execute at the specified second (0-59) of every
         twenty-minute interval. The schedule can be restricted by `start_date`
-        and `end_date`. If a random delay (jitter) is set, it is applied to the
-        trigger.
+        and `end_date`. Random delay (jitter) is not applied to this schedule,
+        since it targets an exact second.
 
         Parameters
         ----------
@@ -1273,8 +1337,9 @@ class Task(ITask):
 
         Configures the event to execute at the given second (0-59) of every
         thirty-minute interval.
-        The schedule can be restricted by `start_date` and `end_date`. If a
-        random delay (jitter) is set, it is applied to the trigger.
+        The schedule can be restricted by `start_date` and `end_date`. Random
+        delay (jitter) is not applied to this schedule, since it targets an
+        exact second.
 
         Parameters
         ----------
@@ -1367,7 +1432,8 @@ class Task(ITask):
 
         Configures the event to execute at the specified second (0-59) of every
         forty-minute interval. The scheduling window can be restricted by `start_date`
-        and `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
+        and `end_date`. Random delay (jitter) is not applied to this schedule,
+        since it targets an exact second.
 
         Parameters
         ----------
@@ -1411,7 +1477,8 @@ class Task(ITask):
 
         Set up the event to execute at the given second (0-59) of every forty-five-
         minute interval. The schedule can be limited by `start_date` and `end_date`.
-        If a random delay (jitter) is set, it is applied to the trigger.
+        Random delay (jitter) is not applied to this schedule, since it targets
+        an exact second.
 
         Parameters
         ----------
@@ -1457,7 +1524,8 @@ class Task(ITask):
 
         Configures the event to execute at the specified second (0-59) of every
         fifty-minute interval. The scheduling window can be restricted by `start_date`
-        and `end_date`. If a random delay (jitter) is set, it is applied to the trigger.
+        and `end_date`. Random delay (jitter) is not applied to this schedule,
+        since it targets an exact second.
 
         Parameters
         ----------
