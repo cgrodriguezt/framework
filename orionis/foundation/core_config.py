@@ -1,6 +1,7 @@
 from dataclasses import asdict
 from types import MappingProxyType
 from orionis.foundation.config.app.entities.app import App
+from orionis.foundation.config.scheduler.entities.scheduler import Scheduler
 from orionis.foundation.config.auth.entities.auth import Auth
 from orionis.foundation.config.cache.entities.cache import Cache
 from orionis.foundation.config.database.entities.database import Database
@@ -34,6 +35,7 @@ def get_core_config_mapping() -> MappingProxyType:
         "logging": asdict(Logging()),
         "mail": asdict(Mail()),
         "queue": asdict(Queue()),
+        "scheduler": asdict(Scheduler()),
         "session": asdict(Session()),
         "testing": asdict(Testing()),
         "view": asdict(View()),
