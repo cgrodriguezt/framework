@@ -11,12 +11,30 @@ if TYPE_CHECKING:
 class ITask(ABC):
 
     @abstractmethod
-    def entity(self) -> TaskEntity:
+    def entity(
+        self,
+        random_delay: int | None = 0,
+        max_instances: int | None = 1,
+        misfire_grace_time: int | None = 0,
+        *,
+        coalesce: bool | None = True,
+    ) -> TaskEntity:
         """
         Create and return a TaskEntity instance from the current Task.
 
         Collect all relevant attributes of the Task and encapsulate them in a
         TaskEntity object.
+
+        Parameters
+        ----------
+        random_delay : int | None, optional
+            Random delay in seconds before triggering. Defaults to 0.
+        max_instances : int | None, optional
+            Maximum concurrent instances allowed. Defaults to 1.
+        misfire_grace_time : int | None, optional
+            Grace period in seconds for misfired events. Defaults to 0.
+        coalesce : bool | None, optional
+            Whether to coalesce missed runs into a single run. Defaults to True.
 
         Returns
         -------
