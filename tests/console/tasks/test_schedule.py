@@ -28,7 +28,10 @@ class TestSchedule(TestCase):
         reactor.call = AsyncMock(return_value=0)
         handler = MagicMock()
         connection_manager = MagicMock()
+        application = MagicMock()
+        application.config = MagicMock(return_value={})
         return Schedule(
+            application=application,
             reactor=reactor,
             exception_handler=handler,
             connection_manager=connection_manager,
@@ -675,7 +678,10 @@ class TestSchedule(TestCase):
         reactor = MagicMock()
         reactor.call = AsyncMock(return_value=0)
         handler = MagicMock()
+        application = MagicMock()
+        application.config = MagicMock(return_value={})
         schedule = Schedule(
+            application=application,
             reactor=reactor,
             exception_handler=handler,
             connection_manager=MagicMock(),
@@ -694,7 +700,10 @@ class TestSchedule(TestCase):
         reactor = MagicMock()
         reactor.call = AsyncMock(return_value=0)
         handler = MagicMock()
+        application = MagicMock()
+        application.config = MagicMock(return_value={})
         schedule = Schedule(
+            application=application,
             reactor=reactor,
             exception_handler=handler,
             connection_manager=MagicMock(),
@@ -706,12 +715,13 @@ class TestSchedule(TestCase):
     #  shutdown() wait parameter                                         #
     # ------------------------------------------------------------------ #
 
-    async def testShutdownSetsWaitToZeroForNone(self) -> None:
+    async def testShutdownKeepsDefaultWaitForNone(self) -> None:
         """
-        Verify that shutdown(None) sets the internal wait time to zero.
+        Verify that shutdown(None) keeps the configured default wait time.
 
-        Ensures passing None as the wait argument results in immediate
-        shutdown without waiting, as documented.
+        Ensures passing None as the wait argument preserves the grace
+        period configured in __init__ (0.5s) instead of collapsing it to
+        zero, so pending cleanup still gets a chance to run by default.
         """
         schedule = self._make()
 
@@ -720,7 +730,7 @@ class TestSchedule(TestCase):
 
         with patch.object(schedule, "_Schedule__createManagedTask", side_effect=_close):
             schedule.shutdown(None)
-        self.assertEqual(schedule._Schedule__wait_to_shutdown, 0)
+        self.assertEqual(schedule._Schedule__wait_to_shutdown, 0.5)
 
     async def testShutdownSetsWaitForValidInteger(self) -> None:
         """
@@ -738,18 +748,38 @@ class TestSchedule(TestCase):
             schedule.shutdown(5)
         self.assertEqual(schedule._Schedule__wait_to_shutdown, 5)
 
-    async def testShutdownSetsWaitToZeroForNegativeInt(self) -> None:
+    async def testShutdownRaisesTypeErrorForNegativeInt(self) -> None:
         """
-        Verify that shutdown(-1) is treated as zero wait.
+        Verify that shutdown(-1) raises TypeError instead of silently clamping.
 
-        Ensures negative integers are normalised to zero rather than causing
-        an exception or a negative sleep duration.
+        Ensures negative integers are rejected outright rather than being
+        silently normalised to zero, which would mask a caller bug.
         """
         schedule = self._make()
 
         def _close(coro):
             coro.close()
 
-        with patch.object(schedule, "_Schedule__createManagedTask", side_effect=_close):
+        with (
+            patch.object(schedule, "_Schedule__createManagedTask", side_effect=_close),
+            self.assertRaises(TypeError),
+        ):
             schedule.shutdown(-1)
-        self.assertEqual(schedule._Schedule__wait_to_shutdown, 0)
+
+    async def testShutdownRaisesTypeErrorForBool(self) -> None:
+        """
+        Verify that shutdown(True) raises TypeError instead of being accepted.
+
+        Ensures bool (a subtype of int) is explicitly rejected so a caller
+        mistake is not silently coerced into a 0/1 second wait.
+        """
+        schedule = self._make()
+
+        def _close(coro):
+            coro.close()
+
+        with (
+            patch.object(schedule, "_Schedule__createManagedTask", side_effect=_close),
+            self.assertRaises(TypeError),
+        ):
+            schedule.shutdown(True)
