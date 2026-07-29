@@ -78,6 +78,7 @@ dependencies = [
     "pendulum~=3.2",
     "psutil~=7.2",
     "python-dotenv~=1.2",
+    "redis[hiredis]>=8.0.1",
     "rich~=15.0",
     "sqlalchemy[asyncio]~=2.0",
     "uvloop>=0.22.1 ; sys_platform != 'win32'",
