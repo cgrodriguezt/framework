@@ -21,6 +21,8 @@ class Task(BaseEntity):
         Unique identifier for the event.
     args : list[str] | None, optional
         Arguments to be passed to the event. Defaults to empty list.
+    kwargs : dict | None, optional
+        Keyword arguments to be passed to the event. Defaults to empty dict.
     purpose : str | None, optional
         Description of the event's purpose.
     random_delay : int | None, optional
@@ -56,6 +58,11 @@ class Task(BaseEntity):
         default_factory=list,
     )
 
+    # Keyword arguments for the event, defaults to empty dict if not provided
+    kwargs: dict | None = field(
+        default_factory=dict,
+    )
+
     # Description of the event's purpose
     purpose: str | None = None
 
@@ -75,13 +82,13 @@ class Task(BaseEntity):
     details: str | None = None
 
     # Maximum number of concurrent instances allowed for the event
-    max_instances: int = 1
+    max_instances: int | None = None
 
     # Grace time in seconds for misfired events
     misfire_grace_time: int | None = None
 
     # Whether to coalesce missed runs into a single run
-    coalesce: bool = True
+    coalesce: bool | None = True
 
     # Optional listeners for event-specific logic, not included in equality checks
     listeners: list[Callable[..., None]] = field(
