@@ -231,7 +231,7 @@ class IConnection(ABC):
         """
 
     @abstractmethod
-    async def dropTable(self, name: str) -> bool:
+    async def dropTable(self, name: str, schema: str | None = None) -> bool:
         """
         Drop the physical table with the given logical name.
 
@@ -239,6 +239,8 @@ class IConnection(ABC):
         ----------
         name : str
             Logical table name; the connection prefix is applied.
+        schema : str or None, optional
+            Database schema owning the table, or ``None`` for the default.
 
         Returns
         -------
