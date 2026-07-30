@@ -1,4 +1,4 @@
-from orionis.orm import Boolean, Integer, Model, String, Timestamp
+from orionis.orm import Boolean, Integer, Model, String, StrictTimestamp
 
 class User(Model):
 
@@ -18,9 +18,9 @@ class User(Model):
     id = Integer().primary().autoIncrement()
     name = String()
     email = String(150).unique().index()
-    email_verified_at = Timestamp().nullable()
+    email_verified_at = StrictTimestamp().nullable()
     password = String()
     remember_token = String(100).nullable()
     active = Boolean().default(True)
-    created_at = Timestamp().nullable()
-    updated_at = Timestamp().nullable()
+    created_at = StrictTimestamp().nullable()
+    updated_at = StrictTimestamp().nullable()
