@@ -47,7 +47,7 @@ def _buildSessionsTable(table: str) -> TableDefinition:
             "payload": payload_column,
             "expires_at": expires_column,
         },
-        primaryKey="id",
+        primary_key="id",
     )
 
 class DatabaseSessionStore(ISessionStore):
