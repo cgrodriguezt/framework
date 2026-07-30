@@ -3,13 +3,13 @@ from datetime import datetime
 from typing import ClassVar
 from orionis.database.connection_manager import ConnectionManager
 from orionis.orm import (
-    JSON,
     Boolean,
     DateTime,
     Integer,
     Model,
     String,
-    Timestamp,
+    StrictJson,
+    StrictTimestamp,
 )
 from orionis.orm.exceptions import (
     InvalidQueryException,
@@ -45,9 +45,9 @@ class Person(Model):
     name = String()
     email = String().nullable()
     active = Boolean().nullable()
-    meta = JSON().nullable()
-    created_at = Timestamp().nullable()
-    updated_at = Timestamp().nullable()
+    meta = StrictJson().nullable()
+    created_at = StrictTimestamp().nullable()
+    updated_at = StrictTimestamp().nullable()
 
     casts: ClassVar[dict[str, str]] = {"active": "bool", "meta": "json"}
     hidden: ClassVar[list[str]] = ["email"]
