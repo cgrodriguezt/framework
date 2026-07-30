@@ -25,7 +25,7 @@ def _makeTable() -> TableDefinition:
     }
     for key, column in columns.items():
         column.name = key
-    return TableDefinition(name="items", columns=columns, primaryKey="id")
+    return TableDefinition(name="items", columns=columns, primary_key="id")
 
 class TestConnection(TestCase):
 
