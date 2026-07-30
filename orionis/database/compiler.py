@@ -15,12 +15,10 @@ from orionis.orm.schema.types import ColumnType
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
-
     from sqlalchemy.sql import Delete, Insert, Select, Update
     from sqlalchemy.sql.elements import ColumnElement
     from sqlalchemy.sql.expression import Executable
     from sqlalchemy.types import TypeEngine
-
     from orionis.orm.query.expressions import (
         AggregateClause,
         DeletePlan,
@@ -79,26 +77,78 @@ class SQLCompiler:
     _TYPE_BUILDERS: ClassVar[
         dict[ColumnType, Callable[[ColumnDefinition], TypeEngine[Any]]]
     ] = {
+        # Generic "CamelCase" types.
         ColumnType.INTEGER: lambda _c: sqlalchemy.Integer(),
         ColumnType.BIG_INTEGER: lambda _c: sqlalchemy.BigInteger(),
         ColumnType.SMALL_INTEGER: lambda _c: sqlalchemy.SmallInteger(),
-        ColumnType.STRING: lambda c: sqlalchemy.String(c.length),
-        ColumnType.TEXT: lambda _c: sqlalchemy.Text(),
-        ColumnType.BOOLEAN: lambda _c: sqlalchemy.Boolean(),
-        ColumnType.FLOAT: lambda _c: sqlalchemy.Float(),
-        ColumnType.DECIMAL: lambda c: sqlalchemy.Numeric(c.precision, c.scale),
+        ColumnType.STRING: lambda c: sqlalchemy.String(c.length, c.collation),
+        ColumnType.TEXT: lambda c: sqlalchemy.Text(c.length, c.collation),
+        ColumnType.UNICODE: lambda c: sqlalchemy.Unicode(c.length, c.collation),
+        ColumnType.UNICODE_TEXT: lambda c: sqlalchemy.UnicodeText(
+            c.length, c.collation,
+        ),
+        ColumnType.BOOLEAN: lambda c: sqlalchemy.Boolean(
+            create_constraint=c.create_constraint,
+            name=c.constraint_name,
+        ),
+        ColumnType.FLOAT: lambda c: sqlalchemy.Float(
+            c.precision, asdecimal=c.as_decimal,
+            decimal_return_scale=c.decimal_return_scale,
+        ),
+        ColumnType.DOUBLE: lambda c: sqlalchemy.Double(
+            c.precision, asdecimal=c.as_decimal,
+            decimal_return_scale=c.decimal_return_scale,
+        ),
+        ColumnType.NUMERIC: lambda c: sqlalchemy.Numeric(
+            c.precision, c.scale, c.decimal_return_scale, asdecimal=c.as_decimal,
+        ),
         ColumnType.DATE: lambda _c: sqlalchemy.Date(),
         ColumnType.TIME: lambda _c: sqlalchemy.Time(),
-        ColumnType.DATETIME: lambda _c: sqlalchemy.DateTime(),
-        ColumnType.TIMESTAMP: lambda _c: sqlalchemy.TIMESTAMP(timezone=True),
-        ColumnType.JSON: lambda _c: sqlalchemy.JSON(),
-        ColumnType.UUID: lambda _c: sqlalchemy.Uuid(),
-        ColumnType.BINARY: lambda _c: sqlalchemy.LargeBinary(),
+        ColumnType.DATETIME: lambda c: sqlalchemy.DateTime(timezone=c.timezone),
+        ColumnType.INTERVAL: lambda c: sqlalchemy.Interval(
+            native=c.native,
+            second_precision=c.second_precision,
+            day_precision=c.day_precision,
+        ),
+        ColumnType.LARGE_BINARY: lambda c: sqlalchemy.LargeBinary(c.length),
+        ColumnType.UUID: lambda c: sqlalchemy.Uuid(
+            as_uuid=c.as_uuid, native_uuid=c.native_uuid,
+        ),
+        ColumnType.PICKLE_TYPE: lambda c: sqlalchemy.PickleType(
+            protocol=c.protocol,
+        ),
         ColumnType.ENUM: lambda c: sqlalchemy.Enum(
-            *c.enumValues,
+            *c.enum_values,
+            name=c.enum_name,
             native_enum=False,
             create_constraint=False,
         ),
+
+        # SQL standard and multiple vendor "UPPERCASE" types.
+        ColumnType.BIGINT: lambda _c: sqlalchemy.BIGINT(),
+        ColumnType.SMALLINT: lambda _c: sqlalchemy.SMALLINT(),
+        ColumnType.INT: lambda _c: sqlalchemy.INTEGER(),
+        ColumnType.CHAR: lambda c: sqlalchemy.CHAR(c.length, c.collation),
+        ColumnType.VARCHAR: lambda c: sqlalchemy.VARCHAR(c.length, c.collation),
+        ColumnType.NCHAR: lambda c: sqlalchemy.NCHAR(c.length, c.collation),
+        ColumnType.NVARCHAR: lambda c: sqlalchemy.NVARCHAR(c.length, c.collation),
+        ColumnType.CLOB: lambda c: sqlalchemy.CLOB(c.length, c.collation),
+        ColumnType.REAL: lambda c: sqlalchemy.REAL(
+            c.precision, asdecimal=c.as_decimal,
+            decimal_return_scale=c.decimal_return_scale,
+        ),
+        ColumnType.DOUBLE_PRECISION: lambda c: sqlalchemy.DOUBLE_PRECISION(
+            c.precision, asdecimal=c.as_decimal,
+            decimal_return_scale=c.decimal_return_scale,
+        ),
+        ColumnType.DECIMAL: lambda c: sqlalchemy.DECIMAL(
+            c.precision, c.scale, c.decimal_return_scale, asdecimal=c.as_decimal,
+        ),
+        ColumnType.TIMESTAMP: lambda c: sqlalchemy.TIMESTAMP(timezone=c.timezone),
+        ColumnType.BINARY: lambda c: sqlalchemy.BINARY(c.length),
+        ColumnType.VARBINARY: lambda c: sqlalchemy.VARBINARY(c.length),
+        ColumnType.BLOB: lambda c: sqlalchemy.BLOB(c.length),
+        ColumnType.JSON: lambda c: sqlalchemy.JSON(none_as_null=c.none_as_null),
     }
 
     def __init__(self, prefix: str = "") -> None:
@@ -322,7 +372,7 @@ class SQLCompiler:
         table = self._sqlTable(definition)
         return CreateTable(table, if_not_exists=True)
 
-    def compileDropTable(self, name: str) -> Executable:
+    def compileDropTable(self, name: str, schema: str | None = None) -> Executable:
         """
         Compile a DROP TABLE statement for the given logical name.
 
@@ -330,20 +380,56 @@ class SQLCompiler:
         ----------
         name : str
             Logical table name; the compiler prefix is applied.
+        schema : str or None, optional
+            Database schema owning the table, or ``None`` for the default.
 
         Returns
         -------
         Executable
             DDL statement dropping the table when it exists.
         """
-        physical = f"{self._prefix}{name}"
-        table = self._tables.get(physical)
+        physical = self._physicalName(name)
+        table = self._tables.get(self._cacheKey(physical, schema))
         if table is None:
             # Build a lightweight standalone table object for the DDL.
-            table = Table(physical, MetaData())
+            table = Table(physical, MetaData(), schema=schema)
         return DropTable(table, if_exists=True)
 
     # ── Table and column resolution ─────────────────────────────────────────
+
+    def _physicalName(self, name: str) -> str:
+        """
+        Prepend the connection prefix to a logical table name.
+
+        Parameters
+        ----------
+        name : str
+            Logical table name.
+
+        Returns
+        -------
+        str
+            Physical table name including the configured prefix.
+        """
+        return f"{self._prefix}{name}"
+
+    def _cacheKey(self, physical: str, schema: str | None) -> str:
+        """
+        Build the internal table cache key, disambiguating by schema.
+
+        Parameters
+        ----------
+        physical : str
+            Physical table name including the connection prefix.
+        schema : str or None
+            Database schema owning the table, or ``None`` for the default.
+
+        Returns
+        -------
+        str
+            Cache key unique per physical name and schema.
+        """
+        return f"{schema}.{physical}" if schema else physical
 
     def _sqlTable(self, definition: TableDefinition) -> Table:
         """
@@ -359,16 +445,21 @@ class SQLCompiler:
         Table
             Engine table metadata.
         """
-        physical = f"{self._prefix}{definition.name}"
-        cached = self._tables.get(physical)
+        physical = self._physicalName(definition.name)
+        cache_key = self._cacheKey(physical, definition.schema)
+        cached = self._tables.get(cache_key)
         if cached is not None:
             return cached
 
         # Pre-register referenced tables so foreign key DDL can resolve
         # them even when their models are compiled later.
         for column in definition.columns.values():
-            if column.foreignRef is not None:
-                self._ensureReferencedTable(column.foreignRef)
+            if column.foreign_ref is not None:
+                self._ensureReferencedTable(column.foreign_ref)
+        for foreign_key in definition.foreign_keys:
+            self._ensureReferencedColumns(
+                foreign_key.ref_table, foreign_key.ref_columns,
+            )
 
         columns = [
             self._sqlColumn(column)
@@ -378,10 +469,53 @@ class SQLCompiler:
             physical,
             self._metadata,
             *columns,
+            *self._tableConstraints(definition),
+            schema=definition.schema,
+            comment=definition.comment,
             extend_existing=True,
         )
-        self._tables[physical] = table
+        self._tables[cache_key] = table
         return table
+
+    def _tableConstraints(self, definition: TableDefinition) -> list[Any]:
+        """
+        Build the composite, table-level constraints for a definition.
+
+        Parameters
+        ----------
+        definition : TableDefinition
+            Orionis table definition.
+
+        Returns
+        -------
+        list of Any
+            SQLAlchemy schema items to attach alongside the columns.
+        """
+        constraints: list[Any] = []
+        if definition.composite_primary_key:
+            constraints.append(
+                sqlalchemy.PrimaryKeyConstraint(*definition.composite_primary_key),
+            )
+        constraints.extend(
+            sqlalchemy.UniqueConstraint(*unique.columns, name=unique.name)
+            for unique in definition.unique_constraints
+        )
+        for foreign_key in definition.foreign_keys:
+            ref_columns = [
+                f"{foreign_key.ref_table}.{column}"
+                for column in foreign_key.ref_columns
+            ]
+            constraints.append(
+                sqlalchemy.ForeignKeyConstraint(
+                    foreign_key.columns, ref_columns, name=foreign_key.name,
+                ),
+            )
+        for index in definition.indexes:
+            name = index.name or f"ix_{definition.name}_{'_'.join(index.columns)}"
+            constraints.append(
+                sqlalchemy.Index(name, *index.columns, unique=index.unique),
+            )
+        return constraints
 
     def _ensureReferencedTable(self, reference: ForeignReference) -> None:
         """
@@ -401,13 +535,38 @@ class SQLCompiler:
         None
             This method does not return a value.
         """
-        physical = f"{self._prefix}{reference.table}"
+        self._ensureReferencedColumns(reference.table, (reference.column,))
+
+    def _ensureReferencedColumns(
+        self,
+        table_name: str,
+        columns: Sequence[str],
+    ) -> None:
+        """
+        Register a stub table exposing the given referenced columns.
+
+        Parameters
+        ----------
+        table_name : str
+            Logical name of the referenced table.
+        columns : Sequence of str
+            Referenced column names, each stubbed as an integer key.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        physical = self._physicalName(table_name)
         if physical in self._metadata.tables:
             return
         Table(
             physical,
             self._metadata,
-            SqlColumn(reference.column, sqlalchemy.Integer(), primary_key=True),
+            *(
+                SqlColumn(column, sqlalchemy.Integer(), primary_key=True)
+                for column in columns
+            ),
         )
 
     def _sqlColumn(self, definition: ColumnDefinition) -> SqlColumn[Any]:
@@ -429,30 +588,31 @@ class SQLCompiler:
         QueryException
             If the logical column type has no registered builder.
         """
-        builder = self._TYPE_BUILDERS.get(definition.columnType)
+        builder = self._TYPE_BUILDERS.get(definition.column_type)
         if builder is None:
             error_msg = (
                 f"No SQL type registered for column type "
-                f"'{definition.columnType}'."
+                f"'{definition.column_type}'."
             )
             raise QueryException(error_msg)
 
         args: list[Any] = [definition.name, builder(definition)]
-        if definition.foreignRef is not None:
-            reference = definition.foreignRef
+        if definition.foreign_ref is not None:
+            reference = definition.foreign_ref
             args.append(
                 ForeignKey(f"{self._prefix}{reference.table}.{reference.column}"),
             )
 
         options: dict[str, Any] = {
-            "primary_key": definition.isPrimary,
-            "nullable": definition.isNullable and not definition.isPrimary,
-            "unique": definition.isUnique or None,
-            "index": definition.hasIndex or None,
-            "autoincrement": True if definition.isAutoIncrement else "auto",
+            "primary_key": definition.is_primary,
+            "nullable": definition.is_nullable and not definition.is_primary,
+            "unique": definition.is_unique or None,
+            "index": definition.has_index or None,
+            "autoincrement": True if definition.is_auto_increment else "auto",
+            "comment": definition.comment_text,
         }
         if definition.hasDefault():
-            options["default"] = definition.defaultValue
+            options["default"] = definition.default_value
 
         return SqlColumn(*args, **options)
 
