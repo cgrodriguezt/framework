@@ -51,7 +51,7 @@ def _buildEntriesTable(table: str) -> TableDefinition:
             "cache_value": value_column,
             "expiration": expiration_column,
         },
-        primaryKey="cache_key",
+        primary_key="cache_key",
     )
 
 
@@ -86,7 +86,7 @@ def _buildLocksTable(table: str) -> TableDefinition:
             "owner": owner_column,
             "expiration": expiration_column,
         },
-        primaryKey="cache_key",
+        primary_key="cache_key",
     )
 
 
