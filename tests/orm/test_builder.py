@@ -1,5 +1,5 @@
 from __future__ import annotations
-from orionis.orm import Integer, Model, String, Timestamp
+from orionis.orm import Integer, Model, String, StrictTimestamp
 from orionis.orm.contracts.builder import IModelQueryBuilder
 from orionis.orm.exceptions import InvalidQueryException
 from orionis.orm.query.expressions import SortDirection, WhereType
@@ -9,8 +9,8 @@ from orionis.test import TestCase
 class _Item(Model):
     id = Integer().primary().autoIncrement()
     name = String()
-    created_at = Timestamp().nullable()
-    updated_at = Timestamp().nullable()
+    created_at = StrictTimestamp().nullable()
+    updated_at = StrictTimestamp().nullable()
 
 class _Plain(Model):
     id = Integer().primary()
