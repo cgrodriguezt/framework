@@ -6,7 +6,6 @@ if TYPE_CHECKING:
     from orionis.database.contracts.connection import IConnection
     from orionis.database.contracts.manager import IConnectionManager
 
-
 class ConnectionResolver:
     """
     Static bridge between the ORM and the database connection manager.
