@@ -4,7 +4,6 @@ from dataclasses import dataclass
 # Number of segments expected in a qualified reference such as "companies.id".
 _REFERENCE_PARTS: int = 2
 
-
 @dataclass(frozen=True, slots=True)
 class ForeignReference:
     """
@@ -61,3 +60,63 @@ class ForeignReference:
             Qualified reference string.
         """
         return f"{self.table}.{self.column}"
+
+
+@dataclass(frozen=True, slots=True)
+class UniqueConstraint:
+    """
+    Composite ``UNIQUE`` constraint spanning one or more columns.
+
+    Attributes
+    ----------
+    columns : tuple of str
+        Column names covered by the constraint, in declaration order.
+    name : str or None
+        Explicit constraint name, or ``None`` to let the engine assign one.
+    """
+
+    columns: tuple[str, ...]
+    name: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class TableIndex:
+    """
+    Composite index spanning one or more columns.
+
+    Attributes
+    ----------
+    columns : tuple of str
+        Column names covered by the index, in declaration order.
+    name : str or None
+        Explicit index name, or ``None`` to derive one from the table.
+    unique : bool
+        Whether the index also enforces uniqueness.
+    """
+
+    columns: tuple[str, ...]
+    name: str | None = None
+    unique: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class CompositeForeignKey:
+    """
+    Multi-column foreign key constraint.
+
+    Attributes
+    ----------
+    columns : tuple of str
+        Local column names, in the same order as ``ref_columns``.
+    ref_table : str
+        Name of the referenced table.
+    ref_columns : tuple of str
+        Referenced column names, aligned positionally with ``columns``.
+    name : str or None
+        Explicit constraint name, or ``None`` to let the engine assign one.
+    """
+
+    columns: tuple[str, ...]
+    ref_table: str
+    ref_columns: tuple[str, ...]
+    name: str | None = None
