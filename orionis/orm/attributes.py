@@ -218,13 +218,13 @@ def serializeForStorage(meta: ModelMetadata, values: dict[str, Any]) -> dict[str
 
         # JSON structures need explicit encoding outside JSON columns.
         is_structure = isinstance(value, (dict, list))
-        if is_structure and column.columnType is not ColumnType.JSON:
+        if is_structure and column.column_type is not ColumnType.JSON:
             serialized[key] = json.dumps(value)
             continue
 
         # UUID objects need their string form outside UUID columns.
         is_uuid = isinstance(value, uuid.UUID)
-        if is_uuid and column.columnType is not ColumnType.UUID:
+        if is_uuid and column.column_type is not ColumnType.UUID:
             serialized[key] = str(value)
             continue
 
