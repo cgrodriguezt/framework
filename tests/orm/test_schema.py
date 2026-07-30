@@ -2,9 +2,9 @@ from __future__ import annotations
 from orionis.orm.schema.constraints import ForeignReference
 from orionis.orm.schema.types import (
     ColumnType,
-    Decimal,
     Enum,
     Integer,
+    StrictDecimal,
     String,
 )
 from orionis.test import TestCase
@@ -27,11 +27,11 @@ class TestColumnDefinitions(TestCase):
             .index()
             .nullable()
         )
-        self.assertTrue(column.isPrimary)
-        self.assertTrue(column.isAutoIncrement)
-        self.assertTrue(column.isUnique)
-        self.assertTrue(column.hasIndex)
-        self.assertTrue(column.isNullable)
+        self.assertTrue(column.is_primary)
+        self.assertTrue(column.is_auto_increment)
+        self.assertTrue(column.is_unique)
+        self.assertTrue(column.has_index)
+        self.assertTrue(column.is_nullable)
 
     def testDefaultDistinguishesNoneFromAbsent(self) -> None:
         """
@@ -43,7 +43,7 @@ class TestColumnDefinitions(TestCase):
         self.assertFalse(plain.hasDefault())
         with_none = Integer().default(None)
         self.assertTrue(with_none.hasDefault())
-        self.assertIsNone(with_none.defaultValue)
+        self.assertIsNone(with_none.default_value)
 
     def testForeignParsesQualifiedReference(self) -> None:
         """
@@ -53,10 +53,10 @@ class TestColumnDefinitions(TestCase):
         """
         column = Integer().foreign("companies.id")
         self.assertEqual(
-            column.foreignRef,
+            column.foreign_ref,
             ForeignReference(table="companies", column="id"),
         )
-        self.assertEqual(column.foreignRef.qualified(), "companies.id")
+        self.assertEqual(column.foreign_ref.qualified(), "companies.id")
 
     def testForeignRejectsMalformedReference(self) -> None:
         """
@@ -95,7 +95,7 @@ class TestColumnDefinitions(TestCase):
 
         Validates the decimal shape parameters.
         """
-        column = Decimal(12, 4)
+        column = StrictDecimal(12, 4)
         self.assertEqual(column.precision, 12)
         self.assertEqual(column.scale, 4)
 
@@ -106,7 +106,7 @@ class TestColumnDefinitions(TestCase):
         Validates the decimal shape guard.
         """
         with self.assertRaises(ValueError):
-            Decimal(2, 5)
+            StrictDecimal(2, 5)
 
     def testEnumRequiresValues(self) -> None:
         """
@@ -115,7 +115,7 @@ class TestColumnDefinitions(TestCase):
         Validates the enum value guard.
         """
         column = Enum("draft", "published")
-        self.assertEqual(column.enumValues, ("draft", "published"))
-        self.assertIs(column.columnType, ColumnType.ENUM)
+        self.assertEqual(column.enum_values, ("draft", "published"))
+        self.assertIs(column.column_type, ColumnType.ENUM)
         with self.assertRaises(ValueError):
             Enum()
