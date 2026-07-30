@@ -356,7 +356,7 @@ class Connection(IConnection):
             await self._run(connection, statement)
             return True
 
-    async def dropTable(self, name: str) -> bool:
+    async def dropTable(self, name: str, schema: str | None = None) -> bool:
         """
         Drop the physical table with the given logical name.
 
@@ -364,6 +364,8 @@ class Connection(IConnection):
         ----------
         name : str
             Logical table name; the connection prefix is applied.
+        schema : str or None, optional
+            Database schema owning the table, or ``None`` for the default.
 
         Returns
         -------
@@ -375,7 +377,7 @@ class Connection(IConnection):
         QueryException
             If the DDL statement fails to execute.
         """
-        statement = self._compiler.compileDropTable(name)
+        statement = self._compiler.compileDropTable(name, schema)
         async with self._acquire() as connection:
             await self._run(connection, statement)
             return True
