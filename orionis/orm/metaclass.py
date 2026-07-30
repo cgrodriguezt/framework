@@ -254,7 +254,7 @@ class ModelMeta(type):
             table=TableDefinition(
                 name=table_name,
                 columns=columns,
-                primaryKey=primary_key,
+                primary_key=primary_key,
             ),
             columns=columns,
             primaryKey=primary_key,
@@ -452,7 +452,7 @@ class ModelMeta(type):
 
         # Use the first column flagged as primary, defaulting to "id".
         for key, column in columns.items():
-            if column.isPrimary:
+            if column.is_primary:
                 return key
         return "id"
 
