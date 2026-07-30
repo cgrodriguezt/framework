@@ -447,7 +447,7 @@ class Model(AttributesMixin, StateMixin, metaclass=ModelMeta):
         if target is not None:
             column = meta.columns.get(target)
             aware = column is not None and (
-                column.columnType is ColumnType.TIMESTAMP
+                column.column_type is ColumnType.TIMESTAMP
             )
             if not aware:
                 return now.replace(tzinfo=None)
