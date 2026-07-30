@@ -2,7 +2,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, date, datetime
 from typing import ClassVar
-from orionis.orm import JSON, UUID, Integer, Model, String, Text
+from orionis.orm import Integer, Model, String, StrictJson, Text, Uuid
 from orionis.orm.attributes import getCastHandler, serializeForStorage
 from orionis.orm.exceptions import OrmException
 from orionis.test import TestCase
@@ -10,8 +10,8 @@ from orionis.test import TestCase
 class _Doc(Model):
     id = Integer().primary().autoIncrement()
     body = Text().nullable()
-    payload = JSON().nullable()
-    token = UUID().nullable()
+    payload = StrictJson().nullable()
+    token = Uuid().nullable()
     label = String().nullable()
 
     casts: ClassVar[dict[str, str]] = {"body": "json"}
