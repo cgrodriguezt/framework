@@ -15,22 +15,22 @@ from orionis.orm.query.expressions import (
 )
 from orionis.orm.schema.table import TableDefinition
 from orionis.orm.schema.types import (
-    JSON,
-    UUID,
     BigInteger,
-    Binary,
     Boolean,
     Date,
     DateTime,
-    Decimal,
     Enum,
     Float,
     Integer,
     SmallInteger,
+    StrictBinary,
+    StrictDecimal,
+    StrictJson,
+    StrictTimestamp,
     String,
     Text,
     Time,
-    Timestamp,
+    Uuid,
 )
 from orionis.test import TestCase
 
@@ -43,7 +43,7 @@ def _makeTable() -> TableDefinition:
     }
     for key, column in columns.items():
         column.name = key
-    return TableDefinition(name="users", columns=columns, primaryKey="id")
+    return TableDefinition(name="users", columns=columns, primary_key="id")
 
 class TestSQLCompiler(TestCase):
 
@@ -380,25 +380,25 @@ class TestSQLCompiler(TestCase):
             "body": Text(),
             "flag": Boolean(),
             "ratio": Float(),
-            "price": Decimal(10, 2),
+            "price": StrictDecimal(10, 2),
             "born": Date(),
             "at": Time(),
             "seen": DateTime(),
-            "stamped": Timestamp(),
-            "payload": JSON(),
-            "token": UUID(),
-            "blob": Binary(),
+            "stamped": StrictTimestamp(),
+            "payload": StrictJson(),
+            "token": Uuid(),
+            "blob": StrictBinary(),
             "state": Enum("draft", "published"),
         }
         for key, column in columns.items():
             column.name = key
-        table = TableDefinition(name="samples", columns=columns, primaryKey="id")
+        table = TableDefinition(name="samples", columns=columns, primary_key="id")
 
         ddl = str(SQLCompiler().compileCreateTable(table)).lower()
         for key in columns:
             self.assertIn(key, ddl)
         self.assertIn("varchar(50)", ddl)
-        self.assertIn("numeric(10, 2)", ddl)
+        self.assertIn("decimal(10, 2)", ddl)
 
     def testForeignKeyAppearsInDdlWithPrefix(self) -> None:
         """
@@ -412,7 +412,7 @@ class TestSQLCompiler(TestCase):
         }
         for key, column in columns.items():
             column.name = key
-        table = TableDefinition(name="staff", columns=columns, primaryKey="id")
+        table = TableDefinition(name="staff", columns=columns, primary_key="id")
 
         ddl = str(SQLCompiler(prefix="app_").compileCreateTable(table)).lower()
         self.assertIn("foreign key", ddl)
@@ -431,7 +431,7 @@ class TestSQLCompiler(TestCase):
         }
         for key, column in columns.items():
             column.name = key
-        table = TableDefinition(name="drafts", columns=columns, primaryKey="id")
+        table = TableDefinition(name="drafts", columns=columns, primary_key="id")
 
         compiler = SQLCompiler()
         engine_table = compiler._sqlTable(table)
