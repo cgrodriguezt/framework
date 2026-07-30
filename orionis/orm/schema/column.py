@@ -1,13 +1,113 @@
 from __future__ import annotations
+from dataclasses import dataclass, fields
 from typing import TYPE_CHECKING, Any
 from orionis.orm.schema.constraints import ForeignReference
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from orionis.orm.schema.types import ColumnType
 
 # Sentinel used to distinguish "no default" from a legitimate ``None`` default.
 _NO_DEFAULT: object = object()
 
+@dataclass(frozen=True, slots=True)
+class ColumnOptions:
+    """
+    Secondary, type-specific knobs mirroring SQLAlchemy constructor args.
+
+    A single options object keeps :class:`ColumnDefinition` constructible
+    with a handful of parameters while still exposing every keyword that
+    the equivalent SQLAlchemy Core type accepts, one attribute per keyword.
+
+    Attributes
+    ----------
+    length : int or None
+        Maximum length for string-like or binary columns.
+    precision : int or None
+        Total digits for numeric/decimal columns.
+    scale : int or None
+        Decimal digits for numeric/decimal columns.
+    decimal_return_scale : int or None
+        Default scale applied when converting floats to decimals.
+    as_decimal : bool
+        Whether numeric values are returned as ``Decimal``.
+    enum_values : tuple of str
+        Allowed values for enum columns.
+    enum_name : str or None
+        Name of the enumerated database type, when applicable.
+    native_enum : bool
+        Whether to use the backend's native ``ENUM`` type.
+    validate_strings : bool
+        Whether to validate string values against enum members.
+    create_constraint : bool
+        Whether to add a CHECK constraint for non-native enum/boolean.
+    constraint_name : str or None
+        Explicit name for the generated CHECK constraint.
+    timezone : bool
+        Whether the datetime column is timezone-aware.
+    collation : str or None
+        Column-level collation for string columns.
+    as_uuid : bool
+        Whether UUID values are interpreted as ``uuid.UUID`` objects.
+    native_uuid : bool
+        Whether to use the backend's native UUID-storing type.
+    item_type : ColumnDefinition or None
+        Element type declaration for array columns.
+    dimensions : int or None
+        Fixed number of dimensions for array columns.
+    as_tuple : bool
+        Whether array results are converted to tuples.
+    zero_indexes : bool
+        Whether array indexes convert between zero- and one-based
+        conventions.
+    none_as_null : bool
+        Whether ``None`` persists as SQL ``NULL`` in JSON columns.
+    native : bool
+        Whether to use the backend's native ``INTERVAL`` type.
+    second_precision : int or None
+        Fractional seconds precision for native interval columns.
+    day_precision : int or None
+        Day precision for native interval columns.
+    protocol : int
+        Pickle protocol used by pickle-backed columns.
+    pickler : object or None
+        Object exposing ``dumps``/``loads``, defaults to ``pickle``.
+    comparator : Callable or None
+        Predicate used to compare pickled values for equality.
+    impl : object or None
+        Binary-storing type used in place of the default.
+    """
+
+    length: int | None = None
+    precision: int | None = None
+    scale: int | None = None
+    decimal_return_scale: int | None = None
+    as_decimal: bool = True
+    enum_values: tuple[str, ...] = ()
+    enum_name: str | None = None
+    native_enum: bool = True
+    validate_strings: bool = False
+    create_constraint: bool = False
+    constraint_name: str | None = None
+    timezone: bool = False
+    collation: str | None = None
+    as_uuid: bool = True
+    native_uuid: bool = True
+    item_type: ColumnDefinition | None = None
+    dimensions: int | None = None
+    as_tuple: bool = False
+    zero_indexes: bool = False
+    none_as_null: bool = False
+    native: bool = True
+    second_precision: int | None = None
+    day_precision: int | None = None
+    protocol: int = 5
+    pickler: object | None = None
+    comparator: Callable[[object, object], bool] | None = None
+    impl: object | None = None
+
+# Field names copied from ColumnOptions onto every ColumnDefinition instance.
+_OPTION_FIELDS: tuple[str, ...] = tuple(field.name for field in fields(ColumnOptions))
 
 class ColumnDefinition:
     """
@@ -20,45 +120,61 @@ class ColumnDefinition:
     """
 
     __slots__ = (
-        "columnType",
-        "defaultValue",
-        "enumValues",
-        "foreignRef",
-        "hasIndex",
-        "isAutoIncrement",
-        "isNullable",
-        "isPrimary",
-        "isUnique",
+        "as_decimal",
+        "as_tuple",
+        "as_uuid",
+        "collation",
+        "column_type",
+        "comment_text",
+        "comparator",
+        "constraint_name",
+        "create_constraint",
+        "day_precision",
+        "decimal_return_scale",
+        "default_value",
+        "dimensions",
+        "enum_name",
+        "enum_values",
+        "foreign_ref",
+        "has_index",
+        "impl",
+        "is_auto_increment",
+        "is_nullable",
+        "is_primary",
+        "is_unique",
+        "item_type",
         "length",
         "name",
+        "native",
+        "native_enum",
+        "native_uuid",
+        "none_as_null",
+        "pickler",
         "precision",
+        "protocol",
         "scale",
+        "second_precision",
+        "timezone",
+        "validate_strings",
+        "zero_indexes",
     )
 
     def __init__(
         self,
-        columnType: ColumnType,  # noqa: N803 # NOSONAR
-        *,
-        length: int | None = None,
-        precision: int | None = None,
-        scale: int | None = None,
-        enumValues: tuple[str, ...] = (),  # noqa: N803 # NOSONAR
+        column_type: ColumnType,
+        options: ColumnOptions | None = None,
     ) -> None:
         """
         Initialize the column definition with its type metadata.
 
         Parameters
         ----------
-        columnType : ColumnType
+        column_type : ColumnType
             Logical column type used by the SQL compiler.
-        length : int or None, optional
-            Maximum length for string-like columns.
-        precision : int or None, optional
-            Total digits for decimal columns.
-        scale : int or None, optional
-            Decimal digits for decimal columns.
-        enumValues : tuple of str, optional
-            Allowed values for enum columns.
+        options : ColumnOptions or None, optional
+            Type-specific knobs mirroring the SQLAlchemy constructor
+            keywords of the concrete subclass. Defaults to every
+            :class:`ColumnOptions` field at its own default value.
 
         Returns
         -------
@@ -67,18 +183,18 @@ class ColumnDefinition:
         """
         # Attribute name is attached later by the model metaclass.
         self.name: str = ""
-        self.columnType = columnType  # NOSONAR
-        self.length = length
-        self.precision = precision
-        self.scale = scale
-        self.enumValues = enumValues  # NOSONAR
-        self.isPrimary: bool = False  # NOSONAR
-        self.isNullable: bool = False  # NOSONAR
-        self.isUnique: bool = False  # NOSONAR
-        self.hasIndex: bool = False  # NOSONAR
-        self.isAutoIncrement: bool = False  # NOSONAR
-        self.defaultValue: Any = _NO_DEFAULT  # NOSONAR
-        self.foreignRef: ForeignReference | None = None  # NOSONAR
+        self.column_type = column_type
+        resolved = options if options is not None else ColumnOptions()
+        for field_name in _OPTION_FIELDS:
+            setattr(self, field_name, getattr(resolved, field_name))
+        self.is_primary: bool = False
+        self.is_nullable: bool = False
+        self.is_unique: bool = False
+        self.has_index: bool = False
+        self.is_auto_increment: bool = False
+        self.default_value: Any = _NO_DEFAULT
+        self.foreign_ref: ForeignReference | None = None
+        self.comment_text: str | None = None
 
     # ── Fluent constraints ──────────────────────────────────────────────────
 
@@ -91,7 +207,7 @@ class ColumnDefinition:
         ColumnDefinition
             The same definition, enabling fluent chaining.
         """
-        self.isPrimary = True  # NOSONAR
+        self.is_primary = True
         return self
 
     def nullable(self) -> ColumnDefinition:
@@ -103,7 +219,7 @@ class ColumnDefinition:
         ColumnDefinition
             The same definition, enabling fluent chaining.
         """
-        self.isNullable = True  # NOSONAR
+        self.is_nullable = True
         return self
 
     def default(self, value: Any) -> ColumnDefinition:  # noqa: ANN401
@@ -120,7 +236,7 @@ class ColumnDefinition:
         ColumnDefinition
             The same definition, enabling fluent chaining.
         """
-        self.defaultValue = value  # NOSONAR
+        self.default_value = value
         return self
 
     def unique(self) -> ColumnDefinition:
@@ -132,7 +248,7 @@ class ColumnDefinition:
         ColumnDefinition
             The same definition, enabling fluent chaining.
         """
-        self.isUnique = True  # NOSONAR
+        self.is_unique = True
         return self
 
     def index(self) -> ColumnDefinition:
@@ -144,7 +260,7 @@ class ColumnDefinition:
         ColumnDefinition
             The same definition, enabling fluent chaining.
         """
-        self.hasIndex = True  # NOSONAR
+        self.has_index = True
         return self
 
     def foreign(self, reference: str) -> ColumnDefinition:
@@ -166,7 +282,7 @@ class ColumnDefinition:
         ValueError
             If the reference is not a valid ``"table.column"`` string.
         """
-        self.foreignRef = ForeignReference.parse(reference)  # NOSONAR
+        self.foreign_ref = ForeignReference.parse(reference)
         return self
 
     def autoIncrement(self) -> ColumnDefinition:
@@ -178,7 +294,24 @@ class ColumnDefinition:
         ColumnDefinition
             The same definition, enabling fluent chaining.
         """
-        self.isAutoIncrement = True  # NOSONAR
+        self.is_auto_increment = True
+        return self
+
+    def comment(self, text: str) -> ColumnDefinition:
+        """
+        Attach a descriptive comment rendered alongside the column DDL.
+
+        Parameters
+        ----------
+        text : str
+            Comment text stored by the database engine.
+
+        Returns
+        -------
+        ColumnDefinition
+            The same definition, enabling fluent chaining.
+        """
+        self.comment_text = text
         return self
 
     # ── Introspection helpers ───────────────────────────────────────────────
@@ -192,7 +325,7 @@ class ColumnDefinition:
         bool
             ``True`` when :meth:`default` was called with any value.
         """
-        return self.defaultValue is not _NO_DEFAULT
+        return self.default_value is not _NO_DEFAULT
 
     def __repr__(self) -> str:
         """
@@ -205,5 +338,5 @@ class ColumnDefinition:
         """
         return (
             f"<{type(self).__name__} name={self.name!r} "
-            f"type={self.columnType!s}>"
+            f"type={self.column_type!s}>"
         )
