@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import Any
 
-
 class StateMixin:
     """
     Attribute state tracking behavior shared by every model.
