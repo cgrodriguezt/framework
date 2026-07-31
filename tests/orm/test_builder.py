@@ -105,6 +105,51 @@ class TestBuilderPlans(TestCase):
         with self.assertRaises(InvalidQueryException):
             _Item.query().whereBetween("id", (1,))
 
+    def testWhereLikeVariantsBuildExpectedClauses(self) -> None:
+        """
+        Build LIKE/ILIKE clauses with their negated counterparts.
+
+        Validates the pattern-matching where builders.
+        """
+        cases = (
+            ("whereLike", WhereType.LIKE),
+            ("whereNotLike", WhereType.NOT_LIKE),
+            ("whereILike", WhereType.ILIKE),
+            ("whereNotILike", WhereType.NOT_ILIKE),
+        )
+        for method_name, expected_type in cases:
+            builder = getattr(_Item.query(), method_name)("name", "a%")
+            clause = builder._plan.wheres[0]
+            self.assertIs(clause.whereType, expected_type)
+            self.assertEqual(clause.value, "a%")
+
+    def testWhereTextMatchersBuildExpectedClauses(self) -> None:
+        """
+        Build startswith/endswith/contains/regexp clauses.
+
+        Validates the literal and regular-expression where builders.
+        """
+        cases = (
+            ("whereStartsWith", WhereType.STARTS_WITH),
+            ("whereEndsWith", WhereType.ENDS_WITH),
+            ("whereContains", WhereType.CONTAINS),
+            ("whereRegexpMatch", WhereType.REGEXP),
+        )
+        for method_name, expected_type in cases:
+            builder = getattr(_Item.query(), method_name)("name", "abc")
+            clause = builder._plan.wheres[0]
+            self.assertIs(clause.whereType, expected_type)
+            self.assertEqual(clause.value, "abc")
+
+    def testDistinctMarksPlan(self) -> None:
+        """
+        Mark the plan as requiring duplicate row collapsing.
+
+        Validates the distinct() fluent method.
+        """
+        builder = _Item.query().distinct()
+        self.assertTrue(builder._plan.distinct)
+
     def testGroupByAndHavingAccumulate(self) -> None:
         """
         Accumulate grouping columns and having conditions.
