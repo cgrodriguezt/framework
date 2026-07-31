@@ -276,6 +276,79 @@ class TestSQLCompiler(TestCase):
         sql = self._sql(self._compiler.compileSelect(plan))
         self.assertIn("not like", sql)
 
+    def testIlikeOperatorCompiles(self) -> None:
+        """
+        Compile the "ilike" comparison operator.
+
+        Validates the case-insensitive pattern comparison.
+        """
+        plan = SelectPlan(table=self._table)
+        plan.wheres.append(
+            WhereClause(column="name", operator="ilike", value="a%"),
+        )
+        sql = self._sql(self._compiler.compileSelect(plan))
+        self.assertIn("lower", sql)
+
+    def testNotIlikeOperatorCompiles(self) -> None:
+        """
+        Compile the "not ilike" comparison operator.
+
+        Validates the negated case-insensitive pattern comparison.
+        """
+        plan = SelectPlan(table=self._table)
+        plan.wheres.append(
+            WhereClause(column="name", operator="not ilike", value="a%"),
+        )
+        sql = self._sql(self._compiler.compileSelect(plan))
+        self.assertIn("not", sql)
+        self.assertIn("lower", sql)
+
+    def testTextMatcherWhereTypesCompileToLike(self) -> None:
+        """
+        Compile STARTS_WITH/ENDS_WITH/CONTAINS clauses into LIKE.
+
+        Validates the literal pattern where-clause kinds. The bound
+        pattern is concatenated with wildcards rather than inlined, so
+        assertions check for the ``||`` concatenation markers.
+
+        """
+        cases = (
+            (WhereType.STARTS_WITH, ("like", "|| '%'")),
+            (WhereType.ENDS_WITH, ("like", "'%' ||")),
+            (WhereType.CONTAINS, ("like", "'%' ||", "|| '%'")),
+        )
+        for where_type, expected_fragments in cases:
+            plan = SelectPlan(table=self._table)
+            plan.wheres.append(
+                WhereClause(column="name", whereType=where_type, value="abc"),
+            )
+            sql = self._sql(self._compiler.compileSelect(plan))
+            for fragment in expected_fragments:
+                self.assertIn(fragment, sql)
+
+    def testRegexpWhereTypeCompiles(self) -> None:
+        """
+        Compile REGEXP where clauses into an engine regexp match.
+
+        Validates the regular-expression where-clause kind.
+        """
+        plan = SelectPlan(table=self._table)
+        plan.wheres.append(
+            WhereClause(column="name", whereType=WhereType.REGEXP, value="^a"),
+        )
+        sql = self._sql(self._compiler.compileSelect(plan))
+        self.assertIn("regexp", sql)
+
+    def testDistinctAddsSelectDistinct(self) -> None:
+        """
+        Apply SELECT DISTINCT when the plan requests it.
+
+        Validates the distinct flag compilation.
+        """
+        plan = SelectPlan(table=self._table, distinct=True)
+        sql = self._sql(self._compiler.compileSelect(plan))
+        self.assertIn("distinct", sql)
+
     def testNotInClauseCompiles(self) -> None:
         """
         Compile NOT IN conditions with bound value lists.
