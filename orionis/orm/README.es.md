@@ -306,12 +306,16 @@ users = await User.where("active", True)\
 | Método | Notas |
 | --- | --- |
 | `select(*columns)` | restringe la proyección |
-| `where(col, valor)` / `where(col, op, valor)` / `where({...})` | operadores: `=`, `!=`, `<>`, `<`, `<=`, `>`, `>=`, `like`, `not like` |
+| `where(col, valor)` / `where(col, op, valor)` / `where({...})` | operadores: `=`, `!=`, `<>`, `<`, `<=`, `>`, `>=`, `like`, `not like`, `ilike`, `not ilike` |
 | `orWhere(...)` | condición combinada con OR |
 | `whereIn(col, valores)` / `whereNotIn(col, valores)` | acepta iterables o `Collection` |
 | `whereNull(col)` / `whereNotNull(col)` | comprobaciones de NULL |
 | `whereBetween(col, (min, max))` | rango |
-| `whereLike(col, patrón)` | comodines `%` / `_` |
+| `whereLike(col, patrón)` / `whereNotLike(col, patrón)` | comodines `%` / `_` |
+| `whereILike(col, patrón)` / `whereNotILike(col, patrón)` | LIKE sin distinguir mayúsculas |
+| `whereStartsWith(col, valor)` / `whereEndsWith(col, valor)` / `whereContains(col, valor)` | coincidencia literal de prefijo/sufijo/subcadena |
+| `whereRegexpMatch(col, patrón)` | coincidencia de expresión regular (según el motor) |
+| `distinct()` | descarta filas duplicadas |
 | `orderBy(col, "asc"\|"desc")` | ordenación |
 | `latest(col=None)` / `oldest(col=None)` | por defecto `created_at`, si no existe usa la clave primaria |
 | `groupBy(*cols)` / `having(col, op, valor)` | agrupación |
