@@ -302,12 +302,16 @@ users = await User.where("active", True)\
 | Method | Notes |
 | --- | --- |
 | `select(*columns)` | restrict the projection |
-| `where(col, value)` / `where(col, op, value)` / `where({...})` | operators: `=`, `!=`, `<>`, `<`, `<=`, `>`, `>=`, `like`, `not like` |
+| `where(col, value)` / `where(col, op, value)` / `where({...})` | operators: `=`, `!=`, `<>`, `<`, `<=`, `>`, `>=`, `like`, `not like`, `ilike`, `not ilike` |
 | `orWhere(...)` | OR-combined condition |
 | `whereIn(col, values)` / `whereNotIn(col, values)` | accepts iterables or `Collection` |
 | `whereNull(col)` / `whereNotNull(col)` | NULL checks |
 | `whereBetween(col, (min, max))` | range check |
-| `whereLike(col, pattern)` | `%` / `_` wildcards |
+| `whereLike(col, pattern)` / `whereNotLike(col, pattern)` | `%` / `_` wildcards |
+| `whereILike(col, pattern)` / `whereNotILike(col, pattern)` | case-insensitive LIKE |
+| `whereStartsWith(col, value)` / `whereEndsWith(col, value)` / `whereContains(col, value)` | literal prefix/suffix/substring match |
+| `whereRegexpMatch(col, pattern)` | regular expression match (engine-dependent) |
+| `distinct()` | collapse duplicate rows |
 | `orderBy(col, "asc"\|"desc")` | ordering |
 | `latest(col=None)` / `oldest(col=None)` | defaults to `created_at`, falls back to the primary key |
 | `groupBy(*cols)` / `having(col, op, value)` | grouping |
