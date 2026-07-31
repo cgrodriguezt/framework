@@ -22,7 +22,6 @@ from orionis.support.types.collection import Collection
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-
     from orionis.database.contracts.connection import IConnection
     from orionis.database.entities.result import InsertResult
     from orionis.orm.model import Model
@@ -309,6 +308,224 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
                 value=pattern,
             ),
         )
+        return self
+
+    def whereNotLike(
+        self,
+        column: str,
+        pattern: str,
+    ) -> ModelQueryBuilder[TModel]:
+        """
+        Filter rows whose column value does not match an SQL LIKE pattern.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        pattern : str
+            SQL LIKE pattern, using ``%`` and ``_`` wildcards.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._plan.wheres.append(
+            WhereClause(
+                column=column,
+                whereType=WhereType.NOT_LIKE,
+                value=pattern,
+            ),
+        )
+        return self
+
+    def whereILike(
+        self,
+        column: str,
+        pattern: str,
+    ) -> ModelQueryBuilder[TModel]:
+        """
+        Filter rows matching a case-insensitive SQL LIKE pattern.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        pattern : str
+            SQL LIKE pattern, using ``%`` and ``_`` wildcards.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._plan.wheres.append(
+            WhereClause(
+                column=column,
+                whereType=WhereType.ILIKE,
+                value=pattern,
+            ),
+        )
+        return self
+
+    def whereNotILike(
+        self,
+        column: str,
+        pattern: str,
+    ) -> ModelQueryBuilder[TModel]:
+        """
+        Filter rows not matching a case-insensitive SQL LIKE pattern.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        pattern : str
+            SQL LIKE pattern, using ``%`` and ``_`` wildcards.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._plan.wheres.append(
+            WhereClause(
+                column=column,
+                whereType=WhereType.NOT_ILIKE,
+                value=pattern,
+            ),
+        )
+        return self
+
+    def whereStartsWith(
+        self,
+        column: str,
+        value: str,
+    ) -> ModelQueryBuilder[TModel]:
+        """
+        Filter rows whose column value starts with the given text.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        value : str
+            Literal prefix to match.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._plan.wheres.append(
+            WhereClause(
+                column=column,
+                whereType=WhereType.STARTS_WITH,
+                value=value,
+            ),
+        )
+        return self
+
+    def whereEndsWith(
+        self,
+        column: str,
+        value: str,
+    ) -> ModelQueryBuilder[TModel]:
+        """
+        Filter rows whose column value ends with the given text.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        value : str
+            Literal suffix to match.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._plan.wheres.append(
+            WhereClause(
+                column=column,
+                whereType=WhereType.ENDS_WITH,
+                value=value,
+            ),
+        )
+        return self
+
+    def whereContains(
+        self,
+        column: str,
+        value: str,
+    ) -> ModelQueryBuilder[TModel]:
+        """
+        Filter rows whose column value contains the given text.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        value : str
+            Literal substring to match.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._plan.wheres.append(
+            WhereClause(
+                column=column,
+                whereType=WhereType.CONTAINS,
+                value=value,
+            ),
+        )
+        return self
+
+    def whereRegexpMatch(
+        self,
+        column: str,
+        pattern: str,
+    ) -> ModelQueryBuilder[TModel]:
+        """
+        Filter rows whose column value matches a regular expression.
+
+        The exact regular expression dialect depends on the underlying
+        database engine.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        pattern : str
+            Regular expression pattern.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._plan.wheres.append(
+            WhereClause(
+                column=column,
+                whereType=WhereType.REGEXP,
+                value=pattern,
+            ),
+        )
+        return self
+
+    def distinct(self) -> ModelQueryBuilder[TModel]:
+        """
+        Collapse duplicate rows from the query results.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._plan.distinct = True
         return self
 
     # ── Ordering, grouping, pagination ──────────────────────────────────────
