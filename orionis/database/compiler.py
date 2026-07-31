@@ -47,6 +47,14 @@ _COMPARATORS: dict[str, Callable[[Any, Any], Any]] = {
 _EQUALITY_OPERATORS: frozenset[str] = frozenset({"=", "=="})
 _INEQUALITY_OPERATORS: frozenset[str] = frozenset({"!=", "<>"})
 
+# Pattern-matching operators accepted by basic where clauses.
+_PATTERN_OPERATORS: dict[str, Callable[[Any, Any], Any]] = {
+    "like": lambda col, val: col.like(val),
+    "not like": lambda col, val: col.not_like(val),
+    "ilike": lambda col, val: col.ilike(val),
+    "not ilike": lambda col, val: col.not_ilike(val),
+}
+
 # Number of boundaries required by a BETWEEN condition.
 _BETWEEN_BOUNDS: int = 2
 
@@ -58,6 +66,12 @@ _SIMPLE_CLAUSES: dict[WhereType, Callable[[Any, Any], Any]] = {
     WhereType.NOT_NULL: lambda col, _val: col.is_not(None),
     WhereType.LIKE: lambda col, val: col.like(val),
     WhereType.NOT_LIKE: lambda col, val: col.not_like(val),
+    WhereType.ILIKE: lambda col, val: col.ilike(val),
+    WhereType.NOT_ILIKE: lambda col, val: col.not_ilike(val),
+    WhereType.STARTS_WITH: lambda col, val: col.startswith(val),
+    WhereType.ENDS_WITH: lambda col, val: col.endswith(val),
+    WhereType.CONTAINS: lambda col, val: col.contains(val),
+    WhereType.REGEXP: lambda col, val: col.regexp_match(val),
 }
 
 
@@ -192,6 +206,8 @@ class SQLCompiler:
         """
         table = self._sqlTable(plan.table)
         statement = self._selectProjection(table, plan)
+        if plan.distinct and plan.aggregate is None:
+            statement = statement.distinct()
 
         # Apply filtering conditions.
         condition = self._whereExpression(table, plan.wheres)
@@ -762,10 +778,9 @@ class SQLCompiler:
         if clause.value is None and op in _INEQUALITY_OPERATORS:
             return column.is_not(None)
 
-        if op == "like":
-            return column.like(clause.value)
-        if op == "not like":
-            return column.not_like(clause.value)
+        pattern_handler = _PATTERN_OPERATORS.get(op)
+        if pattern_handler is not None:
+            return pattern_handler(column, clause.value)
 
         comparator = _COMPARATORS.get(op)
         if comparator is None:
