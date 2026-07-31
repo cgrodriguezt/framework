@@ -26,6 +26,7 @@ _GUARD_ALL: str = "*"
 _FORWARDED_BUILDER_METHODS: frozenset[str] = frozenset({
     "avg",
     "count",
+    "distinct",
     "doesntExist",
     "exists",
     "get",
@@ -46,11 +47,18 @@ _FORWARDED_BUILDER_METHODS: frozenset[str] = frozenset({
     "take",
     "where",
     "whereBetween",
+    "whereContains",
+    "whereEndsWith",
+    "whereILike",
     "whereIn",
     "whereLike",
+    "whereNotILike",
     "whereNotIn",
+    "whereNotLike",
     "whereNotNull",
     "whereNull",
+    "whereRegexpMatch",
+    "whereStartsWith",
 })
 
 
