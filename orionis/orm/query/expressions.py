@@ -9,7 +9,10 @@ if TYPE_CHECKING:
 
 # Comparison operators accepted by basic where clauses.
 SUPPORTED_OPERATORS: frozenset[str] = frozenset(
-    {"=", "==", "!=", "<>", "<", "<=", ">", ">=", "like", "not like"},
+    {
+        "=", "==", "!=", "<>", "<", "<=", ">", ">=",
+        "like", "not like", "ilike", "not ilike",
+    },
 )
 
 
@@ -24,6 +27,12 @@ class WhereType(StrEnum):
     BETWEEN = "between"
     LIKE = "like"
     NOT_LIKE = "not_like"
+    ILIKE = "ilike"
+    NOT_ILIKE = "not_ilike"
+    STARTS_WITH = "starts_with"
+    ENDS_WITH = "ends_with"
+    CONTAINS = "contains"
+    REGEXP = "regexp"
 
 
 class SortDirection(StrEnum):
@@ -128,6 +137,8 @@ class SelectPlan:
         Number of rows to skip.
     aggregate : AggregateClause or None
         Aggregate projection replacing the column list when present.
+    distinct : bool
+        Whether duplicate rows are collapsed via ``SELECT DISTINCT``.
     """
 
     table: TableDefinition
@@ -139,6 +150,7 @@ class SelectPlan:
     limitValue: int | None = None  # NOSONAR
     offsetValue: int | None = None  # NOSONAR
     aggregate: AggregateClause | None = None
+    distinct: bool = False
 
     def clone(self) -> SelectPlan:
         """
@@ -162,6 +174,7 @@ class SelectPlan:
             limitValue=self.limitValue,
             offsetValue=self.offsetValue,
             aggregate=self.aggregate,
+            distinct=self.distinct,
         )
 
 
