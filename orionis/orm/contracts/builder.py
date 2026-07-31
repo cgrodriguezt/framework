@@ -193,6 +193,143 @@ class IModelQueryBuilder(ABC):
         """
 
     @abstractmethod
+    def whereNotLike(self, column: str, pattern: str) -> IModelQueryBuilder:
+        """
+        Filter rows whose column value does not match an SQL LIKE pattern.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        pattern : str
+            SQL LIKE pattern.
+
+        Returns
+        -------
+        IModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+
+    @abstractmethod
+    def whereILike(self, column: str, pattern: str) -> IModelQueryBuilder:
+        """
+        Filter rows matching a case-insensitive SQL LIKE pattern.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        pattern : str
+            SQL LIKE pattern.
+
+        Returns
+        -------
+        IModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+
+    @abstractmethod
+    def whereNotILike(self, column: str, pattern: str) -> IModelQueryBuilder:
+        """
+        Filter rows not matching a case-insensitive SQL LIKE pattern.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        pattern : str
+            SQL LIKE pattern.
+
+        Returns
+        -------
+        IModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+
+    @abstractmethod
+    def whereStartsWith(self, column: str, value: str) -> IModelQueryBuilder:
+        """
+        Filter rows whose column value starts with the given text.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        value : str
+            Literal prefix to match.
+
+        Returns
+        -------
+        IModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+
+    @abstractmethod
+    def whereEndsWith(self, column: str, value: str) -> IModelQueryBuilder:
+        """
+        Filter rows whose column value ends with the given text.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        value : str
+            Literal suffix to match.
+
+        Returns
+        -------
+        IModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+
+    @abstractmethod
+    def whereContains(self, column: str, value: str) -> IModelQueryBuilder:
+        """
+        Filter rows whose column value contains the given text.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        value : str
+            Literal substring to match.
+
+        Returns
+        -------
+        IModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+
+    @abstractmethod
+    def whereRegexpMatch(self, column: str, pattern: str) -> IModelQueryBuilder:
+        """
+        Filter rows whose column value matches a regular expression.
+
+        Parameters
+        ----------
+        column : str
+            Column name to filter by.
+        pattern : str
+            Regular expression pattern.
+
+        Returns
+        -------
+        IModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+
+    @abstractmethod
+    def distinct(self) -> IModelQueryBuilder:
+        """
+        Collapse duplicate rows from the query results.
+
+        Returns
+        -------
+        IModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+
+    @abstractmethod
     def orderBy(self, column: str, direction: str = "asc") -> IModelQueryBuilder:
         """
         Add an ordering rule to the query.
