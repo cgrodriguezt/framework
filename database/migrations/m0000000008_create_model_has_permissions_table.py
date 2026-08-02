@@ -4,7 +4,8 @@ from orionis.support.facades import Schema
 class CreateModelHasPermissionsTable(Migration):
 
     async def up(self) -> None:
-        """Create the ``model_has_permissions`` table.
+        """
+        Create the ``model_has_permissions`` table.
 
         Relates permissions to any model through a polymorphic (morph)
         relation.
@@ -24,7 +25,8 @@ class CreateModelHasPermissionsTable(Migration):
             table.comment("Table to relate permissions with any model (morph).")
 
     async def down(self) -> None:
-        """Drop the ``model_has_permissions`` table.
+        """
+        Drop the ``model_has_permissions`` table.
 
         Reverts the ``up`` migration.
 
