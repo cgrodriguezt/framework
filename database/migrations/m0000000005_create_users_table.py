@@ -20,6 +20,7 @@ class CreateUsersTable(Migration):
             table.string("password", 255).comment("Hashed Password")
             table.string("remember_token", 100).nullable().comment("Remember Me Token")
             table.timestamps()
+
             table.comment("Table to store application users.")
 
     async def down(self) -> None:
