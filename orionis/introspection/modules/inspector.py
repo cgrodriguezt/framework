@@ -24,7 +24,7 @@ class ModuleInspector:
     @staticmethod
     def discoverModules(
         base_path: Path,
-        tarjet_path: Path,
+        target_path: Path,
     ) -> set[str]:
         """
         Discover Python modules in a directory tree.
@@ -37,7 +37,7 @@ class ModuleInspector:
         ----------
         base_path : Path
             Root directory of the application.
-        tarjet_path : Path
+        target_path : Path
             Directory to search for Python modules.
 
         Returns
@@ -48,8 +48,8 @@ class ModuleInspector:
         modules: set[str] = set()
         # Compute base posix string once to avoid repeated conversion inside the loop
         base_posix = base_path.as_posix()
-        # Recursively search for all .py files in tarjet_path
-        for file_path in tarjet_path.rglob("*.py"):
+        # Recursively search for all .py files in target_path
+        for file_path in target_path.rglob("*.py"):
             if not file_path.is_file():
                 continue
             # Convert absolute path to dot-separated module notation
