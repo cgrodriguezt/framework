@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 from orionis.database.schema.blueprint import Blueprint
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
     from types import TracebackType
     from orionis.database.schema.definitions import SchemaDefinition
     from orionis.database.schema.schema import Schema
@@ -21,9 +22,9 @@ class TableCreation:
 
     def __init__(
         self,
-        schema: "Schema",
+        schema: Schema,
         name: str,
-        definitions: tuple["SchemaDefinition", ...],
+        definitions: tuple[SchemaDefinition, ...],
     ) -> None:
         """Store the pending table creation request.
 
@@ -46,7 +47,7 @@ class TableCreation:
         self.__definitions = definitions
         self.__blueprint: Blueprint | None = None
 
-    def __await__(self):
+    def __await__(self) -> Generator[object, None, object]:
         """Create the table from the definitions given to ``create``.
 
         Returns
@@ -74,7 +75,7 @@ class TableCreation:
         self,
         exc_type: type[BaseException] | None,
         exc: BaseException | None,
-        traceback: "TracebackType | None",
+        traceback: TracebackType | None,
     ) -> bool:
         """Create the table with the collected columns, unless it raised.
 
