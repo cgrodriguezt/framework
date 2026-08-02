@@ -12,7 +12,7 @@ CORE_APP_PATHS: MappingProxyType = MappingProxyType({
     "jobs": "app/jobs",
     "bootstrap": "app/bootstrap",
     "config": "config",
-    "database": "database/database",
+    "database": "database",
     "resources": "resources",
     "routes": "routes",
     "storage": "storage",
