@@ -93,6 +93,6 @@ class TableCreation:
             ``False`` to always propagate exceptions raised in the block.
         """
         if exc_type is None and self.__blueprint is not None:
-            combined = (*self.__definitions, *self.__blueprint.columns())
+            combined = (*self.__definitions, *self.__blueprint.definitions())
             await self.__schema._createTable(self.__name, combined)  # noqa: SLF001
         return False
