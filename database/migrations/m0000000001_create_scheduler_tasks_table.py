@@ -16,6 +16,7 @@ class CreateSchedulerTasksTable(Migration):
             table.unicode("id", 191).primary().comment("Job ID")
             table.float("next_run_time").nullable().index().comment("Next Run Time")
             table.largeBinary("job_state").comment("Job State")
+
             table.comment("Table to store scheduled jobs (tasks).")
 
     async def down(self) -> None:
