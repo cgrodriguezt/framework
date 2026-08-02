@@ -210,14 +210,22 @@ class IConnection(ABC):
     # ── Schema helpers ──────────────────────────────────────────────────────
 
     @abstractmethod
-    async def createTable(self, table: TableDefinition) -> bool:
+    async def createTable(
+        self,
+        table: TableDefinition,
+        *,
+        if_not_exists: bool = True,
+    ) -> bool:
         """
         Create the physical table described by the given definition.
 
         Parameters
         ----------
         table : TableDefinition
-            Table definition to materialize. Existing tables are kept.
+            Table definition to materialize.
+        if_not_exists : bool, optional
+            Whether to guard the statement with ``IF NOT EXISTS`` so that
+            an already existing table is silently kept.
 
         Returns
         -------
@@ -231,7 +239,13 @@ class IConnection(ABC):
         """
 
     @abstractmethod
-    async def dropTable(self, name: str, schema: str | None = None) -> bool:
+    async def dropTable(
+        self,
+        name: str,
+        schema: str | None = None,
+        *,
+        if_exists: bool = True,
+    ) -> bool:
         """
         Drop the physical table with the given logical name.
 
@@ -241,6 +255,9 @@ class IConnection(ABC):
             Logical table name; the connection prefix is applied.
         schema : str or None, optional
             Database schema owning the table, or ``None`` for the default.
+        if_exists : bool, optional
+            Whether to guard the statement with ``IF EXISTS`` so that a
+            missing table does not raise an error.
 
         Returns
         -------
