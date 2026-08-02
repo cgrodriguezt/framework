@@ -371,7 +371,12 @@ class SQLCompiler:
             statement = statement.where(condition)
         return statement
 
-    def compileCreateTable(self, definition: TableDefinition) -> Executable:
+    def compileCreateTable(
+        self,
+        definition: TableDefinition,
+        *,
+        if_not_exists: bool = True,
+    ) -> Executable:
         """
         Compile a table definition into a CREATE TABLE statement.
 
@@ -379,16 +384,25 @@ class SQLCompiler:
         ----------
         definition : TableDefinition
             Table definition to materialize.
+        if_not_exists : bool, optional
+            Whether to guard the statement with ``IF NOT EXISTS`` so that
+            an already existing table is silently kept.
 
         Returns
         -------
         Executable
-            DDL statement creating the table when it does not exist.
+            DDL statement creating the table.
         """
         table = self._sqlTable(definition)
-        return CreateTable(table, if_not_exists=True)
+        return CreateTable(table, if_not_exists=if_not_exists)
 
-    def compileDropTable(self, name: str, schema: str | None = None) -> Executable:
+    def compileDropTable(
+        self,
+        name: str,
+        schema: str | None = None,
+        *,
+        if_exists: bool = True,
+    ) -> Executable:
         """
         Compile a DROP TABLE statement for the given logical name.
 
@@ -398,18 +412,21 @@ class SQLCompiler:
             Logical table name; the compiler prefix is applied.
         schema : str or None, optional
             Database schema owning the table, or ``None`` for the default.
+        if_exists : bool, optional
+            Whether to guard the statement with ``IF EXISTS`` so that a
+            missing table does not raise an error.
 
         Returns
         -------
         Executable
-            DDL statement dropping the table when it exists.
+            DDL statement dropping the table.
         """
         physical = self._physicalName(name)
         table = self._tables.get(self._cacheKey(physical, schema))
         if table is None:
             # Build a lightweight standalone table object for the DDL.
             table = Table(physical, MetaData(), schema=schema)
-        return DropTable(table, if_exists=True)
+        return DropTable(table, if_exists=if_exists)
 
     # ── Table and column resolution ─────────────────────────────────────────
 
