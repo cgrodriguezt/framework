@@ -1,6 +1,7 @@
 from orionis.database.compiler import SQLCompiler
 from orionis.database.connection import Connection
 from orionis.database.connection_manager import ConnectionManager
+from orionis.database.contracts.migration import Migration
 from orionis.database.exceptions import (
     ConnectionNotFoundException,
     DatabaseException,
@@ -16,6 +17,7 @@ __all__ = [
     "ConnectionManager",
     "ConnectionNotFoundException",
     "DatabaseException",
+    "Migration",
     "MissingDatabaseDependencyException",
     "QueryException",
     "SQLCompiler",
