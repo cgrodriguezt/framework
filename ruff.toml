@@ -36,7 +36,11 @@ exclude = [
     "PLR2004",
 ]
 "database/**" = [
-    "E505"
+    "E501",
+    "S608",
+]
+"orionis/database/**" = [
+    "S608",
 ]
 "tests/**" = [
     "ANN001",
