@@ -2,7 +2,7 @@ from __future__ import annotations
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.database.connection_manager import ConnectionManager
 from orionis.database.contracts.manager import IConnectionManager
-from orionis.database.provider import DatabaseProvider
+from orionis.database.database_provider import DatabaseProvider
 from orionis.foundation.application import Application
 from orionis.orm.resolver import ConnectionResolver
 from orionis.support.facades.db import DB
