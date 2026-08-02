@@ -65,7 +65,7 @@ class Schema(ISchema):
         self.__connection_name = name
         return self
 
-    def create(self, name: str, *definitions: "SchemaDefinition") -> TableCreation:
+    def create(self, name: str, *definitions: SchemaDefinition) -> TableCreation:
         """Create a new table with the given definitions.
 
         The result can be used two ways:
@@ -118,7 +118,7 @@ class Schema(ISchema):
     async def _createTable(
         self,
         name: str,
-        definitions: tuple["SchemaDefinition", ...],
+        definitions: tuple[SchemaDefinition, ...],
     ) -> bool:
         """Compile and execute the ``CREATE TABLE`` for ``name``.
 
@@ -151,7 +151,7 @@ class Schema(ISchema):
     def __buildTable(
         self,
         name: str,
-        definitions: tuple["SchemaDefinition", ...],
+        definitions: tuple[SchemaDefinition, ...],
     ) -> TableDefinition:
         """Build the table definition from a name and its definitions.
 
