@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from orionis.database.schema.foreign import ForeignKey
     from orionis.database.schema.index import Index
     from orionis.database.schema.primary import PrimaryKey
+    from orionis.database.schema.table_creation import TableCreation
     from orionis.database.schema.unique import Unique
     from orionis.orm.schema.column import ColumnDefinition
 
@@ -34,7 +35,7 @@ class ISchema(ABC):
         ...
 
     @abstractmethod
-    async def create(
+    def create(
         self,
         name: str,
         *definitions: type[
@@ -45,8 +46,17 @@ class ISchema(ABC):
             | PrimaryKey
             | Unique
         ],
-    ) -> bool:
+    ) -> TableCreation:
         """Create a new table with the given definitions.
+
+        The result can be used two ways:
+
+        - ``await schema.create(name, *definitions)`` creates the table
+          immediately from the definitions passed here.
+        - ``async with schema.create(name) as table:`` yields a
+          ``Blueprint`` so columns can be declared fluently
+          (``table.string("username")``, ``table.timestamps()``, ...);
+          the table is created once the block exits without raising.
 
         Parameters
         ----------
@@ -55,12 +65,14 @@ class ISchema(ABC):
             non-default schema, use the ``schema.table`` format.
         *definitions : type[ColumnDefinition] | type[Comment] | ...
             Variable length argument list of schema definitions
-            (columns, constraints, indexes, etc.).
+            (columns, constraints, indexes, etc.). Optional when the
+            async context-manager form is used instead.
 
         Returns
         -------
-        bool
-            ``True`` when the table is created without errors.
+        TableCreation
+            Awaitable and async context manager that performs the
+            creation.
         """
         ...
 
