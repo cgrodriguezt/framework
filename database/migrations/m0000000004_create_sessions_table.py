@@ -1,5 +1,4 @@
 from orionis.database import Migration
-from orionis.database.schema import Column, Comment
 from orionis.support.facades import Schema
 
 class CreateSessionsTable(Migration):
@@ -13,12 +12,11 @@ class CreateSessionsTable(Migration):
         None
             The table is created as a side effect.
         """
-        await Schema.create("sessions",
-            Column.string("id", 255).primary().comment("Session ID"),
-            Column.text("payload").comment("Session Payload"),
-            Column.bigInteger("expires_at").comment("Expiration"),
-            Comment("Table to store session records."),
-        )
+        async with Schema.create("sessions") as table:
+            table.string("id", 255).primary().comment("Session ID")
+            table.text("payload").comment("Session Payload")
+            table.bigInteger("expires_at").comment("Expiration")
+            table.comment("Table to store session records.")
 
     async def down(self) -> None:
         """
