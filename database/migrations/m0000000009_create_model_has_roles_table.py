@@ -4,7 +4,8 @@ from orionis.support.facades import Schema
 class CreateModelHasRolesTable(Migration):
 
     async def up(self) -> None:
-        """Create the ``model_has_roles`` table.
+        """
+        Create the ``model_has_roles`` table.
 
         Relates roles to any model through a polymorphic (morph) relation.
 
