@@ -1629,7 +1629,7 @@ class Application(Container, IApplication):
         self.__discoverProviders(
             ModuleInspector.discoverModules(
                 base_path=self.__basePath,
-                tarjet_path=config_paths["providers"],
+                target_path=config_paths["providers"],
             ),
         )
 
@@ -2533,7 +2533,7 @@ class Application(Container, IApplication):
         config_dataclasses: set = ModuleInspector.discoverFrozenDataclasses(
             ModuleInspector.discoverModules(
                 base_path=self.__basePath,
-                tarjet_path=config_paths["config"],
+                target_path=config_paths["config"],
             ),
         )
 
