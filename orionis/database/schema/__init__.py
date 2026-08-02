@@ -14,6 +14,6 @@ __all__ = [
     "ForeignKey",
     "Index",
     "PrimaryKey",
+    "Timestamps",
     "Unique",
-    "Timestamps"
 ]
