@@ -1,5 +1,4 @@
 from orionis.database import Migration
-from orionis.database.schema import Column, Comment
 from orionis.support.facades import Schema
 
 class CreateCacheLocksTable(Migration):
@@ -13,12 +12,11 @@ class CreateCacheLocksTable(Migration):
         None
             The table is created as a side effect.
         """
-        await Schema.create("cache_locks",
-            Column.string("cache_key", 255).primary().comment("Lock Key"),
-            Column.string("owner", 255).nullable().comment("Lock Owner"),
-            Column.bigInteger("expiration").nullable().comment("Expiration"),
-            Comment("Table to store atomic cache locks."),
-        )
+        async with Schema.create("cache_locks") as table:
+            table.string("cache_key", 255).primary().comment("Lock Key")
+            table.string("owner", 255).nullable().comment("Lock Owner")
+            table.bigInteger("expiration").nullable().comment("Expiration")
+            table.comment("Table to store atomic cache locks.")
 
     async def down(self) -> None:
         """
