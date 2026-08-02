@@ -1,5 +1,4 @@
 from orionis.database import Migration
-from orionis.database.schema import Column, Comment, Index, PrimaryKey
 from orionis.support.facades import Schema
 
 class CreateModelHasRolesTable(Migration):
@@ -14,14 +13,13 @@ class CreateModelHasRolesTable(Migration):
         None
             The table is created as a side effect.
         """
-        await Schema.create("model_has_roles",
-            Column.bigInteger("role_id").foreign("roles.id").comment("Role ID"),
-            Column.string("model_type", 255).comment("Model Class Name"),
-            Column.bigInteger("model_id").comment("Model ID"),
-            PrimaryKey("role_id", "model_id", "model_type"),
-            Index("model_id", "model_type"),
-            Comment("Table to relate roles with any model (morph)."),
-        )
+        async with Schema.create("model_has_roles") as table:
+            table.bigInteger("role_id").foreign("roles.id").comment("Role ID")
+            table.string("model_type", 255).comment("Model Class Name")
+            table.bigInteger("model_id").comment("Model ID")
+            table.primaryKey("role_id", "model_id", "model_type")
+            table.index("model_id", "model_type")
+            table.comment("Table to relate roles with any model (morph).")
 
     async def down(self) -> None:
         """
