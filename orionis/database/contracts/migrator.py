@@ -19,9 +19,9 @@ class IMigrator(ABC):
     async def migrate(
         self,
         *,
-        on_start: "Callable[[str], None] | None" = None,
-        on_success: "Callable[[str, float], None] | None" = None,
-        on_error: "Callable[[str, float], None] | None" = None,
+        on_start: Callable[[str], None] | None = None,
+        on_success: Callable[[str, float], None] | None = None,
+        on_error: Callable[[str, float], None] | None = None,
     ) -> list[str]:
         """
         Apply every migration that has not been run yet.
@@ -56,9 +56,9 @@ class IMigrator(ABC):
         self,
         steps: int = 1,
         *,
-        on_start: "Callable[[str], None] | None" = None,
-        on_success: "Callable[[str, float], None] | None" = None,
-        on_error: "Callable[[str, float], None] | None" = None,
+        on_start: Callable[[str], None] | None = None,
+        on_success: Callable[[str, float], None] | None = None,
+        on_error: Callable[[str, float], None] | None = None,
     ) -> list[str]:
         """
         Revert the most recently applied migration batches.
