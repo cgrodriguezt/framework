@@ -8,13 +8,6 @@ from orionis.database.schema.unique import Unique
 from orionis.orm.schema.column import ColumnDefinition
 
 class Schema(ISchema):
-    """Stub matching the class-level calling convention of the facade.
-
-    ``ISchema`` declares instance methods, but the real facade is always
-    called directly on the class (``Schema.create(...)``, never on an
-    instance), so each method is redeclared here as a ``staticmethod``
-    without ``self`` for accurate static typing.
-    """
 
     @staticmethod
     def connection(name: str | None = None) -> type[Schema]: ...
