@@ -35,6 +35,9 @@ exclude = [
     "ARG002",
     "PLR2004",
 ]
+"database/**" = [
+    "E505"
+]
 "tests/**" = [
     "ANN001",
     "ANN201",
