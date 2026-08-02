@@ -5,11 +5,13 @@ from orionis.database.contracts.migration import Migration
 from orionis.database.exceptions import (
     ConnectionNotFoundException,
     DatabaseException,
+    MigrationNotFoundException,
     MissingDatabaseDependencyException,
     QueryException,
     TransactionException,
     UnsupportedDriverException,
 )
+from orionis.database.migrations.migrator import Migrator
 from orionis.database.transaction import Transaction
 
 __all__ = [
@@ -18,6 +20,8 @@ __all__ = [
     "ConnectionNotFoundException",
     "DatabaseException",
     "Migration",
+    "MigrationNotFoundException",
+    "Migrator",
     "MissingDatabaseDependencyException",
     "QueryException",
     "SQLCompiler",
