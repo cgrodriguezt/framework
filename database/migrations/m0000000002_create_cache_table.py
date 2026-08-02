@@ -1,5 +1,4 @@
 from orionis.database import Migration
-from orionis.database.schema import Column, Comment
 from orionis.support.facades import Schema
 
 class CreateCacheTable(Migration):
@@ -13,12 +12,11 @@ class CreateCacheTable(Migration):
         None
             The table is created as a side effect.
         """
-        await Schema.create("cache",
-            Column.string("cache_key", 255).primary().comment("Cache Key"),
-            Column.text("cache_value").nullable().comment("Cache Value"),
-            Column.bigInteger("expiration").nullable().comment("Expiration"),
-            Comment("Table to store cache entries."),
-        )
+        async with Schema.create("cache") as table:
+            table.string("cache_key", 255).primary().comment("Cache Key")
+            table.text("cache_value").nullable().comment("Cache Value")
+            table.bigInteger("expiration").nullable().comment("Expiration")
+            table.comment("Table to store cache entries.")
 
     async def down(self) -> None:
         """
