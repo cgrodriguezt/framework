@@ -38,14 +38,14 @@ class ISchema(ABC):
     def create(
         self,
         name: str,
-        *definitions: type[
+        *definitions: (
             ColumnDefinition
             | Comment
             | ForeignKey
             | Index
             | PrimaryKey
             | Unique
-        ],
+        ),
     ) -> TableCreation:
         """Create a new table with the given definitions.
 
@@ -63,7 +63,8 @@ class ISchema(ABC):
         name : str
             The name of the table to create. If the table belongs to a
             non-default schema, use the ``schema.table`` format.
-        *definitions : type[ColumnDefinition] | type[Comment] | ...
+        *definitions : ColumnDefinition | Comment | ForeignKey | Index |
+            PrimaryKey | Unique
             Variable length argument list of schema definitions
             (columns, constraints, indexes, etc.). Optional when the
             async context-manager form is used instead.
