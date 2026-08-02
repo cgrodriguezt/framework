@@ -16,6 +16,7 @@ class CreateSessionsTable(Migration):
             table.string("id", 255).primary().comment("Session ID")
             table.text("payload").comment("Session Payload")
             table.bigInteger("expires_at").comment("Expiration")
+
             table.comment("Table to store session records.")
 
     async def down(self) -> None:
