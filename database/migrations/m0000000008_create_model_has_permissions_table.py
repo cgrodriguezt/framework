@@ -18,6 +18,7 @@ class CreateModelHasPermissionsTable(Migration):
             table.bigInteger("permission_id").foreign("permissions.id").comment("Permission ID")
             table.string("model_type", 255).comment("Model Class Name")
             table.bigInteger("model_id").comment("Model ID")
+
             table.primaryKey("permission_id", "model_id", "model_type")
             table.index("model_id", "model_type")
             table.comment("Table to relate permissions with any model (morph).")
