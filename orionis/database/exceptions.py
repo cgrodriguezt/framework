@@ -17,3 +17,6 @@ class QueryException(DatabaseException):
 
 class TransactionException(DatabaseException):
     """Raised when transaction control methods are used incorrectly."""
+
+class MigrationNotFoundException(DatabaseException):
+    """Raised when a recorded migration has no matching migration file."""
