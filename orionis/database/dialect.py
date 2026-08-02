@@ -125,7 +125,9 @@ def missingDependencyError(
     MissingDatabaseDependencyException
         Exception with an actionable installation hint.
     """
-    packages: dict[str, tuple[str, str]] = _SYNC_DRIVER_PACKAGES if sync else _DRIVER_PACKAGES
+    packages: dict[str, tuple[str, str]] = (
+        _SYNC_DRIVER_PACKAGES if sync else _DRIVER_PACKAGES
+    )
     package, extra = packages.get(driver, (driver, "orionis"))
     error_msg = (
         f"The '{driver}' connection requires the '{package}' package "
