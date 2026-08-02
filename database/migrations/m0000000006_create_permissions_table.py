@@ -16,8 +16,8 @@ class CreatePermissionsTable(Migration):
             table.id().comment("Permission ID")
             table.string("name", 255).comment("Permission Name")
             table.string("guard_name", 255).comment("Guard Name")
-            table.dateTime("created_at").nullable().comment("Created At")
-            table.dateTime("updated_at").nullable().comment("Updated At")
+            table.timestamps()
+
             table.unique("name", "guard_name")
             table.comment("Table to store permissions.")
 
