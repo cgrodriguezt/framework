@@ -1,4 +1,4 @@
-from orionis.orm import Boolean, Integer, Model, String, StrictTimestamp
+from orionis.orm import Model
 
 class User(Model):
 
@@ -13,14 +13,3 @@ class User(Model):
 
     # Attributes allowed for mass assignment.
     fillable: list[str] = ["name", "email", "password"]
-
-    # Table columns definition.
-    id = Integer().primary().autoIncrement()
-    name = String()
-    email = String(150).unique().index()
-    email_verified_at = StrictTimestamp().nullable()
-    password = String()
-    remember_token = String(100).nullable()
-    active = Boolean().default(True)
-    created_at = StrictTimestamp().nullable()
-    updated_at = StrictTimestamp().nullable()
