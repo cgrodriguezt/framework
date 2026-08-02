@@ -47,8 +47,6 @@ from orionis.orm.schema.types import (
 )
 
 class Blueprint:
-    """Stub exposing every ``Column`` factory as a typed ``table.xxx(...)`` call."""
-
     def id(self, name: str = "id") -> BigInteger: ...
     def bigInteger(self, name: str) -> BigInteger: ...
     def boolean(
@@ -264,5 +262,5 @@ class Blueprint:
     def definitions(
         self,
     ) -> tuple[
-        ColumnDefinition | Comment | ForeignKey | Index | PrimaryKey | Unique, ...
+        ColumnDefinition | Comment | ForeignKey | Index | PrimaryKey | Unique, ...,
     ]: ...
