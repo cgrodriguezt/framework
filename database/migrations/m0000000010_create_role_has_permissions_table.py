@@ -4,7 +4,8 @@ from orionis.support.facades import Schema
 class CreateRoleHasPermissionsTable(Migration):
 
     async def up(self) -> None:
-        """Create the ``role_has_permissions`` table.
+        """
+        Create the ``role_has_permissions`` table.
 
         Relates roles with permissions.
 
@@ -21,7 +22,8 @@ class CreateRoleHasPermissionsTable(Migration):
             table.comment("Table to relate roles with permissions.")
 
     async def down(self) -> None:
-        """Drop the ``role_has_permissions`` table.
+        """
+        Drop the ``role_has_permissions`` table.
 
         Reverts the ``up`` migration.
 
