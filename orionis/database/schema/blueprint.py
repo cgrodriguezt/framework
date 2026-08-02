@@ -221,7 +221,7 @@ class Blueprint:
     def definitions(
         self,
     ) -> tuple[
-        ColumnDefinition | Comment | ForeignKey | Index | PrimaryKey | Unique, ...
+        ColumnDefinition | Comment | ForeignKey | Index | PrimaryKey | Unique, ...,
     ]:
         """Return every column and table-level constraint declared so far.
 
