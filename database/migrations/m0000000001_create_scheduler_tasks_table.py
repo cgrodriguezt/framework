@@ -1,5 +1,4 @@
 from orionis.database import Migration
-from orionis.database.schema import Column, Comment
 from orionis.support.facades import Schema
 
 class CreateSchedulerTasksTable(Migration):
@@ -13,12 +12,11 @@ class CreateSchedulerTasksTable(Migration):
         None
             The table is created as a side effect.
         """
-        await Schema.create("scheduler_tasks",
-            Column.unicode("id", 191).primary().comment("Job ID"),
-            Column.float("next_run_time").nullable().index().comment("Next Run Time"),
-            Column.largeBinary("job_state").comment("Job State"),
-            Comment("Table to store scheduled jobs (APScheduler)."),
-        )
+        async with Schema.create("scheduler_tasks") as table:
+            table.unicode("id", 191).primary().comment("Job ID")
+            table.float("next_run_time").nullable().index().comment("Next Run Time")
+            table.largeBinary("job_state").comment("Job State")
+            table.comment("Table to store scheduled jobs (tasks).")
 
     async def down(self) -> None:
         """
