@@ -19,7 +19,7 @@ from orionis.database.exceptions import QueryException, TransactionException
 from orionis.database.transaction import Transaction
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Mapping
+    from collections.abc import AsyncGenerator, Mapping
 
     from sqlalchemy.engine import CursorResult
     from sqlalchemy.ext.asyncio import AsyncConnection, AsyncTransaction
@@ -332,14 +332,22 @@ class Connection(IConnection):
 
     # ── Schema helpers ──────────────────────────────────────────────────────
 
-    async def createTable(self, table: TableDefinition) -> bool:
+    async def createTable(
+        self,
+        table: TableDefinition,
+        *,
+        if_not_exists: bool = True,
+    ) -> bool:
         """
         Create the physical table described by the given definition.
 
         Parameters
         ----------
         table : TableDefinition
-            Table definition to materialize. Existing tables are kept.
+            Table definition to materialize.
+        if_not_exists : bool, optional
+            Whether to guard the statement with ``IF NOT EXISTS`` so that
+            an already existing table is silently kept.
 
         Returns
         -------
@@ -351,12 +359,20 @@ class Connection(IConnection):
         QueryException
             If the DDL statement fails to execute.
         """
-        statement = self._compiler.compileCreateTable(table)
+        statement = self._compiler.compileCreateTable(
+            table, if_not_exists=if_not_exists,
+        )
         async with self._acquire() as connection:
             await self._run(connection, statement)
             return True
 
-    async def dropTable(self, name: str, schema: str | None = None) -> bool:
+    async def dropTable(
+        self,
+        name: str,
+        schema: str | None = None,
+        *,
+        if_exists: bool = True,
+    ) -> bool:
         """
         Drop the physical table with the given logical name.
 
@@ -366,6 +382,9 @@ class Connection(IConnection):
             Logical table name; the connection prefix is applied.
         schema : str or None, optional
             Database schema owning the table, or ``None`` for the default.
+        if_exists : bool, optional
+            Whether to guard the statement with ``IF EXISTS`` so that a
+            missing table does not raise an error.
 
         Returns
         -------
@@ -377,7 +396,9 @@ class Connection(IConnection):
         QueryException
             If the DDL statement fails to execute.
         """
-        statement = self._compiler.compileDropTable(name, schema)
+        statement = self._compiler.compileDropTable(
+            name, schema, if_exists=if_exists,
+        )
         async with self._acquire() as connection:
             await self._run(connection, statement)
             return True
@@ -536,7 +557,7 @@ class Connection(IConnection):
         return self._engine
 
     @asynccontextmanager
-    async def _acquire(self) -> AsyncIterator[AsyncConnection]:
+    async def _acquire(self) -> AsyncGenerator[AsyncConnection]:
         """
         Yield the connection to execute statements on.
 
