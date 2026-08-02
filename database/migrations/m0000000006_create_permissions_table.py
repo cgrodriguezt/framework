@@ -1,5 +1,4 @@
 from orionis.database import Migration
-from orionis.database.schema import Column, Comment, Unique
 from orionis.support.facades import Schema
 
 class CreatePermissionsTable(Migration):
@@ -13,15 +12,14 @@ class CreatePermissionsTable(Migration):
         None
             The table is created as a side effect.
         """
-        await Schema.create("permissions",
-            Column.id().comment("Permission ID"),
-            Column.string("name", 255).comment("Permission Name"),
-            Column.string("guard_name", 255).comment("Guard Name"),
-            Column.dateTime("created_at").nullable().comment("Created At"),
-            Column.dateTime("updated_at").nullable().comment("Updated At"),
-            Unique("name", "guard_name"),
-            Comment("Table to store permissions."),
-        )
+        async with Schema.create("permissions") as table:
+            table.id().comment("Permission ID")
+            table.string("name", 255).comment("Permission Name")
+            table.string("guard_name", 255).comment("Guard Name")
+            table.dateTime("created_at").nullable().comment("Created At")
+            table.dateTime("updated_at").nullable().comment("Updated At")
+            table.unique("name", "guard_name")
+            table.comment("Table to store permissions.")
 
     async def down(self) -> None:
         """
