@@ -11,7 +11,7 @@ from orionis.introspection.modules.reflection import ReflectionModule
 from orionis.orm.schema.table import TableDefinition
 from orionis.orm.schema.types import BigInteger, Integer, String
 
-# ruff: noqa: TC001, TC003
+# ruff: noqa: TC001
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -92,9 +92,9 @@ class Migrator(IMigrator):
     async def migrate(
         self,
         *,
-        on_start: "Callable[[str], None] | None" = None,
-        on_success: "Callable[[str, float], None] | None" = None,
-        on_error: "Callable[[str, float], None] | None" = None,
+        on_start: Callable[[str], None] | None = None,
+        on_success: Callable[[str, float], None] | None = None,
+        on_error: Callable[[str, float], None] | None = None,
     ) -> list[str]:
         """
         Apply every migration that has not been run yet.
@@ -154,9 +154,9 @@ class Migrator(IMigrator):
         self,
         steps: int = 1,
         *,
-        on_start: "Callable[[str], None] | None" = None,
-        on_success: "Callable[[str, float], None] | None" = None,
-        on_error: "Callable[[str, float], None] | None" = None,
+        on_start: Callable[[str], None] | None = None,
+        on_success: Callable[[str, float], None] | None = None,
+        on_error: Callable[[str, float], None] | None = None,
     ) -> list[str]:
         """
         Revert the most recently applied migration batches.
@@ -236,7 +236,7 @@ class Migrator(IMigrator):
 
         return rolled_back
 
-    def __migrationsPath(self) -> "Path":
+    def __migrationsPath(self) -> Path:
         """
         Return the directory holding migration files.
 
