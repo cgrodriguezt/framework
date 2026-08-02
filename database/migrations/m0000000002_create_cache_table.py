@@ -16,6 +16,7 @@ class CreateCacheTable(Migration):
             table.string("cache_key", 255).primary().comment("Cache Key")
             table.text("cache_value").nullable().comment("Cache Value")
             table.bigInteger("expiration").nullable().comment("Expiration")
+
             table.comment("Table to store cache entries.")
 
     async def down(self) -> None:
