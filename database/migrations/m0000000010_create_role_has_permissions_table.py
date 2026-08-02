@@ -17,6 +17,7 @@ class CreateRoleHasPermissionsTable(Migration):
             table.bigInteger("permission_id").foreign("permissions.id").comment("Permission ID")
             table.bigInteger("role_id").foreign("roles.id").comment("Role ID")
             table.primaryKey("permission_id", "role_id")
+
             table.comment("Table to relate roles with permissions.")
 
     async def down(self) -> None:
