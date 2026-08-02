@@ -2,42 +2,20 @@ from typing import TYPE_CHECKING, Self
 from orionis.database.contracts.connection import IConnection
 from orionis.database.contracts.manager import IConnectionManager
 from orionis.database.contracts.schema import ISchema
+from orionis.database.schema.column import Column
 from orionis.database.schema.comment import Comment
+from orionis.database.schema.definition_bucket import DefinitionBucket
 from orionis.database.schema.foreign import ForeignKey
 from orionis.database.schema.index import Index
 from orionis.database.schema.primary import PrimaryKey
+from orionis.database.schema.table_creation import TableCreation
+from orionis.database.schema.timestamp import Timestamps
 from orionis.database.schema.unique import Unique
 from orionis.orm.schema.table import TableDefinition
 
 if TYPE_CHECKING:
+    from orionis.database.schema.definitions import SchemaDefinition
     from orionis.orm.schema.column import ColumnDefinition
-
-class _DefinitionBucket:
-    """Mutable accumulator used while classifying schema definitions."""
-
-    __slots__ = (
-        "columns",
-        "foreign_keys",
-        "indexes",
-        "kwargs",
-        "primary_columns",
-        "unique_constraints",
-    )
-
-    def __init__(self) -> None:
-        """Initialize empty containers for each definition kind.
-
-        Returns
-        -------
-        None
-            This method does not return a value.
-        """
-        self.columns: dict[str, ColumnDefinition] = {}
-        self.primary_columns: list[str] = []
-        self.unique_constraints: list[object] = []
-        self.foreign_keys: list[object] = []
-        self.indexes: list[object] = []
-        self.kwargs: dict[str, object] = {}
 
 class Schema(ISchema):
 
@@ -61,22 +39,6 @@ class Schema(ISchema):
         # Initialize connection manager and state attributes
         self.__conn_manager: IConnectionManager = conn_manager
         self.__connection_name: str | None = None
-        self.__table_name: str | None = None
-        # Store table definitions for schema operations
-        self.__definitions: (
-            tuple[
-                type[
-                    ColumnDefinition
-                    | Comment
-                    | ForeignKey
-                    | Index
-                    | PrimaryKey
-                    | Unique
-                ],
-                ...,
-            ]
-            | None
-        ) = None
 
     def connection(self, name: str | None = None) -> Self:
         """Set the connection name for schema operations.
@@ -103,39 +65,37 @@ class Schema(ISchema):
         self.__connection_name = name
         return self
 
-    async def create(
-        self,
-        name: str,
-        *definitions: type[
-            ColumnDefinition
-            | Comment
-            | ForeignKey
-            | Index
-            | PrimaryKey
-            | Unique
-        ],
-    ) -> bool:
+    def create(self, name: str, *definitions: "SchemaDefinition") -> TableCreation:
         """Create a new table with the given definitions.
+
+        The result can be used two ways:
+
+        - ``await schema.create(name, *definitions)`` creates the table
+          immediately from the definitions passed here.
+        - ``async with schema.create(name) as table:`` yields a
+          :class:`~orionis.database.schema.blueprint.Blueprint` so columns
+          can be declared fluently (``table.string("username")``,
+          ``table.timestamps()``, ...); the table is created once the
+          block exits without raising.
 
         Parameters
         ----------
         name : str
             The name of the table to create. If the table belongs to a
             non-default schema, use the ``schema.table`` format.
-        *definitions : type[ColumnDefinition] | type[Comment] | ...
+        *definitions : ColumnDefinition | Comment | ForeignKey | Index |
+            PrimaryKey | Unique
             Variable length argument list of schema definitions
-            (columns, constraints, indexes, etc.).
+            (columns, constraints, indexes, etc.). Optional when the
+            async context-manager form is used instead.
 
         Returns
         -------
-        bool
-            ``True`` when the table is created without errors.
+        TableCreation
+            Awaitable and async context manager that performs the
+            creation.
         """
-        # Store table name and schema definitions for table creation
-        self.__table_name = name
-        self.__definitions = definitions
-        connection: IConnection = self.__resolveConnection()
-        return await connection.createTable(self.__buildTable())
+        return TableCreation(self, name, definitions)
 
     async def drop(self, name: str) -> bool:
         """Drop an existing table.
@@ -151,11 +111,31 @@ class Schema(ISchema):
         bool
             ``True`` when the table is dropped without errors.
         """
-        # Store table name for drop operation
-        self.__table_name = name
         connection: IConnection = self.__resolveConnection()
-        schema, table = self.__parseTableName(self.__table_name)
+        schema, table = self.__parseTableName(name)
         return await connection.dropTable(name=table, schema=schema)
+
+    async def _createTable(
+        self,
+        name: str,
+        definitions: tuple["SchemaDefinition", ...],
+    ) -> bool:
+        """Compile and execute the ``CREATE TABLE`` for ``name``.
+
+        Parameters
+        ----------
+        name : str
+            The name of the table to create.
+        definitions : tuple
+            Schema definitions collected for the table.
+
+        Returns
+        -------
+        bool
+            ``True`` when the table is created without errors.
+        """
+        connection: IConnection = self.__resolveConnection()
+        return await connection.createTable(self.__buildTable(name, definitions))
 
     def __resolveConnection(self) -> IConnection:
         """Resolve the connection bound to the configured connection name.
@@ -168,28 +148,27 @@ class Schema(ISchema):
         # Reuse the connection manager already bound to this instance
         return self.__conn_manager.connection(self.__connection_name)
 
-    def __buildTable(self) -> TableDefinition:
-        """Build the table definition from the stored name and definitions.
+    def __buildTable(
+        self,
+        name: str,
+        definitions: tuple["SchemaDefinition", ...],
+    ) -> TableDefinition:
+        """Build the table definition from a name and its definitions.
+
+        Parameters
+        ----------
+        name : str
+            The name of the table to build, possibly ``schema.table``.
+        definitions : tuple
+            Schema definitions collected for the table.
 
         Returns
         -------
         TableDefinition
             The complete table definition ready for compilation.
-
-        Raises
-        ------
-        ValueError
-            If the table name or definitions have not been set.
         """
-        if self.__table_name is None or self.__definitions is None:
-            error_msg = (
-                "Table name and definitions must be set before "
-                "building the table."
-            )
-            raise ValueError(error_msg)
-
-        schema, table = self.__parseTableName(self.__table_name)
-        kwargs = self.__collectDefinitions(self.__definitions)
+        schema, table = self.__parseTableName(name)
+        kwargs = self.__collectDefinitions(definitions)
         return TableDefinition(name=table, schema=schema, **kwargs)
 
     def __collectDefinitions(
@@ -219,7 +198,7 @@ class Schema(ISchema):
             Keyword arguments accepted by ``TableDefinition``.
         """
         # Accumulate in O(n); tuples for TableDefinition are built once.
-        bucket = _DefinitionBucket()
+        bucket = DefinitionBucket()
         for definition in definitions:
             self.__classifyDefinition(definition, bucket)
 
@@ -250,7 +229,7 @@ class Schema(ISchema):
             | PrimaryKey
             | Unique
         ),
-        bucket: _DefinitionBucket,
+        bucket: DefinitionBucket,
     ) -> None:
         """Route a single schema definition into the shared bucket.
 
@@ -259,7 +238,7 @@ class Schema(ISchema):
         definition : ColumnDefinition | Comment | ForeignKey | Index |
             PrimaryKey | Unique
             The schema definition to classify.
-        bucket : _DefinitionBucket
+        bucket : DefinitionBucket
             Accumulator updated in place with the classified data.
 
         Returns
@@ -267,6 +246,18 @@ class Schema(ISchema):
         None
             The ``bucket`` accumulator is mutated in place.
         """
+        # Columns make up the bulk of a table's definitions, so they are
+        # routed with a single membership check against the marker types.
+        if not isinstance(
+            definition,
+            (Comment, Unique, ForeignKey, Index, PrimaryKey, Timestamps),
+        ):
+            bucket.columns[definition.name] = definition
+            # Column-level .primary() also defines the primary key.
+            if definition.is_primary:
+                bucket.primary_columns.append(definition.name)
+            return
+
         if isinstance(definition, Comment):
             bucket.kwargs["comment"] = definition.text
         elif isinstance(definition, Unique):
@@ -278,10 +269,31 @@ class Schema(ISchema):
         elif isinstance(definition, PrimaryKey):
             self.__setPrimaryKey(list(definition.columns), bucket.kwargs)
         else:
-            bucket.columns[definition.name] = definition
-            # Column-level .primary() also defines the primary key.
-            if definition.is_primary:
-                bucket.primary_columns.append(definition.name)
+            self.__addTimestampColumns(definition, bucket)
+
+    def __addTimestampColumns(
+        self,
+        definition: Timestamps,
+        bucket: DefinitionBucket,
+    ) -> None:
+        """Expand a ``Timestamps`` marker into its two nullable columns.
+
+        Parameters
+        ----------
+        definition : Timestamps
+            The timestamps marker carrying the ``timezone`` flag.
+        bucket : DefinitionBucket
+            Accumulator updated in place with the new columns.
+
+        Returns
+        -------
+        None
+            The ``bucket`` accumulator is mutated in place.
+        """
+        for column_name in ("created_at", "updated_at"):
+            column = Column.dateTime(column_name, timezone=definition.timezone)
+            column.nullable()
+            bucket.columns[column_name] = column
 
     def __setPrimaryKey(
         self,
