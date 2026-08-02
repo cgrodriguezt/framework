@@ -17,6 +17,7 @@ class CreateModelHasRolesTable(Migration):
             table.bigInteger("role_id").foreign("roles.id").comment("Role ID")
             table.string("model_type", 255).comment("Model Class Name")
             table.bigInteger("model_id").comment("Model ID")
+
             table.primaryKey("role_id", "model_id", "model_type")
             table.index("model_id", "model_type")
             table.comment("Table to relate roles with any model (morph).")
