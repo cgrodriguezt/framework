@@ -1,6 +1,7 @@
 from __future__ import annotations
+import asyncio
 from typing import TYPE_CHECKING, Any
-from orionis.orm.attributes import serializeForStorage
+from orionis.orm.attributes import serialize_for_storage
 from orionis.orm.collections.paginator import Paginator
 from orionis.orm.contracts.builder import IModelQueryBuilder
 from orionis.orm.exceptions import InvalidQueryException, ModelNotFoundException
@@ -45,7 +46,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
     model instances wrapped in a :class:`Collection`.
     """
 
-    __slots__ = ("_connectionName", "_meta", "_model", "_plan")
+    __slots__ = ("_connection_name", "_meta", "_model", "_plan")
 
     def __init__(self, model: type[TModel]) -> None:
         """
@@ -64,7 +65,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         meta = model.__meta__
         self._model = model
         self._meta = meta
-        self._connectionName = meta.connection
+        self._connection_name = meta.connection
         self._plan = SelectPlan(table=meta.table)
 
     # ── Projection ──────────────────────────────────────────────────────────
@@ -170,7 +171,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._plan.wheres.append(
             WhereClause(
                 column=column,
-                whereType=WhereType.IN,
+                where_type=WhereType.IN,
                 value=self._materializeValues(values),
             ),
         )
@@ -199,7 +200,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._plan.wheres.append(
             WhereClause(
                 column=column,
-                whereType=WhereType.NOT_IN,
+                where_type=WhereType.NOT_IN,
                 value=self._materializeValues(values),
             ),
         )
@@ -220,7 +221,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
             The same builder, enabling fluent chaining.
         """
         self._plan.wheres.append(
-            WhereClause(column=column, whereType=WhereType.NULL),
+            WhereClause(column=column, where_type=WhereType.NULL),
         )
         return self
 
@@ -239,7 +240,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
             The same builder, enabling fluent chaining.
         """
         self._plan.wheres.append(
-            WhereClause(column=column, whereType=WhereType.NOT_NULL),
+            WhereClause(column=column, where_type=WhereType.NOT_NULL),
         )
         return self
 
@@ -275,7 +276,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._plan.wheres.append(
             WhereClause(
                 column=column,
-                whereType=WhereType.BETWEEN,
+                where_type=WhereType.BETWEEN,
                 value=values,
             ),
         )
@@ -304,7 +305,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._plan.wheres.append(
             WhereClause(
                 column=column,
-                whereType=WhereType.LIKE,
+                where_type=WhereType.LIKE,
                 value=pattern,
             ),
         )
@@ -333,7 +334,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._plan.wheres.append(
             WhereClause(
                 column=column,
-                whereType=WhereType.NOT_LIKE,
+                where_type=WhereType.NOT_LIKE,
                 value=pattern,
             ),
         )
@@ -362,7 +363,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._plan.wheres.append(
             WhereClause(
                 column=column,
-                whereType=WhereType.ILIKE,
+                where_type=WhereType.ILIKE,
                 value=pattern,
             ),
         )
@@ -391,7 +392,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._plan.wheres.append(
             WhereClause(
                 column=column,
-                whereType=WhereType.NOT_ILIKE,
+                where_type=WhereType.NOT_ILIKE,
                 value=pattern,
             ),
         )
@@ -420,7 +421,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._plan.wheres.append(
             WhereClause(
                 column=column,
-                whereType=WhereType.STARTS_WITH,
+                where_type=WhereType.STARTS_WITH,
                 value=value,
             ),
         )
@@ -449,7 +450,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._plan.wheres.append(
             WhereClause(
                 column=column,
-                whereType=WhereType.ENDS_WITH,
+                where_type=WhereType.ENDS_WITH,
                 value=value,
             ),
         )
@@ -478,7 +479,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._plan.wheres.append(
             WhereClause(
                 column=column,
-                whereType=WhereType.CONTAINS,
+                where_type=WhereType.CONTAINS,
                 value=value,
             ),
         )
@@ -510,7 +511,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._plan.wheres.append(
             WhereClause(
                 column=column,
-                whereType=WhereType.REGEXP,
+                where_type=WhereType.REGEXP,
                 value=pattern,
             ),
         )
@@ -583,7 +584,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         ModelQueryBuilder
             The same builder, enabling fluent chaining.
         """
-        target = column or self._meta.createdColumn or self._meta.primaryKey
+        target = column or self._meta.created_column or self._meta.primary_key
         return self.orderBy(target, "desc")
 
     def oldest(self, column: str | None = None) -> ModelQueryBuilder[TModel]:
@@ -601,7 +602,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         ModelQueryBuilder
             The same builder, enabling fluent chaining.
         """
-        target = column or self._meta.createdColumn or self._meta.primaryKey
+        target = column or self._meta.created_column or self._meta.primary_key
         return self.orderBy(target, "asc")
 
     def groupBy(self, *columns: str) -> ModelQueryBuilder[TModel]:
@@ -671,7 +672,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         if value < 0:
             error_msg = "Limit must not be negative."
             raise InvalidQueryException(error_msg)
-        self._plan.limitValue = value
+        self._plan.limit_value = value
         return self
 
     def offset(self, value: int) -> ModelQueryBuilder[TModel]:
@@ -696,7 +697,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         if value < 0:
             error_msg = "Offset must not be negative."
             raise InvalidQueryException(error_msg)
-        self._plan.offsetValue = value
+        self._plan.offset_value = value
         return self
 
     def take(self, value: int) -> ModelQueryBuilder[TModel]:
@@ -765,7 +766,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         QueryException
             If the statement fails to compile or execute.
         """
-        self._plan.limitValue = 1
+        self._plan.limit_value = 1
         rows = await self._connection().select(self._plan)
         if not rows:
             return None
@@ -807,7 +808,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         Model or None
             Matching model, or ``None`` when absent.
         """
-        return await self.where(self._meta.primaryKey, key).first()
+        return await self.where(self._meta.primary_key, key).first()
 
     async def findOrFail(self, key: Any) -> TModel:  # noqa: ANN401
         """
@@ -840,7 +841,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
     async def paginate(
         self,
         page: int = 1,
-        perPage: int = _DEFAULT_PER_PAGE,  # noqa: N803 # NOSONAR
+        per_page: int = _DEFAULT_PER_PAGE,
     ) -> Paginator:
         """
         Execute the query returning a length-aware page of results.
@@ -849,7 +850,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         ----------
         page : int, optional
             Page number starting at 1. Defaults to the first page.
-        perPage : int, optional
+        per_page : int, optional
             Number of items per page. Defaults to 15.
 
         Returns
@@ -862,15 +863,28 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         InvalidQueryException
             If the page or page size are not positive integers.
         """
-        if page < 1 or perPage < 1:
-            error_msg = "Page and perPage must be positive integers."
+        if page < 1 or per_page < 1:
+            error_msg = "Page and per_page must be positive integers."
             raise InvalidQueryException(error_msg)
 
-        total = int(await self._aggregate(AggregateFunction.COUNT, "*") or 0)
-        self._plan.limitValue = perPage
-        self._plan.offsetValue = (page - 1) * perPage
-        items = await self.get()
-        return Paginator(items=items, total=total, page=page, perPage=perPage)
+        self._plan.limit_value = per_page
+        self._plan.offset_value = (page - 1) * per_page
+
+        if self._connection().inTransaction():
+            # A shared transactional connection cannot serve two
+            # statements at once; run the count and the page in turn.
+            total = int(await self._aggregate(AggregateFunction.COUNT, "*") or 0)
+            items = await self.get()
+        else:
+            # Outside a transaction each query acquires its own pooled
+            # connection, so the count and the page can run concurrently.
+            count_result, items = await asyncio.gather(
+                self._aggregate(AggregateFunction.COUNT, "*"),
+                self.get(),
+            )
+            total = int(count_result or 0)
+
+        return Paginator(items=items, total=total, page=page, per_page=per_page)
 
     # ── Aggregate terminals ─────────────────────────────────────────────────
 
@@ -895,9 +909,9 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
             ``True`` when a matching row exists.
         """
         probe = self._plan.clone()
-        probe.columns = (self._meta.primaryKey,)
-        probe.limitValue = 1
-        probe.offsetValue = None
+        probe.columns = (self._meta.primary_key,)
+        probe.limit_value = 1
+        probe.offset_value = None
         rows = await self._connection().select(probe)
         return bool(rows)
 
@@ -1008,7 +1022,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
             raise InvalidQueryException(error_msg)
 
         serialized = [
-            serializeForStorage(self._meta, dict(row)) for row in rows
+            serialize_for_storage(self._meta, row) for row in rows
         ]
         plan = InsertPlan(table=self._meta.table, values=serialized)
         return await self._connection().insert(plan)
@@ -1040,13 +1054,13 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
             raise InvalidQueryException(error_msg)
 
         payload = dict(values)
-        updated_column = self._meta.updatedColumn
+        updated_column = self._meta.updated_column
         if updated_column and updated_column not in payload:
             payload[updated_column] = self._model.freshTimestamp()
 
         plan = UpdatePlan(
             table=self._meta.table,
-            values=serializeForStorage(self._meta, payload),
+            values=serialize_for_storage(self._meta, payload),
             wheres=list(self._plan.wheres),
         )
         return await self._connection().update(plan)
@@ -1077,7 +1091,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         IConnection
             Connection declared by the model, or the default one.
         """
-        return ConnectionResolver.connection(self._connectionName)
+        return ConnectionResolver.connection(self._connection_name)
 
     def _addWhere(
         self,
@@ -1171,8 +1185,8 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         """
         probe = self._plan.clone()
         probe.aggregate = AggregateClause(function=function, column=column)
-        probe.limitValue = None
-        probe.offsetValue = None
+        probe.limit_value = None
+        probe.offset_value = None
         return await self._connection().scalar(probe)
 
     @staticmethod
