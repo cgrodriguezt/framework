@@ -1,8 +1,6 @@
-# ruff: noqa: N815 (camelCase attributes are an Orionis convention)
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
-
 
 @dataclass(frozen=True, slots=True)
 class InsertResult:
@@ -11,12 +9,12 @@ class InsertResult:
 
     Attributes
     ----------
-    lastInsertId : Any
+    last_insert_id : Any
         Primary key generated for the inserted row, or ``None`` when the
         driver cannot report it (for example on multi-row inserts).
-    rowCount : int
+    row_count : int
         Number of rows affected by the statement.
     """
 
-    lastInsertId: Any  # NOSONAR
-    rowCount: int  # NOSONAR
+    last_insert_id: Any
+    row_count: int
