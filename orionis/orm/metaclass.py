@@ -1,9 +1,8 @@
-# ruff: noqa: N815 (camelCase attributes are an Orionis convention)
 from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
-from orionis.orm.attributes import getCastHandler
+from orionis.orm.attributes import get_cast_handler
 from orionis.orm.schema.column import ColumnDefinition
 from orionis.orm.schema.table import TableDefinition
 
@@ -61,8 +60,7 @@ _FORWARDED_BUILDER_METHODS: frozenset[str] = frozenset({
     "whereStartsWith",
 })
 
-
-def snakeCase(name: str) -> str:
+def snake_case(name: str) -> str:
     """
     Convert a CamelCase class name into snake_case.
 
@@ -80,7 +78,6 @@ def snakeCase(name: str) -> str:
         snake_case version of the name.
     """
     return _CAMEL_BOUNDARY.sub("_", name.lstrip("_")).lower()
-
 
 def pluralize(word: str) -> str:
     """
@@ -104,7 +101,6 @@ def pluralize(word: str) -> str:
         return word + "es"
     return word + "s"
 
-
 @dataclass(slots=True, eq=False)
 class ModelMetadata:
     """
@@ -115,17 +111,17 @@ class ModelMetadata:
 
     Attributes
     ----------
-    tableName : str
+    table_name : str
         Logical table name of the model.
     table : TableDefinition
         Table definition consumed by the SQL compiler.
     columns : dict of str to ColumnDefinition
         Column definitions keyed by attribute name.
-    primaryKey : str
+    primary_key : str
         Name of the primary key column.
     casts : dict of str to str
         Declared cast names keyed by attribute name.
-    castLookup : dict of str to Callable
+    cast_lookup : dict of str to Callable
         Precompiled cast handlers keyed by attribute name.
     fillable : frozenset of str
         Attributes allowed for mass assignment.
@@ -139,26 +135,26 @@ class ModelMetadata:
         Whether the primary key is auto-incrementing.
     connection : str or None
         Named connection used by the model, or ``None`` for default.
-    createdColumn : str or None
+    created_column : str or None
         Creation timestamp column, when present.
-    updatedColumn : str or None
+    updated_column : str or None
         Update timestamp column, when present.
     """
 
-    tableName: str  # NOSONAR
+    table_name: str
     table: TableDefinition
     columns: dict[str, ColumnDefinition] = field(default_factory=dict)
-    primaryKey: str = "id"  # NOSONAR
+    primary_key: str = "id"
     casts: dict[str, str] = field(default_factory=dict)
-    castLookup: dict[str, Callable[[Any], Any]] = field(default_factory=dict)  # NOSONAR
+    cast_lookup: dict[str, Callable[[Any], Any]] = field(default_factory=dict)
     fillable: frozenset[str] = frozenset()
     guarded: frozenset[str] = frozenset()
     hidden: frozenset[str] = frozenset()
     timestamps: bool = True
     incrementing: bool = True
     connection: str | None = None
-    createdColumn: str | None = None  # NOSONAR
-    updatedColumn: str | None = None  # NOSONAR
+    created_column: str | None = None
+    updated_column: str | None = None
 
     def isFillable(self, key: str) -> bool:
         """
@@ -195,12 +191,11 @@ class ModelMetadata:
         dict
             The same mapping with cast values applied.
         """
-        for key, handler in self.castLookup.items():
+        for key, handler in self.cast_lookup.items():
             value = attributes.get(key)
             if value is not None:
                 attributes[key] = handler(value)
         return attributes
-
 
 class ModelMeta(type):
     """
@@ -258,17 +253,17 @@ class ModelMeta(type):
         timestamps = bool(getattr(cls, "timestamps", True))
 
         cls.__meta__ = ModelMetadata(
-            tableName=table_name,
+            table_name=table_name,
             table=TableDefinition(
                 name=table_name,
                 columns=columns,
                 primary_key=primary_key,
             ),
             columns=columns,
-            primaryKey=primary_key,
+            primary_key=primary_key,
             casts=casts,
-            castLookup={
-                key: getCastHandler(cast) for key, cast in casts.items()
+            cast_lookup={
+                key: get_cast_handler(cast) for key, cast in casts.items()
             },
             fillable=frozenset(getattr(cls, "fillable", ()) or ()),
             guarded=frozenset(getattr(cls, "guarded", ()) or ()),
@@ -276,8 +271,8 @@ class ModelMeta(type):
             timestamps=timestamps,
             incrementing=bool(getattr(cls, "incrementing", True)),
             connection=getattr(cls, "connection", None),
-            createdColumn=created if timestamps and created in columns else None,
-            updatedColumn=updated if timestamps and updated in columns else None,
+            created_column=created if timestamps and created in columns else None,
+            updated_column=updated if timestamps and updated in columns else None,
         )
         return cls
 
@@ -427,7 +422,7 @@ class ModelMeta(type):
         if isinstance(inherited, str) and inherited.strip():
             return inherited.strip()
 
-        return pluralize(snakeCase(name))
+        return pluralize(snake_case(name))
 
     @staticmethod
     def _resolvePrimaryKey(
@@ -452,8 +447,8 @@ class ModelMeta(type):
         str
             Primary key column name.
         """
-        declared = namespace.get("primaryKey") or getattr(
-            owner, "primaryKey", None,
+        declared = namespace.get("primary_key") or getattr(
+            owner, "primary_key", None,
         )
         if isinstance(declared, str) and declared.strip():
             return declared.strip()
