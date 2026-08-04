@@ -64,8 +64,8 @@ class TestConnection(TestCase):
         Validates the InsertResult contract.
         """
         result = await self._insert("alpha")
-        self.assertEqual(result.lastInsertId, 1)
-        self.assertEqual(result.rowCount, 1)
+        self.assertEqual(result.last_insert_id, 1)
+        self.assertEqual(result.row_count, 1)
 
     async def testMultiRowInsertOmitsGeneratedKey(self) -> None:
         """
@@ -78,8 +78,8 @@ class TestConnection(TestCase):
             values=[{"name": "a"}, {"name": "b"}],
         )
         result = await self._connection.insert(plan)
-        self.assertIsNone(result.lastInsertId)
-        self.assertEqual(result.rowCount, 2)
+        self.assertIsNone(result.last_insert_id)
+        self.assertEqual(result.row_count, 2)
 
     async def testSelectReturnsPlainDictionaries(self) -> None:
         """
@@ -287,6 +287,25 @@ class TestConnection(TestCase):
         await self._connection.dropTable("items")
         with self.assertRaises(QueryException):
             await self._connection.select(SelectPlan(table=self._table))
+
+    async def testCreateTableIfNotExistsFalseFailsOnDuplicate(self) -> None:
+        """
+        Fail to recreate an existing table without the IF NOT EXISTS guard.
+
+        Validates that disabling if_not_exists surfaces the engine error.
+        """
+        with self.assertRaises(QueryException):
+            await self._connection.createTable(self._table, if_not_exists=False)
+
+    async def testDropTableIfExistsFalseFailsOnMissingTable(self) -> None:
+        """
+        Fail to drop a missing table without the IF EXISTS guard.
+
+        Validates that disabling if_exists surfaces the engine error.
+        """
+        await self._connection.dropTable("items")
+        with self.assertRaises(QueryException):
+            await self._connection.dropTable("items", if_exists=False)
     # ── Configuration and lifecycle ────────────────────────────────────────────────
 
     async def testUnsupportedDriverFailsAtConstruction(self) -> None:
