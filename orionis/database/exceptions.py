@@ -6,8 +6,8 @@ class DatabaseException(Exception):
 class ConnectionNotFoundException(DatabaseException):
     """Raised when a connection name is not present in the configuration."""
 
-class UnsupportedDriverException(DatabaseException):
-    """Raised when a connection references a driver with no implementation."""
+class MigrationNotFoundException(DatabaseException):
+    """Raised when a recorded migration has no matching migration file."""
 
 class MissingDatabaseDependencyException(DatabaseException):
     """Raised when a driver requires an optional package that is not installed."""
@@ -18,5 +18,5 @@ class QueryException(DatabaseException):
 class TransactionException(DatabaseException):
     """Raised when transaction control methods are used incorrectly."""
 
-class MigrationNotFoundException(DatabaseException):
-    """Raised when a recorded migration has no matching migration file."""
+class UnsupportedDriverException(DatabaseException):
+    """Raised when a connection references a driver with no implementation."""
