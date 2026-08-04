@@ -365,12 +365,12 @@ class TestModelCrud(TestCase):
         """
         for index in range(5):
             await Person.create({"name": f"user{index}"})
-        page = await Person.query().orderBy("id").paginate(page=2, perPage=2)
+        page = await Person.query().orderBy("id").paginate(page=2, per_page=2)
         self.assertEqual([p.name for p in page.items], ["user2", "user3"])
         self.assertEqual(page.total, 5)
-        self.assertEqual(page.lastPage, 3)
-        self.assertTrue(page.hasNext)
-        self.assertTrue(page.hasPrevious)
+        self.assertEqual(page.last_page, 3)
+        self.assertTrue(page.has_next)
+        self.assertTrue(page.has_previous)
 
     # ── Attributes and state ──────────────────────────────────────────────────
 
@@ -489,7 +489,7 @@ class TestModelCrud(TestCase):
         result = await Person.query().insert(
             [{"name": "a"}, {"name": "b"}],
         )
-        self.assertEqual(result.rowCount, 2)
+        self.assertEqual(result.row_count, 2)
         self.assertEqual(await Person.count(), 2)
 
     async def testCastsApplyOnDirectAssignment(self) -> None:
@@ -581,3 +581,60 @@ class TestModelCrud(TestCase):
         self.assertEqual(fresh.name, "b")
         # SQLite returns naive datetimes; only the refresh is asserted.
         self.assertIsInstance(fresh.updated_at, datetime)
+
+    # ── Classmethod shortcuts ─────────────────────────────────────────────────
+
+    async def testFirstReturnsModelOrNoneClassmethod(self) -> None:
+        """
+        Retrieve the first row, or None, through the class shortcut.
+
+        Validates the Model.first() classmethod, not only the builder
+        it delegates to.
+        """
+        self.assertIsNone(await Person.first())
+        await Person.create({"name": "a"})
+        await Person.create({"name": "b"})
+        first = await Person.first()
+        self.assertIsInstance(first, Person)
+        self.assertEqual(first.name, "a")
+
+    async def testFirstOrFailClassmethodReturnsModel(self) -> None:
+        """
+        Retrieve the first row through the class shortcut, or raise.
+
+        Validates the Model.firstOrFail() success path.
+        """
+        await Person.create({"name": "only"})
+        person = await Person.firstOrFail()
+        self.assertIsInstance(person, Person)
+        self.assertEqual(person.name, "only")
+
+    async def testUpdateTargetsOriginalPrimaryKeyWhenDirty(self) -> None:
+        """
+        Locate the row via the original primary key while it is dirty.
+
+        Validates that _primaryKeyValue() targets the row using the
+        original primary key value, even though the dirty diff still
+        lets the primary key column itself be persisted with its new
+        value once the matching row is found.
+        """
+        person = await Person.create({"name": "John"})
+        person.id = 999
+        await person.update({"name": "Peter"})
+
+        self.assertEqual(person.id, 999)
+        self.assertIsNone(await Person.find(1))
+        fresh = await Person.find(999)
+        self.assertEqual(fresh.name, "Peter")
+
+    async def testFreshTimestampDefaultsToAwareWithoutTimestampColumns(
+        self,
+    ) -> None:
+        """
+        Default to an aware timestamp without any timestamp column.
+
+        Validates the freshTimestamp fallback when a model neither
+        declares timestamp columns nor enables automatic timestamps.
+        """
+        moment = Secret.freshTimestamp()
+        self.assertIsNotNone(moment.tzinfo)
