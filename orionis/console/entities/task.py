@@ -82,7 +82,7 @@ class Task(BaseEntity):
     details: str | None = None
 
     # Maximum number of concurrent instances allowed for the event
-    max_instances: int | None = None
+    max_instances: int | None = 1
 
     # Grace time in seconds for misfired events
     misfire_grace_time: int | None = None
