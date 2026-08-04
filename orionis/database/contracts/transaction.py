@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from types import TracebackType
 
-
 class ITransaction(ABC):
     """
     Contract for a database transaction usable as an async context manager.
