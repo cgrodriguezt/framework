@@ -1,6 +1,10 @@
 from __future__ import annotations
 from typing import Any
 
+# Sentinel distinguishing "attribute absent from the original snapshot"
+# from any legitimate stored value, including None, in a single lookup.
+_UNSET: Any = object()
+
 class StateMixin:
     """
     Attribute state tracking behavior shared by every model.
@@ -25,7 +29,7 @@ class StateMixin:
         return {
             key: value
             for key, value in self._attributes.items()
-            if key not in original or original[key] != value
+            if original.get(key, _UNSET) != value
         }
 
     def isDirty(self, *attributes: str) -> bool:
