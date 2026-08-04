@@ -8,10 +8,9 @@ from orionis.database.exceptions import MigrationNotFoundException
 from orionis.foundation.contracts.application import IApplication
 from orionis.introspection.modules.inspector import ModuleInspector
 from orionis.introspection.modules.reflection import ReflectionModule
+from orionis.orm.schema.column.definition import ColumnDefinition
 from orionis.orm.schema.table import TableDefinition
 from orionis.orm.schema.types import BigInteger, Integer, String
-
-# ruff: noqa: TC001
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -20,7 +19,7 @@ if TYPE_CHECKING:
 # Name of the table used to track already-applied migrations.
 _MIGRATIONS_TABLE: str = "migrations"
 
-def _buildMigrationsTable(table: str) -> TableDefinition:
+def _build_migrations_table(table: str) -> TableDefinition:
     """
     Build the table definition for the migrations tracking table.
 
@@ -35,16 +34,23 @@ def _buildMigrationsTable(table: str) -> TableDefinition:
         Definition with ``id`` (primary key), ``migration`` (unique
         name), ``batch`` and ``migrated_at`` (epoch seconds) columns.
     """
-    id_column = Integer().primary().autoIncrement()
+    # Create primary key column with auto-increment.
+    id_column: ColumnDefinition = Integer()
+    id_column = id_column.primary().autoIncrement()
+    id_column = id_column.comment("Primary key for migrations table.")
     id_column.name = "id"
 
-    migration_column = String(255).unique()
+    migration_column: ColumnDefinition = String(255)
+    migration_column = migration_column.unique()
+    migration_column = migration_column.comment("Name of the migration file.")
     migration_column.name = "migration"
 
-    batch_column = Integer()
+    batch_column: ColumnDefinition = Integer()
+    batch_column = batch_column.comment("Batch number of the migration.")
     batch_column.name = "batch"
 
-    migrated_at_column = BigInteger()
+    migrated_at_column: ColumnDefinition = BigInteger()
+    migrated_at_column = migrated_at_column.comment("Timestamp in epoch seconds.")
     migrated_at_column.name = "migrated_at"
 
     return TableDefinition(
@@ -60,12 +66,12 @@ def _buildMigrationsTable(table: str) -> TableDefinition:
 
 # The tracking table shape is fixed; build it once instead of re-allocating
 # four ColumnDefinition instances on every migrate()/rollback() call.
-_MIGRATIONS_TABLE_DEFINITION: TableDefinition = _buildMigrationsTable(
+_MIGRATIONS_TABLE_DEFINITION: TableDefinition = _build_migrations_table(
     _MIGRATIONS_TABLE,
 )
-
 class Migrator(IMigrator):
-    """Discovers, applies, and reverts migrations under ``database/migrations``."""
+
+    # ruff: noqa: TC001
 
     __slots__ = ("__app", "__conn_manager", "__discovered_cache")
 
