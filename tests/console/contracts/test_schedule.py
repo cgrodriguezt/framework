@@ -7,6 +7,29 @@ from orionis.test import TestCase
 
 class TestIScheduleContract(TestCase):
 
+    @staticmethod
+    def _makeStores() -> MagicMock:
+        """
+        Create a mocked ScheduleStore exposing a realistic config entity.
+
+        Returns
+        -------
+        MagicMock
+            A mock with ``store``/``config`` attributes matching the real
+            ``ScheduleStore`` API used by ``Schedule``.
+        """
+        stores = MagicMock()
+        stores.store = "memory"
+        config = MagicMock()
+        config.store = "memory"
+        config.jitter = 0
+        config.max_instances = 1
+        config.misfire_grace_time = 30
+        config.coalesce = True
+        config.replace_existing = True
+        stores.config = config
+        return stores
+
     # ------------------------------------------------------------------ #
     #  Abstract class characteristics                                    #
     # ------------------------------------------------------------------ #
@@ -342,7 +365,11 @@ class TestIScheduleContract(TestCase):
         reactor.info = AsyncMock(return_value=[])
         reactor.call = AsyncMock(return_value=0)
         handler = MagicMock()
-        schedule = Schedule(reactor=reactor, exception_handler=handler)
+        schedule = Schedule(
+            reactor=reactor,
+            exception_handler=handler,
+            stores=self._makeStores(),
+        )
         self.assertIsInstance(schedule, Schedule)
 
     def testScheduleIsInstanceOfISchedule(self) -> None:
@@ -356,7 +383,11 @@ class TestIScheduleContract(TestCase):
         reactor.info = AsyncMock(return_value=[])
         reactor.call = AsyncMock(return_value=0)
         handler = MagicMock()
-        schedule = Schedule(reactor=reactor, exception_handler=handler)
+        schedule = Schedule(
+            reactor=reactor,
+            exception_handler=handler,
+            stores=self._makeStores(),
+        )
         self.assertIsInstance(schedule, ISchedule)
 
     def testScheduleImplementsAllAbstractMethods(self) -> None:

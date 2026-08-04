@@ -2,7 +2,9 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.scheduler_provider import ScheduleProvider
+from orionis.console.contracts.store import IScheduleStore
 from orionis.console.tasks.schedule import Schedule
+from orionis.console.tasks.store import ScheduleStore
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.test import TestCase
 
@@ -41,14 +43,27 @@ class TestScheduleProvider(TestCase):
 
     def testRegisterCallsSingleton(self) -> None:
         """
-        Verify register() calls app.singleton with ISchedule and Schedule.
+        Verify register() calls app.singleton for IScheduleStore and ISchedule.
 
-        Ensures the schedule interface is bound to its concrete
-        implementation as a singleton in the container.
+        Ensures both the store dependency and the schedule interface are
+        bound as singletons in the container.
         """
         provider, mock_app = self._make()
         provider.register()
-        mock_app.singleton.assert_called_once()
+        self.assertEqual(mock_app.singleton.call_count, 2)
+
+    def testRegisterBindsIScheduleStoreInterface(self) -> None:
+        """
+        Verify register() binds IScheduleStore to ScheduleStore.
+
+        Ensures the store dependency required by Schedule's constructor
+        can be auto-resolved by the container.
+        """
+        provider, mock_app = self._make()
+        provider.register()
+        args, _ = mock_app.singleton.call_args_list[0]
+        self.assertIs(args[0], IScheduleStore)
+        self.assertIs(args[1], ScheduleStore)
 
     def testRegisterBindsIScheduleInterface(self) -> None:
         """
@@ -117,7 +132,7 @@ class TestScheduleProvider(TestCase):
             new_callable=AsyncMock,
         ) as mock_pin:
             await provider.boot()
-        mock_app.singleton.assert_called_once()
+        self.assertEqual(mock_app.singleton.call_count, 2)
         mock_pin.assert_called_once()
 
     def testAppAttributeIsStored(self) -> None:
@@ -140,4 +155,4 @@ class TestScheduleProvider(TestCase):
         provider, mock_app = self._make()
         provider.register()
         provider.register()
-        self.assertEqual(mock_app.singleton.call_count, 2)
+        self.assertEqual(mock_app.singleton.call_count, 4)

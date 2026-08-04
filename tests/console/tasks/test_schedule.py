@@ -27,15 +27,34 @@ class TestSchedule(TestCase):
         reactor.info = AsyncMock(return_value=[])
         reactor.call = AsyncMock(return_value=0)
         handler = MagicMock()
-        connection_manager = MagicMock()
-        application = MagicMock()
-        application.config = MagicMock(return_value={})
+        stores = self._makeStores()
         return Schedule(
-            application=application,
             reactor=reactor,
             exception_handler=handler,
-            connection_manager=connection_manager,
+            stores=stores,
         )
+
+    def _makeStores(self) -> MagicMock:
+        """
+        Create a mocked ScheduleStore exposing a realistic config entity.
+
+        Returns
+        -------
+        MagicMock
+            A mock with ``store``/``config`` attributes matching the real
+            ``ScheduleStore`` API used by ``Schedule``.
+        """
+        stores = MagicMock()
+        stores.store = "memory"
+        config = MagicMock()
+        config.store = "memory"
+        config.jitter = 0
+        config.max_instances = 1
+        config.misfire_grace_time = 30
+        config.coalesce = True
+        config.replace_existing = True
+        stores.config = config
+        return stores
 
     # ------------------------------------------------------------------ #
     #  Instantiation & interface                                         #
@@ -678,13 +697,10 @@ class TestSchedule(TestCase):
         reactor = MagicMock()
         reactor.call = AsyncMock(return_value=0)
         handler = MagicMock()
-        application = MagicMock()
-        application.config = MagicMock(return_value={})
         schedule = Schedule(
-            application=application,
             reactor=reactor,
             exception_handler=handler,
-            connection_manager=MagicMock(),
+            stores=self._makeStores(),
         )
         result = await schedule._reactorCall("inspire:quote", ["--lang", "en"])
         reactor.call.assert_called_once_with("inspire:quote", ["--lang", "en"])
@@ -700,13 +716,10 @@ class TestSchedule(TestCase):
         reactor = MagicMock()
         reactor.call = AsyncMock(return_value=0)
         handler = MagicMock()
-        application = MagicMock()
-        application.config = MagicMock(return_value={})
         schedule = Schedule(
-            application=application,
             reactor=reactor,
             exception_handler=handler,
-            connection_manager=MagicMock(),
+            stores=self._makeStores(),
         )
         await schedule._reactorCall("db:seed")
         reactor.call.assert_called_once_with("db:seed", [])
