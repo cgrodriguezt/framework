@@ -1,10 +1,13 @@
 from __future__ import annotations
+import operator
 from dataclasses import fields
 from typing import TYPE_CHECKING, Any
 from orionis.orm.schema.column.options import ColumnOptions
 from orionis.orm.schema.constraints.foreign_reference import ForeignReference
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from orionis.orm.schema.types.column_type import ColumnType
 
 # Sentinel used to distinguish "no default" from a legitimate ``None`` default.
@@ -12,6 +15,12 @@ _NO_DEFAULT: object = object()
 
 # Field names copied from ColumnOptions onto every ColumnDefinition instance.
 _OPTION_FIELDS: tuple[str, ...] = tuple(field.name for field in fields(ColumnOptions))
+
+# Single attrgetter reading every option field in one native call instead of
+# one Python-level getattr() per field; built once and reused per column.
+_OPTION_GETTER: Callable[[ColumnOptions], tuple[Any, ...]] = operator.attrgetter(
+    *_OPTION_FIELDS,
+)
 
 class ColumnDefinition:
     """
@@ -89,8 +98,10 @@ class ColumnDefinition:
         self.name: str = ""
         self.column_type = column_type
         resolved = options if options is not None else ColumnOptions()
-        for field_name in _OPTION_FIELDS:
-            setattr(self, field_name, getattr(resolved, field_name))
+        for field_name, value in zip(
+            _OPTION_FIELDS, _OPTION_GETTER(resolved), strict=True,
+        ):
+            setattr(self, field_name, value)
         self.is_primary: bool = False
         self.is_nullable: bool = False
         self.is_unique: bool = False
