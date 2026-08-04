@@ -1,5 +1,5 @@
 from __future__ import annotations
-from contextlib import asynccontextmanager
+from contextlib import AbstractAsyncContextManager
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
 from sqlalchemy import text
@@ -8,22 +8,20 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from orionis.database.compiler import SQLCompiler
 from orionis.database.contracts.connection import IConnection
 from orionis.database.dialect import (
-    buildEngineUrl,
-    configureEngine,
-    engineOptions,
-    missingDependencyError,
-    resolveDriver,
+    build_engine_url,
+    configure_engine,
+    engine_options,
+    missing_dependency_error,
+    resolve_driver,
 )
 from orionis.database.entities.result import InsertResult
 from orionis.database.exceptions import QueryException, TransactionException
 from orionis.database.transaction import Transaction
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Mapping
-
+    from collections.abc import Mapping
     from sqlalchemy.engine import CursorResult
     from sqlalchemy.ext.asyncio import AsyncConnection, AsyncTransaction
-
     from orionis.database.contracts.transaction import ITransaction
     from orionis.orm.query.expressions import (
         DeletePlan,
@@ -35,7 +33,6 @@ if TYPE_CHECKING:
 
 # Error message used when transaction control has no active transaction.
 _NO_ACTIVE_TRANSACTION: str = "No active transaction on this connection."
-
 
 class _TransactionState:
     """Per-task stack of open transactions bound to one raw connection."""
@@ -65,6 +62,53 @@ class _TransactionState:
         self.connection = connection
         self.transactions: list[AsyncTransaction] = [transaction]
 
+class _ReusedConnection(AbstractAsyncContextManager):
+    """Async context manager exposing an already-open transactional connection."""
+
+    __slots__ = ("_connection",)
+
+    def __init__(self, connection: AsyncConnection) -> None:
+        """
+        Initialize the wrapper around an already-open connection.
+
+        Parameters
+        ----------
+        connection : AsyncConnection
+            Connection currently participating in an open transaction.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        self._connection = connection
+
+    async def __aenter__(self) -> AsyncConnection:
+        """
+        Expose the wrapped connection without opening a new one.
+
+        Returns
+        -------
+        AsyncConnection
+            The wrapped, already-open connection.
+        """
+        return self._connection
+
+    async def __aexit__(self, *exc_info: object) -> None:
+        """
+        Leave the wrapped connection open for the enclosing transaction.
+
+        Parameters
+        ----------
+        *exc_info : object
+            Exception information from the ``with`` block; unused since
+            the transaction lifecycle is controlled by its owner.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
 
 class Connection(IConnection):
     """
@@ -77,7 +121,7 @@ class Connection(IConnection):
     nesting through savepoints.
     """
 
-    __slots__ = ("_compiler", "_config", "_engine", "_name", "_txState")
+    __slots__ = ("_compiler", "_config", "_engine", "_name", "_tx_state")
 
     def __init__(self, name: str, config: dict[str, Any]) -> None:
         """
@@ -101,14 +145,14 @@ class Connection(IConnection):
             If the configured driver has no registered dialect.
         """
         # Validate the driver eagerly so misconfiguration fails fast.
-        resolveDriver(config)
+        resolve_driver(config)
 
         self._name = name
         self._config = dict(config)
         self._engine: AsyncEngine | None = None
         self._compiler = SQLCompiler(str(self._config.get("prefix", "") or ""))
         # Task-local transaction state keeps concurrent tasks isolated.
-        self._txState: ContextVar[_TransactionState | None] = ContextVar(
+        self._tx_state: ContextVar[_TransactionState | None] = ContextVar(
             f"orionis_db_tx_{name}",
             default=None,
         )
@@ -162,7 +206,7 @@ class Connection(IConnection):
         async with self._acquire() as connection:
             result = await self._run(connection, statement, parameters)
             # Materialize rows before the connection is released.
-            return [dict(row) for row in result.mappings().all()]
+            return [dict(row) for row in result.mappings()]
 
     async def insert(self, plan: InsertPlan) -> InsertResult:
         """
@@ -194,8 +238,8 @@ class Connection(IConnection):
                 if generated is not None and len(generated) > 0:
                     last_id = generated[0]
             return InsertResult(
-                lastInsertId=last_id,
-                rowCount=int(result.rowcount or 0),
+                last_insert_id=last_id,
+                row_count=int(result.rowcount or 0),
             )
 
     async def update(self, plan: UpdatePlan) -> int:
@@ -419,13 +463,13 @@ class Connection(IConnection):
         TransactionException
             If the transaction cannot be started.
         """
-        state = self._txState.get()
+        state = self._tx_state.get()
         try:
             if state is None:
                 # Open a dedicated raw connection with a root transaction.
                 raw = await self._getEngine().connect()
                 transaction = await raw.begin()
-                self._txState.set(_TransactionState(raw, transaction))
+                self._tx_state.set(_TransactionState(raw, transaction))
             else:
                 # Nested calls open a savepoint on the same connection.
                 savepoint = await state.connection.begin_nested()
@@ -448,7 +492,7 @@ class Connection(IConnection):
         TransactionException
             If no transaction is active or the commit fails.
         """
-        state = self._txState.get()
+        state = self._tx_state.get()
         if state is None or not state.transactions:
             raise TransactionException(_NO_ACTIVE_TRANSACTION)
 
@@ -475,7 +519,7 @@ class Connection(IConnection):
         TransactionException
             If no transaction is active or the rollback fails.
         """
-        state = self._txState.get()
+        state = self._tx_state.get()
         if state is None or not state.transactions:
             raise TransactionException(_NO_ACTIVE_TRANSACTION)
 
@@ -508,7 +552,7 @@ class Connection(IConnection):
         bool
             ``True`` when at least one transaction level is open.
         """
-        state = self._txState.get()
+        state = self._tx_state.get()
         return state is not None and bool(state.transactions)
 
     # ── Lifecycle ───────────────────────────────────────────────────────────
@@ -543,41 +587,41 @@ class Connection(IConnection):
             If the async driver package is not installed.
         """
         if self._engine is None:
-            url = buildEngineUrl(self._config)
-            options = engineOptions(self._config)
+            url = build_engine_url(self._config)
+            options = engine_options(self._config)
             try:
                 engine = create_async_engine(url, **options)
             except ModuleNotFoundError as exc:
-                raise missingDependencyError(
-                    resolveDriver(self._config),
+                raise missing_dependency_error(
+                    resolve_driver(self._config),
                     exc,
                 ) from exc
-            configureEngine(engine, self._config)
+            configure_engine(engine, self._config)
             self._engine = engine
         return self._engine
 
-    @asynccontextmanager
-    async def _acquire(self) -> AsyncGenerator[AsyncConnection]:
+    def _acquire(self) -> AbstractAsyncContextManager[AsyncConnection]:
         """
-        Yield the connection to execute statements on.
+        Resolve the connection context to execute statements on.
 
         Inside a transaction the transactional connection is reused;
-        otherwise an ephemeral autocommit connection is opened.
+        otherwise an ephemeral autocommit connection is opened. The
+        context manager is returned directly instead of through an
+        async generator, so entering and exiting it on every statement
+        skips the extra indirection layer generator-based context
+        managers add.
 
-        Yields
-        ------
-        AsyncConnection
-            Raw connection ready to execute statements.
+        Returns
+        -------
+        AbstractAsyncContextManager
+            Context manager yielding the connection to execute on.
         """
-        state = self._txState.get()
+        state = self._tx_state.get()
         if state is not None:
             # Reuse the transactional connection without committing.
-            yield state.connection
-            return
+            return _ReusedConnection(state.connection)
 
-        engine = self._getEngine()
-        async with engine.begin() as connection:
-            yield connection
+        return self._getEngine().begin()
 
     async def _run(
         self,
@@ -632,5 +676,5 @@ class Connection(IConnection):
             This method does not return a value.
         """
         if not state.transactions:
-            self._txState.set(None)
+            self._tx_state.set(None)
             await state.connection.close()
