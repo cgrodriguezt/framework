@@ -1,9 +1,9 @@
 from __future__ import annotations
 from orionis.database.connection_manager import ConnectionManager
 from orionis.database.dialect import (
-    buildEngineUrl,
-    engineOptions,
-    resolveDriver,
+    build_engine_url,
+    engine_options,
+    resolve_driver,
 )
 from orionis.foundation.application import Application
 from orionis.foundation.config.database.entities.database import Database
@@ -34,10 +34,10 @@ class TestConfigurationContract(TestCase):
         for name in _EXPECTED_CONNECTIONS:
             self.assertIn(name, connections)
             entry = connections[name]
-            self.assertEqual(resolveDriver(entry), name)
-            url = buildEngineUrl(entry)
+            self.assertEqual(resolve_driver(entry), name)
+            url = build_engine_url(entry)
             self.assertTrue(url.drivername)
-            options = engineOptions(entry)
+            options = engine_options(entry)
             self.assertIn("future", options)
 
     def testDefaultConnectionNameIsDeclared(self) -> None:
@@ -82,9 +82,9 @@ class TestConfigurationContract(TestCase):
             self.assertIn(name, connections)
             entry = connections[name]
             entry = entry if isinstance(entry, dict) else entry.toDict()
-            self.assertEqual(resolveDriver(entry), name)
-            self.assertTrue(buildEngineUrl(entry).drivername)
-            engineOptions(entry)
+            self.assertEqual(resolve_driver(entry), name)
+            self.assertTrue(build_engine_url(entry).drivername)
+            engine_options(entry)
 
     async def testApplicationSqliteUrlAndDatabaseAreCoherent(self) -> None:
         """
