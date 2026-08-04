@@ -1,37 +1,23 @@
 from typing import Any
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from orionis.database.connection import Connection
 from orionis.database.contracts.connection import IConnection
 from orionis.database.contracts.manager import IConnectionManager
-from orionis.database.dialect import (
-    buildSyncEngineUrl,
-    missingDependencyError,
-    resolveDriver,
-    syncEngineOptions,
-)
 from orionis.database.exceptions import ConnectionNotFoundException
 from orionis.foundation.contracts.application import IApplication
-
-# ruff: noqa: TC001
+from orionis.foundation.config.database.entities.database import (
+    Database as ConfigDatabase,
+)
 
 class ConnectionManager(IConnectionManager):
-    """
-    Resolve, cache, and control the lifecycle of database connections.
 
-    The manager reads the ``database`` configuration, keeps one plain
-    configuration mapping per connection name, and builds
-    :class:`Connection` objects lazily, caching them for reuse.
+    # ruff: noqa: TC001
 
-    Notes
-    -----
-    This module must not enable ``from __future__ import annotations``:
-    the container resolves constructor dependencies from evaluated
-    annotations, and stringized annotations cannot be injected.
-    """
+    __slots__ = ("_cached_connections", "_connections", "_default")
 
-    __slots__ = ("_configs", "_connections", "_default")
-
-    def __init__(self, app: IApplication) -> None:
+    def __init__(
+        self,
+        app: IApplication,
+    ) -> None:
         """
         Initialize the manager from the application configuration.
 
@@ -45,22 +31,22 @@ class ConnectionManager(IConnectionManager):
         None
             This method does not return a value.
         """
-        raw = app.config("database") or {}
-        raw = self._asDict(raw)
+        raw_config: ConfigDatabase | dict[str, Any] = app.config("database")
+        payload: dict[str, Any] = (
+            raw_config.toDict()
+            if isinstance(raw_config, ConfigDatabase)
+            else raw_config
+        )
+        self._default: str = str(payload["default"]).lower()
+        self._connections: dict[str, dict[str, Any]] = dict(
+            payload.get("connections") or {},
+        )
+        self._cached_connections: dict[str, IConnection] = {}
 
-        self._default: str = str(raw.get("default", "sqlite"))
-        self._connections: dict[str, Connection] = {}
-
-        # Normalize every connection entry into a plain dictionary.
-        entries = self._asDict(raw.get("connections", {}) or {})
-        self._configs: dict[str, dict[str, Any]] = {
-            str(name): self._asDict(config)
-            for name, config in entries.items()
-        }
-
-    # ── Resolution ──────────────────────────────────────────────────────────
-
-    def connection(self, name: str | None = None) -> IConnection:
+    def connection(
+        self,
+        name: str | None = None,
+    ) -> IConnection:
         """
         Resolve the connection registered under the given name.
 
@@ -82,14 +68,18 @@ class ConnectionManager(IConnectionManager):
         ConnectionNotFoundException
             If the connection is not declared in the configuration.
         """
-        resolved = name or self._default
-        cached = self._connections.get(resolved)
-        if cached is not None:
-            return cached
+        resolved_name: str = name or self._default
+        if resolved_name in self._cached_connections:
+            return self._cached_connections[resolved_name]
 
-        config = self._configFor(resolved)
-        instance = Connection(resolved, config)
-        self._connections[resolved] = instance
+        config: dict[str, Any] | None = self._connections.get(resolved_name)
+        if config is None:
+            raise ConnectionNotFoundException(self.__unknownConnectionMessage(
+                resolved_name,
+            ))
+
+        instance = Connection(resolved_name, config)
+        self._cached_connections[resolved_name] = instance
         return instance
 
     def addConnection(self, name: str, config: dict[str, Any]) -> None:
@@ -114,15 +104,18 @@ class ConnectionManager(IConnectionManager):
         Raises
         ------
         ValueError
-            If the name is empty or the configuration is not a mapping.
+            If the name is empty.
+        TypeError
+            If the configuration is not a mapping.
         """
         if not isinstance(name, str) or not name.strip():
             error_msg = "Connection name must be a non-empty string."
             raise ValueError(error_msg)
         if not isinstance(config, dict):
-            error_msg = "Connection configuration must be a dictionary."
+            error_msg = "Connection configuration must be a dict."
             raise TypeError(error_msg)
-        self._configs[name.strip()] = dict(config)
+
+        self._connections[name] = config
 
     def hasConnection(self, name: str) -> bool:
         """
@@ -138,9 +131,7 @@ class ConnectionManager(IConnectionManager):
         bool
             ``True`` when the configuration is registered.
         """
-        return name in self._configs
-
-    # ── Default connection ──────────────────────────────────────────────────
+        return name in self._connections
 
     def getDefaultName(self) -> str:
         """
@@ -149,7 +140,7 @@ class ConnectionManager(IConnectionManager):
         Returns
         -------
         str
-            Default connection name.
+            Default connection name as configured.
         """
         return self._default
 
@@ -160,7 +151,8 @@ class ConnectionManager(IConnectionManager):
         Parameters
         ----------
         name : str
-            Name of a registered connection.
+            Connection name to use as the default; must already be
+            declared in the configuration.
 
         Returns
         -------
@@ -170,16 +162,11 @@ class ConnectionManager(IConnectionManager):
         Raises
         ------
         ConnectionNotFoundException
-            If the name is not registered.
+            If the connection is not declared in the configuration.
         """
-        if name not in self._configs:
-            error_msg = (
-                f"Cannot set default connection: '{name}' is not configured."
-            )
-            raise ConnectionNotFoundException(error_msg)
+        if name not in self._connections:
+            raise ConnectionNotFoundException(self.__unknownConnectionMessage(name))
         self._default = name
-
-    # ── Lifecycle ───────────────────────────────────────────────────────────
 
     async def disconnect(self, name: str | None = None) -> None:
         """
@@ -197,120 +184,59 @@ class ConnectionManager(IConnectionManager):
             This method does not return a value.
         """
         if name is not None:
-            instance = self._connections.pop(name, None)
+            instance: IConnection | None = self._cached_connections.pop(name, None)
             if instance is not None:
                 await instance.disconnect()
             return
 
-        # Dispose every cached connection and clear the registry.
-        instances = list(self._connections.values())
-        self._connections.clear()
+        instances: list[IConnection] = list(self._cached_connections.values())
+        self._cached_connections.clear()
         for instance in instances:
             await instance.disconnect()
 
-    # ── APScheduler integration ─────────────────────────────────────────────
-
-    def scheduleTaskStore(
-        self,
-        name: str | None = None,
-        *,
-        tablename: str = "scheduler_tasks",
-    ) -> SQLAlchemyJobStore:
+    def configFor(self, name: str | None = None) -> dict[str, Any]:
         """
-        Build an APScheduler ``SQLAlchemyJobStore`` for a connection.
-
-        APScheduler's ``SQLAlchemyJobStore`` always operates through a
-        blocking SQLAlchemy engine, so the returned store is backed by a
-        synchronous DBAPI driver rather than the async engine used by
-        :meth:`connection`.
+        Retrieve the configuration for a named connection.
 
         Parameters
         ----------
         name : str or None, optional
-            Connection name as declared in the database configuration,
-            or ``None`` for the default connection.
-        tablename : str, optional
-            Name of the table used to persist scheduled jobs.
+            Connection name to look up, or ``None`` for the default.
 
         Returns
         -------
-        SQLAlchemyJobStore
-            Job store bound to a synchronous engine for the connection.
-
-        Raises
-        ------
-        ConnectionNotFoundException
-            If the connection is not declared in the configuration.
-        MissingDatabaseDependencyException
-            If the synchronous driver package is not installed.
-        """
-        resolved = name or self._default
-        config = self._configFor(resolved)
-
-        url = buildSyncEngineUrl(config)
-        options = syncEngineOptions(config)
-        try:
-            return SQLAlchemyJobStore(
-                url=url,
-                tablename=tablename,
-                engine_options=options,
-            )
-        except ModuleNotFoundError as exc:
-            raise missingDependencyError(
-                resolveDriver(config),
-                exc,
-                sync=True,
-            ) from exc
-
-    # ── Internal helpers ────────────────────────────────────────────────────
-
-    def _configFor(self, resolved: str) -> dict[str, Any]:
-        """
-        Look up the configuration registered under the resolved name.
-
-        Parameters
-        ----------
-        resolved : str
-            Connection name already resolved from ``name or default``.
-
-        Returns
-        -------
-        dict
-            Driver configuration for the connection.
+        dict[str, Any]
+            The configuration dictionary for the requested connection.
 
         Raises
         ------
         ConnectionNotFoundException
             If the connection is not declared in the configuration.
         """
-        config = self._configs.get(resolved)
+        resolved_name: str = name or self._default
+        config: dict[str, Any] | None = self._connections.get(resolved_name)
         if config is None:
-            available = ", ".join(sorted(self._configs)) or "none"
-            error_msg = (
-                f"Database connection '{resolved}' is not configured. "
-                f"Available connections: {available}."
-            )
-            raise ConnectionNotFoundException(error_msg)
+            raise ConnectionNotFoundException(self.__unknownConnectionMessage(
+                resolved_name,
+            ))
         return config
 
-    @staticmethod
-    def _asDict(value: Any) -> dict[str, Any]:  # noqa: ANN401
+    def __unknownConnectionMessage(self, name: str) -> str:
         """
-        Coerce configuration entities or mappings into plain dictionaries.
+        Build the descriptive message for an unresolved connection name.
 
         Parameters
         ----------
-        value : Any
-            Mapping or entity exposing a ``toDict`` method.
+        name : str
+            Connection name that failed to resolve.
 
         Returns
         -------
-        dict
-            Plain dictionary representation of the value.
+        str
+            Descriptive message listing the declared connection names.
         """
-        if isinstance(value, dict):
-            return value
-        to_dict = getattr(value, "toDict", None)
-        if callable(to_dict):
-            return dict(to_dict())
-        return dict(value)
+        declared = ", ".join(sorted(self._connections)) or "none"
+        return (
+            f"Unknown database connection '{name}'. "
+            f"Declared connections: {declared}."
+        )
