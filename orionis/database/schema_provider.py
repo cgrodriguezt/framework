@@ -6,10 +6,10 @@ class SchemaProvider(ServiceProvider):
 
     def register(self) -> None:
         """
-        Bind the ``ISchema`` contract to the ``Schema`` implementation.
+        Bind the `ISchema` contract to the `Schema` implementation.
 
         A new instance is resolved on every request (transient lifetime),
-        since ``Schema`` accumulates per-call state such as the table
+        since `Schema` accumulates per-call state such as the table
         name and pending definitions.
 
         Returns
