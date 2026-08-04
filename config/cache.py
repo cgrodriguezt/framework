@@ -18,10 +18,10 @@ class BootstrapCache(Cache):
     # ----------------------------------------------------------------------------------
     # default : Drivers | str, optional
     # --- The default cache store driver.
-    # --- Defaults to the CACHE_STORE env var or "memory".
+    # --- Defaults to the CACHE_STORE env var or "file" if not set.
     # ----------------------------------------------------------------------------------
     default: Drivers | str = field(
-        default_factory=lambda: Env.get("CACHE_STORE", Drivers.MEMORY),
+        default_factory=lambda: Env.get("CACHE_STORE", Drivers.FILE),
     )
 
     # ----------------------------------------------------------------------------------
