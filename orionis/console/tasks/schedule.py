@@ -13,7 +13,7 @@ from orionis.console.enums.events import SchedulerEvent, TaskEvent
 from orionis.console.fluent.contracts.task import ITask
 from orionis.console.fluent.task import Task
 from orionis.console.enums.states import ScheduleStates
-from orionis.console.tasks.contracts.store import IScheduleStore
+from orionis.console.contracts.store import IScheduleStore
 from orionis.failure.contracts.catch import ICatch
 from orionis.support.facades.logger import Log
 from orionis.support.facades.datetime import DateTime
