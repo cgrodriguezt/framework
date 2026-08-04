@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncEngine
 
 # Map of Orionis driver names to SQLAlchemy async dialect names.
-_DIALECTS: dict[str, str] = {
+_ASYNC_DIALECTS: dict[str, str] = {
     "sqlite": "sqlite+aiosqlite",
     "mysql": "mysql+aiomysql",
     "pgsql": "postgresql+asyncpg",
@@ -21,7 +21,7 @@ _DIALECTS: dict[str, str] = {
 }
 
 # Map of Orionis driver names to (pip package, install extra) hints.
-_DRIVER_PACKAGES: dict[str, tuple[str, str]] = {
+_ASYNC_DRIVER_PACKAGES: dict[str, tuple[str, str]] = {
     "sqlite": ("aiosqlite", "orionis"),
     "mysql": ("aiomysql", "orionis[mysql]"),
     "pgsql": ("asyncpg", "orionis[pgsql]"),
@@ -70,8 +70,7 @@ _MYSQL_RELAXED_MODE: str = "NO_ENGINE_SUBSTITUTION"
 # SQLite database markers that identify an in-memory database.
 _SQLITE_MEMORY_MARKERS: frozenset[str] = frozenset({":memory:", ""})
 
-
-def resolveDriver(config: dict[str, Any]) -> str:
+def resolve_driver(config: dict[str, Any]) -> str:
     """
     Extract and validate the driver name from a connection configuration.
 
@@ -91,8 +90,8 @@ def resolveDriver(config: dict[str, Any]) -> str:
         If the driver is missing or has no registered dialect.
     """
     driver = str(config.get("driver", "")).strip().lower()
-    if driver not in _DIALECTS:
-        supported = ", ".join(sorted(_DIALECTS))
+    if driver not in _ASYNC_DIALECTS:
+        supported = ", ".join(sorted(_ASYNC_DIALECTS))
         error_msg = (
             f"Unsupported database driver '{driver}'. "
             f"Supported drivers: {supported}."
@@ -100,8 +99,7 @@ def resolveDriver(config: dict[str, Any]) -> str:
         raise UnsupportedDriverException(error_msg)
     return driver
 
-
-def missingDependencyError(
+def missing_dependency_error(
     driver: str,
     cause: ModuleNotFoundError,
     *,
@@ -126,7 +124,7 @@ def missingDependencyError(
         Exception with an actionable installation hint.
     """
     packages: dict[str, tuple[str, str]] = (
-        _SYNC_DRIVER_PACKAGES if sync else _DRIVER_PACKAGES
+        _SYNC_DRIVER_PACKAGES if sync else _ASYNC_DRIVER_PACKAGES
     )
     package, extra = packages.get(driver, (driver, "orionis"))
     error_msg = (
@@ -135,8 +133,11 @@ def missingDependencyError(
     )
     return MissingDatabaseDependencyException(error_msg)
 
-
-def buildEngineUrl(config: dict[str, Any]) -> URL:
+def build_engine_url(
+    config: dict[str, Any],
+    *,
+    sync: bool = False,
+) -> URL:
     """
     Build the engine URL for a connection configuration.
 
@@ -144,6 +145,9 @@ def buildEngineUrl(config: dict[str, Any]) -> URL:
     ----------
     config : dict
         Connection configuration produced by the database config entities.
+    sync : bool, optional
+        Whether to select the blocking DBAPI dialect instead of the async
+        one.
 
     Returns
     -------
@@ -155,115 +159,48 @@ def buildEngineUrl(config: dict[str, Any]) -> URL:
     UnsupportedDriverException
         If the driver has no registered dialect.
     """
-    driver = resolveDriver(config)
-    dialect = _DIALECTS[driver]
+    driver = resolve_driver(config)
+    dialects = _SYNC_DIALECTS if sync else _ASYNC_DIALECTS
+    dialect = dialects[driver]
     if driver == "sqlite":
-        return _sqliteUrl(config, dialect)
+        return _sqlite_url(config, dialect)
     if driver == "oracle":
-        return _oracleUrl(config, dialect)
-    return _serverUrl(driver, config, dialect)
+        return _oracle_url(config, dialect)
+    return _server_url(driver, config, dialect)
 
-
-def buildSyncEngineUrl(config: dict[str, Any]) -> URL:
+def engine_options(
+    config: dict[str, Any],
+    *,
+    sync: bool = False,
+) -> dict[str, Any]:
     """
-    Build a synchronous engine URL for a connection configuration.
-
-    Mirrors :func:`buildEngineUrl` but selects the SQLAlchemy dialect
-    backed by a blocking DBAPI driver, suitable for consumers that
-    require a synchronous engine, such as APScheduler's
-    ``scheduleTaskStore``.
-
-    Parameters
-    ----------
-    config : dict
-        Connection configuration produced by the database config entities.
-
-    Returns
-    -------
-    URL
-        Synchronous engine URL for the configured driver.
-
-    Raises
-    ------
-    UnsupportedDriverException
-        If the driver has no registered dialect.
-    """
-    driver = resolveDriver(config)
-    dialect = _SYNC_DIALECTS[driver]
-    if driver == "sqlite":
-        return _sqliteUrl(config, dialect)
-    if driver == "oracle":
-        return _oracleUrl(config, dialect)
-    return _serverUrl(driver, config, dialect)
-
-
-def syncEngineOptions(config: dict[str, Any]) -> dict[str, Any]:
-    """
-    Build keyword options for a synchronous engine factory.
-
-    Mirrors :func:`engineOptions`, but restricts driver-specific
-    ``connect_args`` to the keys understood by blocking DBAPI drivers.
-    PostgreSQL's ``sslmode``/``server_settings`` are asyncpg-specific and
-    are intentionally not translated here; they only apply to the async
-    connection used by :class:`Connection`.
+    Build keyword options for an engine factory.
 
     Parameters
     ----------
     config : dict
         Connection configuration.
+    sync : bool, optional
+        Whether to select the blocking DBAPI driver options instead of
+        the async ones.
 
     Returns
     -------
     dict
         Options such as pool class and driver connect arguments.
     """
-    driver = resolveDriver(config)
+    driver = resolve_driver(config)
     options: dict[str, Any] = {"echo": False, "future": True}
 
     if driver == "sqlite":
         # A shared in-memory database requires a single pooled connection.
-        if _isSqliteMemory(config):
+        if _is_sqlite_memory(config):
             options["poolclass"] = StaticPool
             options["connect_args"] = {"check_same_thread": False}
         return options
 
-    if driver == "oracle":
-        # A full DSN bypasses the host/port URL components entirely; the
-        # same keyword works for oracledb in both async and sync mode.
-        dsn = config.get("dsn") or config.get("tns_name")
-        if dsn:
-            options["connect_args"] = {"dsn": str(dsn)}
-        return options
-
-    return options
-
-
-def engineOptions(config: dict[str, Any]) -> dict[str, Any]:
-    """
-    Build keyword options for the async engine factory.
-
-    Parameters
-    ----------
-    config : dict
-        Connection configuration.
-
-    Returns
-    -------
-    dict
-        Options such as pool class and driver connect arguments.
-    """
-    driver = resolveDriver(config)
-    options: dict[str, Any] = {"echo": False, "future": True}
-
-    if driver == "sqlite":
-        # A shared in-memory database requires a single pooled connection.
-        if _isSqliteMemory(config):
-            options["poolclass"] = StaticPool
-            options["connect_args"] = {"check_same_thread": False}
-        return options
-
-    if driver == "pgsql":
-        connect_args = _pgsqlConnectArgs(config)
+    if not sync and driver == "pgsql":
+        connect_args = _pgsql_connect_args(config)
         if connect_args:
             options["connect_args"] = connect_args
         return options
@@ -277,8 +214,7 @@ def engineOptions(config: dict[str, Any]) -> dict[str, Any]:
 
     return options
 
-
-def _pgsqlConnectArgs(config: dict[str, Any]) -> dict[str, Any]:
+def _pgsql_connect_args(config: dict[str, Any]) -> dict[str, Any]:
     """
     Build the asyncpg connect arguments for a PostgreSQL connection.
 
@@ -298,15 +234,15 @@ def _pgsqlConnectArgs(config: dict[str, Any]) -> dict[str, Any]:
     connect_args: dict[str, Any] = {}
 
     # asyncpg accepts libpq-style ssl mode strings directly.
-    sslmode = _configText(config, "sslmode")
+    sslmode = _config_text(config, "sslmode")
     if sslmode:
         connect_args["ssl"] = sslmode
 
     server_settings: dict[str, str] = {}
-    search_path = _configText(config, "search_path")
+    search_path = _config_text(config, "search_path")
     if search_path:
         server_settings["search_path"] = search_path
-    charset = _configText(config, "charset")
+    charset = _config_text(config, "charset")
     if charset:
         server_settings["client_encoding"] = charset
     if server_settings:
@@ -314,8 +250,7 @@ def _pgsqlConnectArgs(config: dict[str, Any]) -> dict[str, Any]:
 
     return connect_args
 
-
-def configureEngine(engine: AsyncEngine, config: dict[str, Any]) -> None:
+def configure_engine(engine: AsyncEngine, config: dict[str, Any]) -> None:
     """
     Apply driver-specific session settings to a freshly built engine.
 
@@ -335,21 +270,23 @@ def configureEngine(engine: AsyncEngine, config: dict[str, Any]) -> None:
     None
         This function does not return a value.
     """
-    statements = _sessionStatements(config)
+    statements = _session_statements(config)
     if not statements:
         return
 
     # Register a Core pool event on the underlying sync engine; the async
     # adapters expose a synchronous cursor facade suitable for session setup.
     @event.listens_for(engine.sync_engine, "connect")
-    def _applySessionStatements(dbapi_connection: Any, _record: Any) -> None:  # noqa: ANN401
+    def _apply_session_statements(
+        dbapi_connection: object,
+        _record: object,
+    ) -> None:
         cursor = dbapi_connection.cursor()
         for statement in statements:
             cursor.execute(statement)
         cursor.close()
 
-
-def _sessionStatements(config: dict[str, Any]) -> tuple[str, ...]:
+def _session_statements(config: dict[str, Any]) -> tuple[str, ...]:
     """
     Build the per-connection session statements for a configuration.
 
@@ -363,15 +300,14 @@ def _sessionStatements(config: dict[str, Any]) -> tuple[str, ...]:
     tuple of str
         Statements to run on each new pooled connection.
     """
-    driver = resolveDriver(config)
+    driver = resolve_driver(config)
     if driver == "sqlite":
-        return _sqlitePragmas(config)
+        return _sqlite_pragmas(config)
     if driver == "mysql":
-        return _mysqlSessionCommands(config)
+        return _mysql_session_commands(config)
     return ()
 
-
-def _mysqlSessionCommands(config: dict[str, Any]) -> tuple[str, ...]:
+def _mysql_session_commands(config: dict[str, Any]) -> tuple[str, ...]:
     """
     Build the MySQL session commands for a configuration.
 
@@ -393,26 +329,22 @@ def _mysqlSessionCommands(config: dict[str, Any]) -> tuple[str, ...]:
 
     # Charset and collation are validated as identifiers before being
     # embedded; both originate from trusted configuration entities.
-    charset = _configText(config, "charset")
+    charset = _config_text(config, "charset")
     if charset and _IDENTIFIER_PATTERN.fullmatch(charset):
         command = f"SET NAMES {charset}"
-        collation = _configText(config, "collation")
+        collation = _config_text(config, "collation")
         if collation and _IDENTIFIER_PATTERN.fullmatch(collation):
             command += f" COLLATE {collation}"
         commands.append(command)
 
     strict = config.get("strict")
     if strict is not None:
-        mode = _MYSQL_STRICT_MODE if _yesNo(strict) == "yes" else _MYSQL_RELAXED_MODE
+        mode = _MYSQL_STRICT_MODE if _yes_no(strict) == "yes" else _MYSQL_RELAXED_MODE
         commands.append(f"SET SESSION sql_mode='{mode}'")
 
     return tuple(commands)
 
-
-# ── URL builders ────────────────────────────────────────────────────────────
-
-
-def _sqliteUrl(config: dict[str, Any], dialect: str) -> URL:
+def _sqlite_url(config: dict[str, Any], dialect: str) -> URL:
     """
     Build the engine URL for a SQLite connection.
 
@@ -436,8 +368,7 @@ def _sqliteUrl(config: dict[str, Any], dialect: str) -> URL:
         database = ":memory:"
     return URL.create(dialect, database=database)
 
-
-def _configText(config: dict[str, Any], key: str) -> str | None:
+def _config_text(config: dict[str, Any], key: str) -> str | None:
     """
     Extract a trimmed text value from a configuration mapping.
 
@@ -456,8 +387,7 @@ def _configText(config: dict[str, Any], key: str) -> str | None:
     value = str(config.get(key, "") or "").strip()
     return value or None
 
-
-def _serverUrl(driver: str, config: dict[str, Any], dialect: str) -> URL:
+def _server_url(driver: str, config: dict[str, Any], dialect: str) -> URL:
     """
     Build the engine URL for host-based drivers.
 
@@ -480,16 +410,15 @@ def _serverUrl(driver: str, config: dict[str, Any], dialect: str) -> URL:
     """
     return URL.create(
         dialect,
-        username=_configText(config, "username"),
-        password=_configText(config, "password"),
-        host=_configText(config, "host"),
+        username=_config_text(config, "username"),
+        password=_config_text(config, "password"),
+        host=_config_text(config, "host"),
         port=int(config["port"]) if config.get("port") else None,
-        database=_configText(config, "database"),
-        query=_serverQuery(driver, config),
+        database=_config_text(config, "database"),
+        query=_server_query(driver, config),
     )
 
-
-def _serverQuery(driver: str, config: dict[str, Any]) -> dict[str, str]:
+def _server_query(driver: str, config: dict[str, Any]) -> dict[str, str]:
     """
     Build the URL query parameters for host-based drivers.
 
@@ -508,26 +437,25 @@ def _serverQuery(driver: str, config: dict[str, Any]) -> dict[str, str]:
     query: dict[str, str] = {}
 
     if driver == "mysql":
-        charset = _configText(config, "charset")
+        charset = _config_text(config, "charset")
         if charset:
             query["charset"] = charset
-        unix_socket = _configText(config, "unix_socket")
+        unix_socket = _config_text(config, "unix_socket")
         if unix_socket:
             query["unix_socket"] = unix_socket
 
     if driver == "sqlserver":
-        query["driver"] = _configText(config, "odbc_driver") or _DEFAULT_ODBC_DRIVER
+        query["driver"] = _config_text(config, "odbc_driver") or _DEFAULT_ODBC_DRIVER
         if config.get("encrypt") is not None:
-            query["Encrypt"] = _yesNo(config["encrypt"])
+            query["Encrypt"] = _yes_no(config["encrypt"])
         if config.get("trust_server_certificate") is not None:
-            query["TrustServerCertificate"] = _yesNo(
+            query["TrustServerCertificate"] = _yes_no(
                 config["trust_server_certificate"],
             )
 
     return query
 
-
-def _oracleUrl(config: dict[str, Any], dialect: str) -> URL:
+def _oracle_url(config: dict[str, Any], dialect: str) -> URL:
     """
     Build the engine URL for an Oracle connection.
 
@@ -548,23 +476,22 @@ def _oracleUrl(config: dict[str, Any], dialect: str) -> URL:
     if config.get("dsn") or config.get("tns_name"):
         return URL.create(
             dialect,
-            username=_configText(config, "username"),
-            password=_configText(config, "password"),
+            username=_config_text(config, "username"),
+            password=_config_text(config, "password"),
         )
 
-    sid = _configText(config, "sid")
+    sid = _config_text(config, "sid")
     return URL.create(
         dialect,
-        username=_configText(config, "username"),
-        password=_configText(config, "password"),
-        host=_configText(config, "host"),
+        username=_config_text(config, "username"),
+        password=_config_text(config, "password"),
+        host=_config_text(config, "host"),
         port=int(config["port"]) if config.get("port") else None,
         database=sid,
-        query=_oracleQuery(config, sid),
+        query=_oracle_query(config, sid),
     )
 
-
-def _oracleQuery(config: dict[str, Any], sid: str | None) -> dict[str, str]:
+def _oracle_query(config: dict[str, Any], sid: str | None) -> dict[str, str]:
     """
     Build the URL query parameters for an Oracle connection.
 
@@ -580,16 +507,12 @@ def _oracleQuery(config: dict[str, Any], sid: str | None) -> dict[str, str]:
     dict of str to str
         Query parameters for the engine URL.
     """
-    service_name = _configText(config, "service_name")
+    service_name = _config_text(config, "service_name")
     if service_name and not sid:
         return {"service_name": service_name}
     return {}
 
-
-# ── SQLite helpers ──────────────────────────────────────────────────────────
-
-
-def _isSqliteMemory(config: dict[str, Any]) -> bool:
+def _is_sqlite_memory(config: dict[str, Any]) -> bool:
     """
     Report whether a SQLite configuration targets an in-memory database.
 
@@ -606,8 +529,7 @@ def _isSqliteMemory(config: dict[str, Any]) -> bool:
     database = str(config.get("database", "") or "")
     return database in _SQLITE_MEMORY_MARKERS
 
-
-def _sqlitePragmas(config: dict[str, Any]) -> tuple[str, ...]:
+def _sqlite_pragmas(config: dict[str, Any]) -> tuple[str, ...]:
     """
     Build the PRAGMA statements for a SQLite configuration.
 
@@ -625,25 +547,24 @@ def _sqlitePragmas(config: dict[str, Any]) -> tuple[str, ...]:
 
     foreign_keys = config.get("foreign_key_constraints")
     if foreign_keys is not None:
-        state = _normalizeSwitch(foreign_keys)
+        state = _normalize_switch(foreign_keys)
         pragmas.append(f"PRAGMA foreign_keys={state}")
 
     busy_timeout = config.get("busy_timeout")
     if isinstance(busy_timeout, int) and busy_timeout > 0:
         pragmas.append(f"PRAGMA busy_timeout={busy_timeout}")
 
-    journal_mode = _enumValue(config.get("journal_mode"))
+    journal_mode = _enum_value(config.get("journal_mode"))
     if journal_mode:
         pragmas.append(f"PRAGMA journal_mode={journal_mode}")
 
-    synchronous = _enumValue(config.get("synchronous"))
+    synchronous = _enum_value(config.get("synchronous"))
     if synchronous:
         pragmas.append(f"PRAGMA synchronous={synchronous}")
 
     return tuple(pragmas)
 
-
-def _normalizeSwitch(value: Any) -> str:  # noqa: ANN401
+def _normalize_switch(value: Any) -> str:  # noqa: ANN401
     """
     Normalize a boolean-like configuration value to ``ON`` or ``OFF``.
 
@@ -657,13 +578,12 @@ def _normalizeSwitch(value: Any) -> str:  # noqa: ANN401
     str
         ``"ON"`` or ``"OFF"``.
     """
-    raw = _enumValue(value)
+    raw = _enum_value(value)
     if isinstance(value, bool):
         return "ON" if value else "OFF"
     return "ON" if str(raw).strip().upper() in {"ON", "TRUE", "1"} else "OFF"
 
-
-def _yesNo(value: Any) -> str:  # noqa: ANN401
+def _yes_no(value: Any) -> str:  # noqa: ANN401
     """
     Normalize a boolean-like configuration value to ``yes`` or ``no``.
 
@@ -679,11 +599,10 @@ def _yesNo(value: Any) -> str:  # noqa: ANN401
     """
     if isinstance(value, bool):
         return "yes" if value else "no"
-    raw = str(_enumValue(value)).strip().upper()
+    raw = str(_enum_value(value)).strip().upper()
     return "yes" if raw in {"YES", "ON", "TRUE", "1"} else "no"
 
-
-def _enumValue(value: Any) -> str:  # noqa: ANN401
+def _enum_value(value: Any) -> str:  # noqa: ANN401
     """
     Extract the primitive value from a possible enum member.
 
