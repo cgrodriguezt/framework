@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import ClassVar
 from orionis.orm import Boolean, Integer, Model, String
-from orionis.orm.metaclass import pluralize, snakeCase
+from orionis.orm.metaclass import pluralize, snake_case
 from orionis.test import TestCase
 
 class _User(Model):
@@ -46,8 +46,8 @@ class TestNamingHelpers(TestCase):
 
         Validates the class-name normalization helper.
         """
-        self.assertEqual(snakeCase("UserProfile"), "user_profile")
-        self.assertEqual(snakeCase("User"), "user")
+        self.assertEqual(snake_case("UserProfile"), "user_profile")
+        self.assertEqual(snake_case("User"), "user")
 
     def testPluralizeAppliesEnglishHeuristics(self) -> None:
         """
@@ -68,9 +68,9 @@ class TestModelMetaclass(TestCase):
 
         Validates the naming convention.
         """
-        self.assertEqual(_User.__meta__.tableName, "users")
-        self.assertEqual(_Category.__meta__.tableName, "categories")
-        self.assertEqual(_Box.__meta__.tableName, "boxes")
+        self.assertEqual(_User.__meta__.table_name, "users")
+        self.assertEqual(_Category.__meta__.table_name, "categories")
+        self.assertEqual(_Box.__meta__.table_name, "boxes")
 
     def testExplicitTableNameIsRespected(self) -> None:
         """
@@ -78,7 +78,7 @@ class TestModelMetaclass(TestCase):
 
         Validates the declaration override.
         """
-        self.assertEqual(_Account.__meta__.tableName, "ledger_accounts")
+        self.assertEqual(_Account.__meta__.table_name, "ledger_accounts")
 
     def testColumnsAreDiscoveredAndDetached(self) -> None:
         """
@@ -98,8 +98,8 @@ class TestModelMetaclass(TestCase):
 
         Validates primary key discovery.
         """
-        self.assertEqual(_User.__meta__.primaryKey, "id")
-        self.assertEqual(_CustomKey.__meta__.primaryKey, "uuid")
+        self.assertEqual(_User.__meta__.primary_key, "id")
+        self.assertEqual(_CustomKey.__meta__.primary_key, "uuid")
         self.assertFalse(_CustomKey.__meta__.incrementing)
 
     def testCastsAndHiddenArePrecomputed(self) -> None:
@@ -109,7 +109,7 @@ class TestModelMetaclass(TestCase):
         Validates the metadata precomputation.
         """
         meta = _User.__meta__
-        self.assertIn("active", meta.castLookup)
+        self.assertIn("active", meta.cast_lookup)
         self.assertEqual(meta.hidden, frozenset({"active"}))
 
     def testAbstractModelsDeferColumnsToChildren(self) -> None:
@@ -124,7 +124,7 @@ class TestModelMetaclass(TestCase):
             set(meta.columns),
             {"id", "created_by", "total"},
         )
-        self.assertEqual(meta.primaryKey, "id")
+        self.assertEqual(meta.primary_key, "id")
         self.assertEqual(set(meta.casts), {"id", "total"})
 
     def testTimestampColumnsOnlyWhenDeclared(self) -> None:
@@ -133,8 +133,8 @@ class TestModelMetaclass(TestCase):
 
         Validates the timestamp column detection.
         """
-        self.assertIsNone(_User.__meta__.createdColumn)
-        self.assertIsNone(_User.__meta__.updatedColumn)
+        self.assertIsNone(_User.__meta__.created_column)
+        self.assertIsNone(_User.__meta__.updated_column)
 
     def testFillableRulesPrecedence(self) -> None:
         """
@@ -185,8 +185,8 @@ class TestModelMetaclass(TestCase):
             timestamps = False
 
         meta = _Frozen.__meta__
-        self.assertIsNone(meta.createdColumn)
-        self.assertIsNone(meta.updatedColumn)
+        self.assertIsNone(meta.created_column)
+        self.assertIsNone(meta.updated_column)
 
     def testCustomTimestampColumnNames(self) -> None:
         """
@@ -201,8 +201,8 @@ class TestModelMetaclass(TestCase):
             CREATED_AT: ClassVar[str] = "createdOn"
 
         meta = _Renamed.__meta__
-        self.assertEqual(meta.createdColumn, "createdOn")
-        self.assertIsNone(meta.updatedColumn)
+        self.assertEqual(meta.created_column, "createdOn")
+        self.assertIsNone(meta.updated_column)
 
     def testApplyCastsSkipsNoneValues(self) -> None:
         """
@@ -223,3 +223,55 @@ class TestModelMetaclass(TestCase):
         Validates the abstract base detection.
         """
         self.assertIsNone(Model.__meta__)
+
+    def testUnknownAttributeRaisesAttributeError(self) -> None:
+        """
+        Raise AttributeError for names outside the forwarded builder set.
+
+        Validates the metaclass __getattr__ fallback.
+        """
+        with self.assertRaises(AttributeError):
+            _User.totallyUnknownAttribute  # noqa: B018
+
+    def testForwardedMethodOnAbstractModelRaisesAttributeError(self) -> None:
+        """
+        Raise AttributeError for forwarded methods on an abstract model.
+
+        Validates that a builder method name never crashes when the
+        owning class has no metadata to build a query from.
+        """
+        with self.assertRaises(AttributeError):
+            Model.where("name", "x")
+
+    def testPrimaryKeyDefaultsToIdWithoutAnyPrimaryFlag(self) -> None:
+        """
+        Default the primary key name to "id" without a primary flag.
+
+        Validates the final fallback of primary key resolution.
+        """
+
+        class _NoFlaggedPrimary(Model):
+            id = Integer()
+            name = String()
+
+        self.assertEqual(_NoFlaggedPrimary.__meta__.primary_key, "id")
+
+    def testConcreteParentColumnsAreInherited(self) -> None:
+        """
+        Inherit columns from a concrete, non-abstract parent model.
+
+        Validates that __meta__.columns (not just __pending_columns__)
+        feeds the discovery of a subclass built from a real model.
+        """
+
+        class _ConcreteParent(Model):
+            id = Integer().primary().autoIncrement()
+            name = String()
+
+        class _ConcreteChild(_ConcreteParent):
+            extra = String().nullable()
+
+        self.assertEqual(
+            set(_ConcreteChild.__meta__.columns),
+            {"id", "name", "extra"},
+        )
