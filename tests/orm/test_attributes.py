@@ -3,7 +3,7 @@ import uuid
 from datetime import UTC, date, datetime
 from typing import ClassVar
 from orionis.orm import Integer, Model, String, StrictJson, Text, Uuid
-from orionis.orm.attributes import getCastHandler, serializeForStorage
+from orionis.orm.attributes import get_cast_handler, serialize_for_storage
 from orionis.orm.exceptions import OrmException
 from orionis.test import TestCase
 
@@ -24,8 +24,8 @@ class TestCastHandlers(TestCase):
 
         Validates the numeric cast handlers.
         """
-        self.assertEqual(getCastHandler("int")("42"), 42)
-        self.assertEqual(getCastHandler("float")("2.5"), 2.5)
+        self.assertEqual(get_cast_handler("int")("42"), 42)
+        self.assertEqual(get_cast_handler("float")("2.5"), 2.5)
 
     def testBoolCastHandlesTextualForms(self) -> None:
         """
@@ -33,7 +33,7 @@ class TestCastHandlers(TestCase):
 
         Validates the truthy string table and fallbacks.
         """
-        handler = getCastHandler("bool")
+        handler = get_cast_handler("bool")
         for truthy in ("1", "true", "YES", " on "):
             self.assertTrue(handler(truthy))
         for falsy in ("0", "false", "off", ""):
@@ -47,7 +47,7 @@ class TestCastHandlers(TestCase):
 
         Validates every accepted datetime input shape.
         """
-        handler = getCastHandler("datetime")
+        handler = get_cast_handler("datetime")
         now = datetime.now(UTC)
         self.assertIs(handler(now), now)
         parsed = handler("2026-07-24T10:30:00")
@@ -61,7 +61,7 @@ class TestCastHandlers(TestCase):
 
         Validates every accepted date input shape.
         """
-        handler = getCastHandler("date")
+        handler = get_cast_handler("date")
         today = date(2026, 7, 24)
         self.assertEqual(handler("2026-07-24"), today)
         self.assertEqual(handler(today), today)
@@ -74,7 +74,7 @@ class TestCastHandlers(TestCase):
 
         Validates the JSON cast idempotency.
         """
-        handler = getCastHandler("json")
+        handler = get_cast_handler("json")
         self.assertEqual(handler('{"a": 1}'), {"a": 1})
         self.assertEqual(handler(b"[1, 2]"), [1, 2])
         self.assertEqual(handler({"a": 1}), {"a": 1})
@@ -85,7 +85,7 @@ class TestCastHandlers(TestCase):
 
         Validates the UUID cast idempotency.
         """
-        handler = getCastHandler("uuid")
+        handler = get_cast_handler("uuid")
         value = uuid.uuid4()
         self.assertIs(handler(value), value)
         self.assertEqual(handler(str(value)), value)
@@ -97,7 +97,17 @@ class TestCastHandlers(TestCase):
         Validates the cast registry guard.
         """
         with self.assertRaises(OrmException):
-            getCastHandler("decimal128")
+            get_cast_handler("decimal128")
+
+    def testGetCastHandlerNormalizesCaseAndWhitespace(self) -> None:
+        """
+        Normalize cast names before looking them up in the registry.
+
+        Validates that surrounding whitespace and casing never prevent
+        a declared cast from resolving to its handler.
+        """
+        self.assertIs(get_cast_handler(" INT "), get_cast_handler("int"))
+        self.assertIs(get_cast_handler("Bool"), get_cast_handler("bool"))
 
 class TestSerializeForStorage(TestCase):
 
@@ -108,7 +118,7 @@ class TestSerializeForStorage(TestCase):
         Validates the storage-side JSON encoding rule.
         """
         meta = _Doc.__meta__
-        result = serializeForStorage(meta, {"body": {"a": 1}})
+        result = serialize_for_storage(meta, {"body": {"a": 1}})
         self.assertEqual(result["body"], '{"a": 1}')
 
     def testStructureOnJsonColumnPassesThrough(self) -> None:
@@ -119,7 +129,7 @@ class TestSerializeForStorage(TestCase):
         """
         meta = _Doc.__meta__
         payload = {"a": 1}
-        result = serializeForStorage(meta, {"payload": payload})
+        result = serialize_for_storage(meta, {"payload": payload})
         self.assertIs(result["payload"], payload)
 
     def testUuidOnNonUuidColumnIsStringified(self) -> None:
@@ -130,7 +140,7 @@ class TestSerializeForStorage(TestCase):
         """
         meta = _Doc.__meta__
         value = uuid.uuid4()
-        result = serializeForStorage(meta, {"label": value})
+        result = serialize_for_storage(meta, {"label": value})
         self.assertEqual(result["label"], str(value))
 
     def testUuidOnUuidColumnPassesThrough(self) -> None:
@@ -141,7 +151,7 @@ class TestSerializeForStorage(TestCase):
         """
         meta = _Doc.__meta__
         value = uuid.uuid4()
-        result = serializeForStorage(meta, {"token": value})
+        result = serialize_for_storage(meta, {"token": value})
         self.assertIs(result["token"], value)
 
     def testNoneAndUnknownColumnsPassThrough(self) -> None:
@@ -151,7 +161,7 @@ class TestSerializeForStorage(TestCase):
         Validates the serialization fallbacks.
         """
         meta = _Doc.__meta__
-        result = serializeForStorage(meta, {"body": None, "ghost": 5})
+        result = serialize_for_storage(meta, {"body": None, "ghost": 5})
         self.assertIsNone(result["body"])
         self.assertEqual(result["ghost"], 5)
 
