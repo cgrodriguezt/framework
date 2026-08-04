@@ -124,6 +124,37 @@ class TestConnectionManager(TestCase):
         with self.assertRaises(ConnectionNotFoundException):
             self._manager.setDefaultName("missing")
 
+    # ── Configuration lookup ──────────────────────────────────────────────────
+
+    def testConfigForReturnsNamedConfiguration(self) -> None:
+        """
+        Retrieve the raw configuration for a named connection.
+
+        Validates the configFor lookup used outside connection building.
+        """
+        config = self._manager.configFor("replica")
+        self.assertEqual(config["driver"], "sqlite")
+
+    def testConfigForDefaultsToDefaultConnection(self) -> None:
+        """
+        Retrieve the default connection configuration without a name.
+
+        Validates the same default-resolution rule used by connection().
+        """
+        self.assertEqual(
+            self._manager.configFor(),
+            self._manager.configFor("sqlite"),
+        )
+
+    def testConfigForUnknownConnectionRaises(self) -> None:
+        """
+        Raise ConnectionNotFoundException for unregistered names.
+
+        Validates that configFor fails the same way as connection().
+        """
+        with self.assertRaises(ConnectionNotFoundException):
+            self._manager.configFor("missing")
+
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
     async def testDisconnectRemovesCachedConnection(self) -> None:
@@ -136,3 +167,25 @@ class TestConnectionManager(TestCase):
         await self._manager.disconnect("sqlite")
         second = self._manager.connection()
         self.assertIsNot(first, second)
+
+    async def testDisconnectAllClearsEveryCachedConnection(self) -> None:
+        """
+        Dispose every cached connection when no name is given.
+
+        Validates the bulk-disconnect branch of the lifecycle method.
+        """
+        first_default = self._manager.connection()
+        first_replica = self._manager.connection("replica")
+        await self._manager.disconnect()
+        second_default = self._manager.connection()
+        second_replica = self._manager.connection("replica")
+        self.assertIsNot(first_default, second_default)
+        self.assertIsNot(first_replica, second_replica)
+
+    async def testDisconnectUnknownNameIsNoOp(self) -> None:
+        """
+        Do nothing when disconnecting a name that was never resolved.
+
+        Validates that disconnect is safe to call for untouched names.
+        """
+        await self._manager.disconnect("never-touched")
