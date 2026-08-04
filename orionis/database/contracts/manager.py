@@ -3,19 +3,9 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-
     from orionis.database.contracts.connection import IConnection
 
-
 class IConnectionManager(ABC):
-    """
-    Contract for the database connection manager.
-
-    The manager resolves the database configuration, registers named
-    connection configurations, builds :class:`IConnection` objects on
-    demand, caches them for reuse, and controls their lifecycle.
-    """
 
     @abstractmethod
     def connection(self, name: str | None = None) -> IConnection:
@@ -64,7 +54,9 @@ class IConnectionManager(ABC):
         Raises
         ------
         ValueError
-            If the name is empty or the configuration is not a mapping.
+            If the name is empty.
+        TypeError
+            If the configuration is not a mapping.
         """
 
     @abstractmethod
@@ -91,7 +83,7 @@ class IConnectionManager(ABC):
         Returns
         -------
         str
-            Default connection name.
+            Default connection name as configured.
         """
 
     @abstractmethod
@@ -102,7 +94,8 @@ class IConnectionManager(ABC):
         Parameters
         ----------
         name : str
-            Name of a registered connection.
+            Connection name to use as the default; must already be
+            declared in the configuration.
 
         Returns
         -------
@@ -112,7 +105,7 @@ class IConnectionManager(ABC):
         Raises
         ------
         ConnectionNotFoundException
-            If the name is not registered.
+            If the connection is not declared in the configuration.
         """
 
     @abstractmethod
@@ -133,37 +126,23 @@ class IConnectionManager(ABC):
         """
 
     @abstractmethod
-    def scheduleTaskStore(
-        self,
-        name: str | None = None,
-        *,
-        tablename: str = "scheduler_tasks",
-    ) -> SQLAlchemyJobStore:
+    def configFor(self, name: str | None = None) -> dict[str, Any]:
         """
-        Build an APScheduler ``SQLAlchemyJobStore`` for a connection.
-
-        APScheduler's ``SQLAlchemyJobStore`` always operates through a
-        blocking SQLAlchemy engine, so the returned store is backed by a
-        synchronous DBAPI driver rather than the async engine used by
-        :meth:`connection`.
+        Retrieve the configuration for a named connection.
 
         Parameters
         ----------
         name : str or None, optional
             Connection name as declared in the database configuration,
             or ``None`` for the default connection.
-        tablename : str, optional
-            Name of the table used to persist scheduled jobs.
 
         Returns
         -------
-        SQLAlchemyJobStore
-            Job store bound to a synchronous engine for the connection.
+        dict
+            The driver configuration for the connection.
 
         Raises
         ------
         ConnectionNotFoundException
             If the connection is not declared in the configuration.
-        MissingDatabaseDependencyException
-            If the synchronous driver package is not installed.
         """
