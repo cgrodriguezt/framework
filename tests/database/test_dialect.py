@@ -1,10 +1,10 @@
 from __future__ import annotations
 from orionis.database.dialect import (
-    _mysqlSessionCommands,
-    buildEngineUrl,
-    engineOptions,
-    missingDependencyError,
-    resolveDriver,
+    _mysql_session_commands,
+    build_engine_url,
+    engine_options,
+    missing_dependency_error,
+    resolve_driver,
 )
 from orionis.database.exceptions import (
     MissingDatabaseDependencyException,
@@ -20,11 +20,11 @@ class TestDialect(TestCase):
         """
         Resolve every supported driver name.
 
-        Validates the normalization and acceptance of the four
+        Validates the normalization and acceptance of the five
         first-party drivers.
         """
-        for driver in ("sqlite", "mysql", "pgsql", "oracle"):
-            self.assertEqual(resolveDriver({"driver": driver}), driver)
+        for driver in ("sqlite", "mysql", "pgsql", "oracle", "sqlserver"):
+            self.assertEqual(resolve_driver({"driver": driver}), driver)
 
     def testResolveDriverRejectsUnknownDriver(self) -> None:
         """
@@ -33,7 +33,7 @@ class TestDialect(TestCase):
         Validates the fail-fast contract for misconfigured connections.
         """
         with self.assertRaises(UnsupportedDriverException):
-            resolveDriver({"driver": "mssql"})
+            resolve_driver({"driver": "mssql"})
 
     def testResolveDriverRejectsMissingDriver(self) -> None:
         """
@@ -42,7 +42,7 @@ class TestDialect(TestCase):
         Validates that empty configurations are rejected.
         """
         with self.assertRaises(UnsupportedDriverException):
-            resolveDriver({})
+            resolve_driver({})
 
     # ── URL building ──────────────────────────────────────────────────────────
 
@@ -52,7 +52,7 @@ class TestDialect(TestCase):
 
         Validates dialect selection and database path propagation.
         """
-        url = buildEngineUrl({"driver": "sqlite", "database": "db.sqlite"})
+        url = build_engine_url({"driver": "sqlite", "database": "db.sqlite"})
         self.assertEqual(url.drivername, "sqlite+aiosqlite")
         self.assertEqual(url.database, "db.sqlite")
 
@@ -62,7 +62,7 @@ class TestDialect(TestCase):
 
         Validates the in-memory normalization rule.
         """
-        url = buildEngineUrl({"driver": "sqlite", "database": ""})
+        url = build_engine_url({"driver": "sqlite", "database": ""})
         self.assertEqual(url.database, ":memory:")
 
     def testMysqlUrlCarriesCredentialsAndCharset(self) -> None:
@@ -71,7 +71,7 @@ class TestDialect(TestCase):
 
         Validates the server-style URL construction for MySQL.
         """
-        url = buildEngineUrl({
+        url = build_engine_url({
             "driver": "mysql",
             "host": "127.0.0.1",
             "port": 3306,
@@ -93,7 +93,7 @@ class TestDialect(TestCase):
 
         Validates the socket addressing mode for MySQL.
         """
-        url = buildEngineUrl({
+        url = build_engine_url({
             "driver": "mysql",
             "host": "localhost",
             "database": "orionis",
@@ -110,7 +110,7 @@ class TestDialect(TestCase):
 
         Validates dialect selection for PostgreSQL.
         """
-        url = buildEngineUrl({
+        url = build_engine_url({
             "driver": "pgsql",
             "host": "localhost",
             "port": 5432,
@@ -127,7 +127,7 @@ class TestDialect(TestCase):
 
         Validates the service-name addressing mode.
         """
-        url = buildEngineUrl({
+        url = build_engine_url({
             "driver": "oracle",
             "host": "localhost",
             "port": 1521,
@@ -144,7 +144,7 @@ class TestDialect(TestCase):
 
         Validates the SID addressing mode for Oracle.
         """
-        url = buildEngineUrl({
+        url = build_engine_url({
             "driver": "oracle",
             "host": "localhost",
             "port": 1521,
@@ -169,9 +169,9 @@ class TestDialect(TestCase):
             "password": "x",
             "dsn": "mydsn",
         }
-        url = buildEngineUrl(config)
+        url = build_engine_url(config)
         self.assertIsNone(url.host)
-        options = engineOptions(config)
+        options = engine_options(config)
         self.assertEqual(options["connect_args"]["dsn"], "mydsn")
 
     # ── Engine options ────────────────────────────────────────────────────────
@@ -183,7 +183,7 @@ class TestDialect(TestCase):
         Validates that the single shared connection semantics of the
         in-memory database are preserved.
         """
-        options = engineOptions({"driver": "sqlite", "database": ":memory:"})
+        options = engine_options({"driver": "sqlite", "database": ":memory:"})
         self.assertIn("poolclass", options)
 
     def testPgsqlSslModeTravelsAsConnectArg(self) -> None:
@@ -192,7 +192,7 @@ class TestDialect(TestCase):
 
         Validates the ssl translation rule for PostgreSQL.
         """
-        options = engineOptions({
+        options = engine_options({
             "driver": "pgsql",
             "sslmode": "require",
         })
@@ -204,7 +204,7 @@ class TestDialect(TestCase):
 
         Validates the PostgreSQL session configuration mapping.
         """
-        options = engineOptions({
+        options = engine_options({
             "driver": "pgsql",
             "charset": "UTF8",
             "search_path": "public",
@@ -219,7 +219,7 @@ class TestDialect(TestCase):
 
         Validates the empty configuration path for PostgreSQL.
         """
-        options = engineOptions({"driver": "pgsql"})
+        options = engine_options({"driver": "pgsql"})
         self.assertNotIn("connect_args", options)
 
     # ── MySQL session commands ────────────────────────────────────────────────
@@ -230,7 +230,7 @@ class TestDialect(TestCase):
 
         Validates the MySQL session configuration mapping.
         """
-        commands = _mysqlSessionCommands({
+        commands = _mysql_session_commands({
             "driver": "mysql",
             "charset": "utf8mb4",
             "collation": "utf8mb4_unicode_ci",
@@ -247,7 +247,7 @@ class TestDialect(TestCase):
 
         Validates the strict switch translation.
         """
-        commands = _mysqlSessionCommands({
+        commands = _mysql_session_commands({
             "driver": "mysql",
             "strict": False,
         })
@@ -259,7 +259,7 @@ class TestDialect(TestCase):
 
         Validates the session command injection guard.
         """
-        commands = _mysqlSessionCommands({
+        commands = _mysql_session_commands({
             "driver": "mysql",
             "charset": "utf8; DROP TABLE users",
         })
@@ -273,7 +273,7 @@ class TestDialect(TestCase):
 
         Validates dialect selection and endpoint propagation.
         """
-        url = buildEngineUrl({
+        url = build_engine_url({
             "driver": "sqlserver",
             "host": "127.0.0.1",
             "port": 1433,
@@ -291,7 +291,7 @@ class TestDialect(TestCase):
 
         Validates the default and explicit ODBC driver selection.
         """
-        default_url = buildEngineUrl({
+        default_url = build_engine_url({
             "driver": "sqlserver",
             "host": "h",
             "database": "d",
@@ -301,7 +301,7 @@ class TestDialect(TestCase):
             "ODBC Driver 18 for SQL Server",
         )
 
-        explicit_url = buildEngineUrl({
+        explicit_url = build_engine_url({
             "driver": "sqlserver",
             "host": "h",
             "database": "d",
@@ -318,7 +318,7 @@ class TestDialect(TestCase):
 
         Validates boolean and textual switch normalization.
         """
-        url = buildEngineUrl({
+        url = build_engine_url({
             "driver": "sqlserver",
             "host": "h",
             "database": "d",
@@ -328,7 +328,7 @@ class TestDialect(TestCase):
         self.assertEqual(url.query.get("Encrypt"), "yes")
         self.assertEqual(url.query.get("TrustServerCertificate"), "no")
 
-        textual = buildEngineUrl({
+        textual = build_engine_url({
             "driver": "sqlserver",
             "host": "h",
             "database": "d",
@@ -347,7 +347,7 @@ class TestDialect(TestCase):
         Validates the package name and install extra in the message.
         """
         cause = ModuleNotFoundError("No module named 'aioodbc'")
-        error = missingDependencyError("sqlserver", cause)
+        error = missing_dependency_error("sqlserver", cause)
         self.assertIsInstance(error, MissingDatabaseDependencyException)
         self.assertIn("aioodbc", str(error))
         self.assertIn("orionis[sqlserver]", str(error))
@@ -365,4 +365,55 @@ class TestDialect(TestCase):
             ("pgsql", "asyncpg"),
             ("oracle", "oracledb"),
         ):
-            self.assertIn(package, str(missingDependencyError(driver, cause)))
+            self.assertIn(package, str(missing_dependency_error(driver, cause)))
+
+    def testMissingDependencyErrorForSyncDriver(self) -> None:
+        """
+        Report the synchronous package name for a missing sync driver.
+
+        Validates the sync-specific installation hint used by the
+        APScheduler jobstore builder.
+        """
+        cause = ModuleNotFoundError("No module named 'psycopg2'")
+        error = missing_dependency_error("pgsql", cause, sync=True)
+        self.assertIn("psycopg2", str(error))
+
+    # ── Synchronous engine (APScheduler jobstore) ────────────────────────────
+
+    def testBuildEngineUrlSyncUsesBlockingDialects(self) -> None:
+        """
+        Select the blocking DBAPI dialect when sync is requested.
+
+        Validates every first-party driver against its synchronous
+        SQLAlchemy dialect, used by the APScheduler jobstore.
+        """
+        expectations = {
+            "sqlite": "sqlite",
+            "mysql": "mysql+pymysql",
+            "pgsql": "postgresql+psycopg2",
+            "oracle": "oracle+oracledb",
+            "sqlserver": "mssql+pyodbc",
+        }
+        for driver, drivername in expectations.items():
+            config = {
+                "driver": driver,
+                "host": "localhost",
+                "database": "orionis",
+                "username": "user",
+                "password": "secret",
+            }
+            url = build_engine_url(config, sync=True)
+            self.assertEqual(url.drivername, drivername)
+
+    def testPgsqlSyncOmitsAsyncConnectArgs(self) -> None:
+        """
+        Skip the asyncpg-only connect args when building a sync engine.
+
+        Validates the documented limitation: sslmode, search_path, and
+        charset only translate for the async PostgreSQL driver.
+        """
+        options = engine_options(
+            {"driver": "pgsql", "sslmode": "require", "charset": "UTF8"},
+            sync=True,
+        )
+        self.assertNotIn("connect_args", options)
