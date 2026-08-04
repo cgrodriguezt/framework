@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     )
     from orionis.orm.schema.table import TableDefinition
 
-
 class IConnection(ABC):
     """
     Contract for a single named database connection.
