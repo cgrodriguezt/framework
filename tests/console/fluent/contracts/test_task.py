@@ -201,13 +201,22 @@ class TestITaskContract(TestCase):
 
     def testEntityMethodSignature(self):
         """
-        Test that entity() accepts only self.
+        Test that entity() accepts scheduler-level default overrides.
 
-        Verifies the method signature matches the documented contract.
+        Verifies the signature matches the documented contract: random_delay,
+        max_instances, and misfire_grace_time are positional-or-keyword, and
+        coalesce is keyword-only.
         """
         sig = inspect.signature(ITask.entity)
         params = list(sig.parameters.keys())
-        self.assertEqual(params, ["self"])
+        self.assertEqual(
+            params,
+            ["self", "random_delay", "max_instances", "misfire_grace_time", "coalesce"],
+        )
+        self.assertEqual(
+            sig.parameters["coalesce"].kind,
+            inspect.Parameter.KEYWORD_ONLY,
+        )
 
     def testOnMethodSignature(self):
         """
