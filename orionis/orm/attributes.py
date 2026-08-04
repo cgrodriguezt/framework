@@ -14,8 +14,7 @@ if TYPE_CHECKING:
 # Strings interpreted as truthy when casting to bool.
 _TRUTHY_STRINGS: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 
-
-def _castInt(value: Any) -> int:  # noqa: ANN401
+def _cast_int(value: Any) -> int:  # noqa: ANN401
     """
     Cast a raw value to ``int``.
 
@@ -31,8 +30,7 @@ def _castInt(value: Any) -> int:  # noqa: ANN401
     """
     return int(value)
 
-
-def _castFloat(value: Any) -> float:  # noqa: ANN401
+def _cast_float(value: Any) -> float:  # noqa: ANN401
     """
     Cast a raw value to ``float``.
 
@@ -48,8 +46,7 @@ def _castFloat(value: Any) -> float:  # noqa: ANN401
     """
     return float(value)
 
-
-def _castBool(value: Any) -> bool:  # noqa: ANN401
+def _cast_bool(value: Any) -> bool:  # noqa: ANN401
     """
     Cast a raw value to ``bool`` handling common textual forms.
 
@@ -67,8 +64,7 @@ def _castBool(value: Any) -> bool:  # noqa: ANN401
         return value.strip().lower() in _TRUTHY_STRINGS
     return bool(value)
 
-
-def _castDatetime(value: Any) -> datetime:  # noqa: ANN401
+def _cast_datetime(value: Any) -> datetime:  # noqa: ANN401
     """
     Cast a raw value to ``datetime``.
 
@@ -88,8 +84,7 @@ def _castDatetime(value: Any) -> datetime:  # noqa: ANN401
         return datetime.fromtimestamp(value, tz=UTC)
     return datetime.fromisoformat(str(value))
 
-
-def _castDate(value: Any) -> date:  # noqa: ANN401
+def _cast_date(value: Any) -> date:  # noqa: ANN401
     """
     Cast a raw value to ``date``.
 
@@ -109,8 +104,7 @@ def _castDate(value: Any) -> date:  # noqa: ANN401
         return value
     return date.fromisoformat(str(value))
 
-
-def _castJson(value: Any) -> Any:  # noqa: ANN401
+def _cast_json(value: Any) -> Any:  # noqa: ANN401
     """
     Cast a raw value to a JSON-decoded Python structure.
 
@@ -128,8 +122,7 @@ def _castJson(value: Any) -> Any:  # noqa: ANN401
         return json.loads(value)
     return value
 
-
-def _castUuid(value: Any) -> uuid.UUID:  # noqa: ANN401
+def _cast_uuid(value: Any) -> uuid.UUID:  # noqa: ANN401
     """
     Cast a raw value to :class:`uuid.UUID`.
 
@@ -147,20 +140,18 @@ def _castUuid(value: Any) -> uuid.UUID:  # noqa: ANN401
         return value
     return uuid.UUID(str(value))
 
-
 # Registry of supported cast names.
 _CAST_HANDLERS: dict[str, Callable[[Any], Any]] = {
-    "int": _castInt,
-    "float": _castFloat,
-    "bool": _castBool,
-    "datetime": _castDatetime,
-    "date": _castDate,
-    "json": _castJson,
-    "uuid": _castUuid,
+    "int": _cast_int,
+    "float": _cast_float,
+    "bool": _cast_bool,
+    "datetime": _cast_datetime,
+    "date": _cast_date,
+    "json": _cast_json,
+    "uuid": _cast_uuid,
 }
 
-
-def getCastHandler(cast: str) -> Callable[[Any], Any]:
+def get_cast_handler(cast: str) -> Callable[[Any], Any]:
     """
     Return the cast handler registered under the given name.
 
@@ -188,8 +179,9 @@ def getCastHandler(cast: str) -> Callable[[Any], Any]:
         raise OrmException(error_msg)
     return handler
 
-
-def serializeForStorage(meta: ModelMetadata, values: dict[str, Any]) -> dict[str, Any]:
+def serialize_for_storage(
+    meta: ModelMetadata, values: dict[str, Any],
+) -> dict[str, Any]:
     """
     Convert attribute values into driver-friendly storage values.
 
@@ -230,7 +222,6 @@ def serializeForStorage(meta: ModelMetadata, values: dict[str, Any]) -> dict[str
 
         serialized[key] = value
     return serialized
-
 
 class AttributesMixin:
     """
@@ -295,7 +286,7 @@ class AttributesMixin:
         None
             This method does not return a value.
         """
-        handler = self.__meta__.castLookup.get(key)
+        handler = self.__meta__.cast_lookup.get(key)
         if handler is not None and value is not None:
             value = handler(value)
         self._attributes[key] = value
