@@ -1,5 +1,6 @@
 from __future__ import annotations
 from orionis.database.connection_manager import ConnectionManager
+from orionis.database.exceptions import ConnectionNotFoundException
 from orionis.orm.exceptions import OrmConfigurationException
 from orionis.orm.resolver import ConnectionResolver
 from orionis.test import TestCase
@@ -73,3 +74,14 @@ class TestConnectionResolver(TestCase):
         ConnectionResolver.clear()
         with self.assertRaises(OrmConfigurationException):
             ConnectionResolver.manager()
+
+    def testConnectionPropagatesUnknownNameError(self) -> None:
+        """
+        Propagate the manager's error for an unregistered connection.
+
+        Validates that the resolver delegates without swallowing the
+        manager's own connection-resolution failures.
+        """
+        ConnectionResolver.setManager(ConnectionManager(_StubApp()))
+        with self.assertRaises(ConnectionNotFoundException):
+            ConnectionResolver.connection("missing")
