@@ -3,9 +3,7 @@ import functools
 import inspect
 import logging
 from typing import Self, TYPE_CHECKING
-from orionis.database.contracts.manager import IConnectionManager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.jobstores.redis import RedisJobStore
 from orionis.console.contracts.schedule import ISchedule
 from orionis.console.core.contracts.reactor import IReactor
 from orionis.console.entities.scheduler_event import (
@@ -15,11 +13,8 @@ from orionis.console.enums.events import SchedulerEvent, TaskEvent
 from orionis.console.fluent.contracts.task import ITask
 from orionis.console.fluent.task import Task
 from orionis.console.enums.states import ScheduleStates
+from orionis.console.tasks.contracts.store import IScheduleStore
 from orionis.failure.contracts.catch import ICatch
-from orionis.foundation.config.scheduler.entities.scheduler import (
-    Scheduler as ConfigScheduler,
-)
-from orionis.foundation.contracts.application import IApplication
 from orionis.support.facades.logger import Log
 from orionis.support.facades.datetime import DateTime
 from orionis.support.facades.reactor import Reactor
@@ -30,6 +25,9 @@ if TYPE_CHECKING:
     from apscheduler.events import JobEvent as APJobEvent
     from apscheduler.events import SchedulerEvent as APSchedulerEvent
     from orionis.console.entities.task import Task as TaskEntity
+    from orionis.foundation.config.scheduler.entities.scheduler import (
+        Scheduler as ConfigScheduler,
+    )
 
 async def _executeScheduledCommand(
     signature: str,
@@ -72,37 +70,31 @@ class Schedule(ISchedule):
 
     def __init__(
         self,
-        application: IApplication,
         reactor: IReactor,
         exception_handler: ICatch,
-        connection_manager: IConnectionManager,
+        stores: IScheduleStore,
     ) -> None:
         """
         Initialize the Schedule instance.
 
         Parameters
         ----------
-        application : IApplication
-            Application instance.
         reactor : IReactor
             Reactor instance for command execution.
         exception_handler : ICatch
             Exception handler for managing errors.
-        connection_manager : IConnectionManager
-            Connection manager for database interactions.
+        stores : IScheduleStore
+            Schedule store for managing job stores.
 
         Returns
         -------
         None
             This constructor does not return a value.
         """
-        self.__application: IApplication = application
-        self.__config: ConfigScheduler = ConfigScheduler(
-            **self.__application.config("scheduler"),
-        )
         self.__reactor: IReactor = reactor
         self.__exception_handler: ICatch = exception_handler
-        self.__connection_manager: IConnectionManager = connection_manager
+        self.__stores: IScheduleStore = stores
+        self.__config: ConfigScheduler = stores.config
         self.__available_command_signatures: set[str] = set()
         self.__job_store: str = self.__config.store
         self.__scheduler: AsyncIOScheduler | None = None
@@ -460,39 +452,16 @@ class Schedule(ISchedule):
             If the selected store is "database" or "redis" but its
             dedicated configuration section is missing.
         """
-        if self.__config.store == "database":
-            database_store = self.__config.stores.database
-            if database_store is None:
-                error_msg = (
-                    "The scheduler is configured to use the 'database' job "
-                    "store, but 'scheduler.stores.database' is not configured."
-                )
-                raise RuntimeError(error_msg)
+        if self.__stores.store == "database":
             self.__scheduler.add_jobstore(
-                jobstore=self.__connection_manager.scheduleTaskStore(
-                    name=database_store.connection,
-                    tablename=database_store.table,
-                ),
+                jobstore=self.__stores.database(),
                 alias="database",
             )
 
-        if self.__config.store == "redis":
-            redis_store = self.__config.stores.redis
-            if redis_store is None:
-                error_msg = (
-                    "The scheduler is configured to use the 'redis' job "
-                    "store, but 'scheduler.stores.redis' is not configured."
-                )
-                raise RuntimeError(error_msg)
+        if self.__stores.store == "redis":
+            redis_store = self.__stores.redis()
             self.__scheduler.add_jobstore(
-                jobstore=RedisJobStore(
-                    jobs_key=redis_store.key,
-                    run_times_key=redis_store.run_times_key,
-                    host=redis_store.host,
-                    port=redis_store.port,
-                    db=redis_store.db,
-                    password=redis_store.password,
-                ),
+                jobstore=redis_store,
                 alias="redis",
             )
 

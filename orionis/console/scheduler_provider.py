@@ -1,7 +1,9 @@
 from __future__ import annotations
 from orionis.container.providers.service_provider import ServiceProvider
 from orionis.console.contracts.schedule import ISchedule
+from orionis.console.tasks.contracts.store import IScheduleStore
 from orionis.console.tasks.schedule import Schedule
+from orionis.console.tasks.store import ScheduleStore
 from orionis.support.facades.schedule import Schedule as ScheduleFacade
 
 class ScheduleProvider(ServiceProvider):
@@ -11,8 +13,9 @@ class ScheduleProvider(ServiceProvider):
         Register the Scheduler as a singleton service in the application container.
 
         Binds the `ISchedule` interface to the `Schedule` implementation, ensuring a
-        single instance throughout the application's lifecycle. Also provides an alias
-        for convenient access.
+        single instance throughout the application's lifecycle. Also binds
+        `IScheduleStore` to `ScheduleStore` so it can be auto-resolved as a
+        constructor dependency of `Schedule`.
 
         Parameters
         ----------
@@ -23,6 +26,7 @@ class ScheduleProvider(ServiceProvider):
         None
             This method performs registration as a side effect and returns None.
         """
+        self.app.singleton(IScheduleStore, ScheduleStore)
         self.app.singleton(ISchedule, Schedule)
 
     async def boot(self) -> None:
