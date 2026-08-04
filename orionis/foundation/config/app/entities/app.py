@@ -61,11 +61,11 @@ class App(BaseEntity):
     )
 
     debug: bool = field(
-        default_factory=lambda: Env.get("APP_DEBUG", True),
+        default_factory=lambda: Env.get("APP_DEBUG", False),
         metadata={
             "description": "Flag indicating whether debug mode is enabled. "
             "Defaults to False.",
-            "default": True,
+            "default": False,
         },
     )
 
