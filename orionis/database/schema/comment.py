@@ -1,4 +1,3 @@
-# Comment class for database schema documentation.
 class Comment:
 
     def __init__(self, text: str) -> None:
