@@ -84,7 +84,7 @@ class TestBuilderPlans(TestCase):
         """
         builder = _Item.query().whereNotIn("id", [1, 2])
         clause = builder._plan.wheres[0]
-        self.assertIs(clause.whereType, WhereType.NOT_IN)
+        self.assertIs(clause.where_type, WhereType.NOT_IN)
         self.assertEqual(clause.value, (1, 2))
 
     def testWhereInUnwrapsCollections(self) -> None:
@@ -120,7 +120,7 @@ class TestBuilderPlans(TestCase):
         for method_name, expected_type in cases:
             builder = getattr(_Item.query(), method_name)("name", "a%")
             clause = builder._plan.wheres[0]
-            self.assertIs(clause.whereType, expected_type)
+            self.assertIs(clause.where_type, expected_type)
             self.assertEqual(clause.value, "a%")
 
     def testWhereTextMatchersBuildExpectedClauses(self) -> None:
@@ -138,7 +138,7 @@ class TestBuilderPlans(TestCase):
         for method_name, expected_type in cases:
             builder = getattr(_Item.query(), method_name)("name", "abc")
             clause = builder._plan.wheres[0]
-            self.assertIs(clause.whereType, expected_type)
+            self.assertIs(clause.where_type, expected_type)
             self.assertEqual(clause.value, "abc")
 
     def testDistinctMarksPlan(self) -> None:
@@ -167,8 +167,8 @@ class TestBuilderPlans(TestCase):
         Validates the pagination aliases.
         """
         builder = _Item.query().take(5).skip(10)
-        self.assertEqual(builder._plan.limitValue, 5)
-        self.assertEqual(builder._plan.offsetValue, 10)
+        self.assertEqual(builder._plan.limit_value, 5)
+        self.assertEqual(builder._plan.offset_value, 10)
 
     def testNegativeLimitAndOffsetRaise(self) -> None:
         """
@@ -239,7 +239,7 @@ class TestBuilderPlans(TestCase):
         with self.assertRaises(InvalidQueryException):
             await _Item.query().paginate(page=0)
         with self.assertRaises(InvalidQueryException):
-            await _Item.query().paginate(perPage=0)
+            await _Item.query().paginate(per_page=0)
 
     def testForwardedClassEntryPointsStartBuilders(self) -> None:
         """
@@ -250,7 +250,7 @@ class TestBuilderPlans(TestCase):
         builder = _Item.where("name", "a")
         self.assertEqual(len(builder._plan.wheres), 1)
         chained = _Item.orderBy("name").limit(1)
-        self.assertEqual(chained._plan.limitValue, 1)
+        self.assertEqual(chained._plan.limit_value, 1)
 
     def testUnknownClassAttributeRaises(self) -> None:
         """
