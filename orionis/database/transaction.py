@@ -1,12 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from orionis.database.contracts.connection import IConnection
 from orionis.database.contracts.transaction import ITransaction
 
 if TYPE_CHECKING:
     from types import TracebackType
-
     from orionis.database.contracts.connection import IConnection
-
 
 class Transaction(ITransaction):
     """
@@ -33,7 +32,7 @@ class Transaction(ITransaction):
         None
             This method does not return a value.
         """
-        self._connection = connection
+        self._connection: IConnection = connection
 
     async def __aenter__(self) -> ITransaction:
         """
