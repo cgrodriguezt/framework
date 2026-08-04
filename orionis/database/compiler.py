@@ -8,6 +8,7 @@ from sqlalchemy.schema import CreateTable, DropTable
 from orionis.database.exceptions import QueryException
 from orionis.orm.query.expressions import (
     AggregateFunction,
+    JoinType,
     SortDirection,
     WhereType,
 )
@@ -23,6 +24,8 @@ if TYPE_CHECKING:
         AggregateClause,
         DeletePlan,
         InsertPlan,
+        JoinCondition,
+        JoinExpression,
         SelectPlan,
         UpdatePlan,
         WhereClause,
@@ -30,6 +33,13 @@ if TYPE_CHECKING:
     from orionis.orm.schema.column import ColumnDefinition
     from orionis.orm.schema.constraints import ForeignReference
     from orionis.orm.schema.table import TableDefinition
+
+    # A resolvable FROM/JOIN source: either the raw engine Table or an
+    # aliased projection of it (``Table.alias(name)``).
+    type SqlSource = Any
+    # Table sources reachable by qualified column references, keyed by
+    # alias when present or by logical table name otherwise.
+    type SourceMap = dict[str, SqlSource]
 
 # Comparison operators for basic where clauses.
 _COMPARATORS: dict[str, Callable[[Any, Any], Any]] = {
@@ -73,7 +83,6 @@ _SIMPLE_CLAUSES: dict[WhereType, Callable[[Any, Any], Any]] = {
     WhereType.CONTAINS: lambda col, val: col.contains(val),
     WhereType.REGEXP: lambda col, val: col.regexp_match(val),
 }
-
 
 class SQLCompiler:
     """
@@ -204,33 +213,339 @@ class SQLCompiler:
         QueryException
             If the plan references unknown columns or invalid clauses.
         """
-        table = self._sqlTable(plan.table)
-        statement = self._selectProjection(table, plan)
+        self._ensureSelectRawColumns(plan)
+        default, sources, from_clause = self._resolveSources(plan)
+        statement = self._selectProjection(default, sources, plan)
+        if plan.joins:
+            statement = statement.select_from(from_clause)
         if plan.distinct and plan.aggregate is None:
             statement = statement.distinct()
 
         # Apply filtering conditions.
-        condition = self._whereExpression(table, plan.wheres)
+        condition = self._whereExpression(sources, default, plan.wheres)
         if condition is not None:
             statement = statement.where(condition)
 
         # Apply grouping and post-grouping conditions.
         if plan.groups:
-            groups = [self._column(table, name) for name in plan.groups]
+            groups = [
+                self._resolveColumn(sources, default, name)
+                for name in plan.groups
+            ]
             statement = statement.group_by(*groups)
-        having = self._whereExpression(table, plan.havings)
+        having = self._whereExpression(sources, default, plan.havings)
         if having is not None:
             statement = statement.having(having)
 
         # Ordering and pagination are meaningless for aggregates.
         if plan.aggregate is None:
-            statement = self._applyOrderingAndPaging(table, statement, plan)
+            statement = self._applyOrderingAndPaging(
+                sources, default, statement, plan,
+            )
 
         return statement
 
+    # ── Schemaless (raw) table support ──────────────────────────────────────
+
+    def _bareNameForIdentifier(self, name: str, identifier: str) -> str | None:
+        """
+        Return the bare column name when a reference targets an identifier.
+
+        Parameters
+        ----------
+        name : str
+            Column reference, optionally qualified as ``"table.column"``.
+        identifier : str
+            Alias or logical table name being checked against.
+
+        Returns
+        -------
+        str or None
+            The bare column name when unqualified or matching
+            ``identifier``, otherwise ``None``.
+        """
+        qualifier, column = self._splitQualifiedColumn(name)
+        if qualifier is None or qualifier == identifier:
+            return column
+        return None
+
+    def _collectPlanColumnNames(self, plan: SelectPlan) -> set[str]:
+        """
+        Collect every column reference touched anywhere in a select plan.
+
+        Parameters
+        ----------
+        plan : SelectPlan
+            Engine-agnostic select description.
+
+        Returns
+        -------
+        set of str
+            Every column name referenced by the plan, qualified or not.
+        """
+        names: set[str] = set(plan.columns)
+        names.update(clause.column for clause in plan.wheres)
+        names.update(clause.column for clause in plan.havings)
+        names.update(order.column for order in plan.orders)
+        names.update(plan.groups)
+        if plan.aggregate is not None and plan.aggregate.column != "*":
+            names.add(plan.aggregate.column)
+        for join in plan.joins:
+            for condition in join.conditions:
+                names.add(condition.first)
+                names.add(condition.second)
+        return names
+
+    def _ensureRawColumns(
+        self,
+        table: TableDefinition,
+        alias: str | None,
+        names: set[str],
+    ) -> None:
+        """
+        Lazily declare columns a plan references against a raw table.
+
+        A schemaless :class:`TableDefinition` (no declared columns, used
+        by model-less builders such as ``DB.table("users")``) has no
+        upfront column list for the compiler to validate against. Every
+        name the plan actually references for it is appended to its
+        engine table here, before any alias gets created, since
+        ``Table.alias().c`` memoizes on first access and would silently
+        miss columns appended afterwards.
+
+        Parameters
+        ----------
+        table : TableDefinition
+            Table to inspect; a no-op unless it declares no columns.
+        alias : str or None
+            Alias this table is referred to by inside the query.
+        names : set of str
+            Every column reference collected from the owning plan.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        if table.columns:
+            return  # already has a real, declared schema
+
+        identifier = alias or table.name
+        bare_names = {
+            column
+            for name in names
+            if (column := self._bareNameForIdentifier(name, identifier)) is not None
+        }
+        if not bare_names:
+            return
+
+        engine_table = self._sqlTable(table)
+        for column in bare_names:
+            if column not in engine_table.c:
+                engine_table.append_column(SqlColumn(column))
+
+    def _ensureSelectRawColumns(self, plan: SelectPlan) -> None:
+        """
+        Lazily declare raw columns referenced by a select plan's sources.
+
+        Parameters
+        ----------
+        plan : SelectPlan
+            Engine-agnostic select description.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        # Every source already has a declared schema in the common,
+        # model-backed case; skip scanning every clause for nothing.
+        if plan.table.columns and all(join.table.columns for join in plan.joins):
+            return
+        names = self._collectPlanColumnNames(plan)
+        self._ensureRawColumns(plan.table, plan.alias, names)
+        for join in plan.joins:
+            self._ensureRawColumns(join.table, join.alias, names)
+
+    def _resolveSources(
+        self,
+        plan: SelectPlan,
+    ) -> tuple[SqlSource, SourceMap, SqlSource]:
+        """
+        Build the main source, the resolvable source map, and the FROM.
+
+        The main table and every joined table are registered under the
+        identifier queries use to qualify their columns: the alias when
+        present, otherwise the logical table name. This is what lets
+        ``_resolveColumn`` find ``"users.id"`` or ``"posts.title"``
+        regardless of how many tables participate in the query.
+
+        Parameters
+        ----------
+        plan : SelectPlan
+            Engine-agnostic select description.
+
+        Returns
+        -------
+        tuple of (SqlSource, SourceMap, SqlSource)
+            The main source (for unqualified projections), the source
+            map keyed by alias or table name, and the compiled FROM
+            clause (the main source joined with every configured join).
+        """
+        table = self._sqlTable(plan.table)
+        default = table.alias(plan.alias) if plan.alias else table
+        sources: SourceMap = {plan.alias or plan.table.name: default}
+
+        from_clause = default
+        for join in plan.joins:
+            from_clause, joined_name, joined_source = self._applyJoin(
+                from_clause, sources, join,
+            )
+            sources[joined_name] = joined_source
+
+        return default, sources, from_clause
+
+    def _applyJoin(
+        self,
+        from_clause: SqlSource,
+        sources: SourceMap,
+        join: JoinExpression,
+    ) -> tuple[SqlSource, str, SqlSource]:
+        """
+        Extend a FROM clause with a single joined table.
+
+        Parameters
+        ----------
+        from_clause : SqlSource
+            FROM clause assembled so far.
+        sources : SourceMap
+            Table sources already reachable by qualified references.
+        join : JoinExpression
+            Join description to compile.
+
+        Returns
+        -------
+        tuple of (SqlSource, str, SqlSource)
+            The extended FROM clause, the identifier the joined table is
+            reachable by, and the joined source itself.
+
+        Raises
+        ------
+        QueryException
+            If the join type is not supported yet, or its ON conditions
+            cannot be resolved.
+        """
+        joined_table = self._sqlTable(join.table)
+        joined_source = joined_table.alias(join.alias) if join.alias else joined_table
+        joined_name = join.alias or join.table.name
+
+        if join.join_type is JoinType.CROSS:
+            return from_clause.join(joined_source, sqlalchemy.true()), \
+                joined_name, joined_source
+
+        condition = self._joinCondition(sources, joined_name, joined_source, join)
+        if join.join_type is JoinType.INNER:
+            joined = from_clause.join(joined_source, condition)
+        elif join.join_type is JoinType.LEFT:
+            joined = from_clause.join(joined_source, condition, isouter=True)
+        else:
+            error_msg = (
+                f"Join type '{join.join_type}' is not supported yet."
+            )
+            raise QueryException(error_msg)
+        return joined, joined_name, joined_source
+
+    def _joinCondition(
+        self,
+        sources: SourceMap,
+        joined_name: str,
+        joined_source: SqlSource,
+        join: JoinExpression,
+    ) -> ColumnElement[bool]:
+        """
+        Fold a join's ON conditions into a single boolean expression.
+
+        Parameters
+        ----------
+        sources : SourceMap
+            Table sources reachable before this join is applied.
+        joined_name : str
+            Identifier the joined table is reachable by.
+        joined_source : SqlSource
+            The joined table source itself.
+        join : JoinExpression
+            Join description whose conditions are compiled.
+
+        Returns
+        -------
+        ColumnElement
+            Combined boolean expression for the ON clause.
+
+        Raises
+        ------
+        QueryException
+            If the join declares no ON conditions.
+        """
+        if not join.conditions:
+            error_msg = (
+                f"Join on '{joined_name}' requires at least one ON condition."
+            )
+            raise QueryException(error_msg)
+
+        local_sources: SourceMap = {**sources, joined_name: joined_source}
+        expression: ColumnElement[bool] | None = None
+        for condition in join.conditions:
+            piece = self._joinConditionExpression(
+                local_sources, joined_source, condition,
+            )
+            if expression is None:
+                expression = piece
+            elif condition.boolean == "or":
+                expression = or_(expression, piece)
+            else:
+                expression = and_(expression, piece)
+        return expression
+
+    def _joinConditionExpression(
+        self,
+        sources: SourceMap,
+        default: SqlSource,
+        condition: JoinCondition,
+    ) -> ColumnElement[bool]:
+        """
+        Compile a single ON condition into a column-to-column comparison.
+
+        Parameters
+        ----------
+        sources : SourceMap
+            Table sources reachable while resolving this condition.
+        default : SqlSource
+            Source an unqualified column reference resolves against.
+        condition : JoinCondition
+            ON condition to compile.
+
+        Returns
+        -------
+        ColumnElement
+            Boolean expression comparing both column references.
+
+        Raises
+        ------
+        QueryException
+            If the operator is not supported.
+        """
+        left = self._resolveColumn(sources, default, condition.first)
+        right = self._resolveColumn(sources, default, condition.second)
+        comparator = _COMPARATORS.get(condition.operator.strip().lower())
+        if comparator is None:
+            error_msg = f"Unsupported join operator '{condition.operator}'."
+            raise QueryException(error_msg)
+        return comparator(left, right)
+
     def _selectProjection(
         self,
-        table: Table,
+        default: SqlSource,
+        sources: SourceMap,
         plan: SelectPlan,
     ) -> Select[Any]:
         """
@@ -238,8 +553,10 @@ class SQLCompiler:
 
         Parameters
         ----------
-        table : Table
-            Engine table metadata.
+        default : SqlSource
+            Source an unqualified column reference resolves against.
+        sources : SourceMap
+            Table sources reachable by qualified column references.
         plan : SelectPlan
             Engine-agnostic select description.
 
@@ -247,20 +564,30 @@ class SQLCompiler:
         -------
         Select
             Statement projecting the aggregate, explicit columns, or
-            every table column.
+            every column of the main table.
         """
         if plan.aggregate is not None:
             return sqlalchemy.select(
-                self._aggregateExpression(table, plan.aggregate),
-            ).select_from(table)
+                self._aggregateExpression(sources, default, plan.aggregate),
+            ).select_from(default)
         if plan.columns:
-            projected = [self._column(table, name) for name in plan.columns]
+            projected = [
+                self._resolveColumn(sources, default, name)
+                for name in plan.columns
+            ]
             return sqlalchemy.select(*projected)
-        return sqlalchemy.select(table)
+        if not plan.table.columns:
+            # Schemaless table: its real column list is unknowable up
+            # front, so project literally instead of guessing a subset.
+            return sqlalchemy.select(
+                sqlalchemy.literal_column("*"),
+            ).select_from(default)
+        return sqlalchemy.select(default)
 
     def _applyOrderingAndPaging(
         self,
-        table: Table,
+        sources: SourceMap,
+        default: SqlSource,
         statement: Select[Any],
         plan: SelectPlan,
     ) -> Select[Any]:
@@ -269,8 +596,10 @@ class SQLCompiler:
 
         Parameters
         ----------
-        table : Table
-            Engine table metadata.
+        sources : SourceMap
+            Table sources reachable by qualified column references.
+        default : SqlSource
+            Source an unqualified column reference resolves against.
         statement : Select
             Statement being assembled.
         plan : SelectPlan
@@ -282,15 +611,15 @@ class SQLCompiler:
             Statement with ordering and pagination applied.
         """
         for order in plan.orders:
-            column = self._column(table, order.column)
+            column = self._resolveColumn(sources, default, order.column)
             descending = order.direction is SortDirection.DESC
             statement = statement.order_by(
                 column.desc() if descending else column.asc(),
             )
-        if plan.limitValue is not None:
-            statement = statement.limit(plan.limitValue)
-        if plan.offsetValue is not None:
-            statement = statement.offset(plan.offsetValue)
+        if plan.limit_value is not None:
+            statement = statement.limit(plan.limit_value)
+        if plan.offset_value is not None:
+            statement = statement.offset(plan.offset_value)
         return statement
 
     def compileInsert(self, plan: InsertPlan) -> Insert:
@@ -315,6 +644,14 @@ class SQLCompiler:
         if not plan.values:
             error_msg = "Cannot compile an INSERT statement without values."
             raise QueryException(error_msg)
+
+        # Schemaless tables need their referenced columns backfilled first;
+        # model-backed tables already declare them, so this is skipped.
+        if not plan.table.columns:
+            names: set[str] = set()
+            for row in plan.values:
+                names.update(row)
+            self._ensureRawColumns(plan.table, None, names)
 
         table = self._sqlTable(plan.table)
         rows = plan.values if len(plan.values) > 1 else plan.values[0]
@@ -343,9 +680,14 @@ class SQLCompiler:
             error_msg = "Cannot compile an UPDATE statement without values."
             raise QueryException(error_msg)
 
+        if not plan.table.columns:
+            names = set(plan.values) | {clause.column for clause in plan.wheres}
+            self._ensureRawColumns(plan.table, None, names)
+
         table = self._sqlTable(plan.table)
+        sources: SourceMap = {plan.table.name: table}
         statement = sqlalchemy.update(table).values(dict(plan.values))
-        condition = self._whereExpression(table, plan.wheres)
+        condition = self._whereExpression(sources, table, plan.wheres)
         if condition is not None:
             statement = statement.where(condition)
         return statement
@@ -364,9 +706,14 @@ class SQLCompiler:
         Delete
             Executable DELETE statement.
         """
+        if not plan.table.columns:
+            names = {clause.column for clause in plan.wheres}
+            self._ensureRawColumns(plan.table, None, names)
+
         table = self._sqlTable(plan.table)
+        sources: SourceMap = {plan.table.name: table}
         statement = sqlalchemy.delete(table)
-        condition = self._whereExpression(table, plan.wheres)
+        condition = self._whereExpression(sources, table, plan.wheres)
         if condition is not None:
             statement = statement.where(condition)
         return statement
@@ -534,8 +881,9 @@ class SQLCompiler:
             for unique in definition.unique_constraints
         )
         for foreign_key in definition.foreign_keys:
+            ref_table = self._physicalName(foreign_key.ref_table)
             ref_columns = [
-                f"{foreign_key.ref_table}.{column}"
+                f"{ref_table}.{column}"
                 for column in foreign_key.ref_columns
             ]
             constraints.append(
@@ -649,16 +997,50 @@ class SQLCompiler:
 
         return SqlColumn(*args, **options)
 
-    def _column(self, table: Table, name: str) -> ColumnElement[Any]:
+    def _splitQualifiedColumn(self, name: str) -> tuple[str | None, str]:
         """
-        Resolve a column reference inside an engine table.
+        Split a column reference into its table qualifier and column name.
 
         Parameters
         ----------
-        table : Table
-            Engine table metadata.
         name : str
-            Column name to resolve.
+            Column reference, optionally qualified as ``"table.column"``.
+
+        Returns
+        -------
+        tuple of (str or None, str)
+            The qualifier (``None`` when unqualified) and the bare
+            column name.
+        """
+        if "." in name:
+            qualifier, _, column = name.rpartition(".")
+            return qualifier, column
+        return None, name
+
+    def _resolveColumn(
+        self,
+        sources: SourceMap,
+        default: SqlSource,
+        name: str,
+    ) -> ColumnElement[Any]:
+        """
+        Resolve a column reference against the tables reachable in a plan.
+
+        A qualified reference such as ``"posts.title"`` is looked up in
+        ``sources`` by its table alias or name; an unqualified reference
+        resolves against ``default`` (the plan's main table). This is the
+        single place that understands multiple table origins, so joins,
+        aliases, and future table expressions never need bespoke column
+        lookup logic elsewhere in the compiler.
+
+        Parameters
+        ----------
+        sources : SourceMap
+            Table sources reachable by alias or logical table name.
+        default : SqlSource
+            Source an unqualified column reference resolves against.
+        name : str
+            Column reference, optionally qualified as ``"table.column"``.
 
         Returns
         -------
@@ -668,21 +1050,30 @@ class SQLCompiler:
         Raises
         ------
         QueryException
-            If the column is not declared on the table.
+            If the qualifier is unknown, or the column is not declared
+            on the resolved table.
         """
+        qualifier, column = self._splitQualifiedColumn(name)
+        if qualifier is None:
+            source = default
+        else:
+            source = sources.get(qualifier)
+            if source is None:
+                error_msg = f"Unknown table reference '{qualifier}' in '{name}'."
+                raise QueryException(error_msg)
         try:
-            return table.c[name]
+            return source.c[column]
         except KeyError as exc:
-            error_msg = (
-                f"Unknown column '{name}' on table '{table.name}'."
-            )
+            origin = qualifier or getattr(default, "name", "?")
+            error_msg = f"Unknown column '{column}' on table '{origin}'."
             raise QueryException(error_msg) from exc
 
     # ── Clause compilation ──────────────────────────────────────────────────
 
     def _whereExpression(
         self,
-        table: Table,
+        sources: SourceMap,
+        default: SqlSource,
         clauses: Sequence[WhereClause],
     ) -> ColumnElement[bool] | None:
         """
@@ -693,8 +1084,10 @@ class SQLCompiler:
 
         Parameters
         ----------
-        table : Table
-            Engine table metadata.
+        sources : SourceMap
+            Table sources reachable by qualified column references.
+        default : SqlSource
+            Source an unqualified column reference resolves against.
         clauses : Sequence of WhereClause
             Conditions to combine.
 
@@ -705,7 +1098,7 @@ class SQLCompiler:
         """
         expression: ColumnElement[bool] | None = None
         for clause in clauses:
-            piece = self._clauseExpression(table, clause)
+            piece = self._clauseExpression(sources, default, clause)
             if expression is None:
                 expression = piece
             elif clause.boolean == "or":
@@ -716,7 +1109,8 @@ class SQLCompiler:
 
     def _clauseExpression(
         self,
-        table: Table,
+        sources: SourceMap,
+        default: SqlSource,
         clause: WhereClause,
     ) -> ColumnElement[bool]:
         """
@@ -724,8 +1118,10 @@ class SQLCompiler:
 
         Parameters
         ----------
-        table : Table
-            Engine table metadata.
+        sources : SourceMap
+            Table sources reachable by qualified column references.
+        default : SqlSource
+            Source an unqualified column reference resolves against.
         clause : WhereClause
             Condition to compile.
 
@@ -739,8 +1135,8 @@ class SQLCompiler:
         QueryException
             If the clause uses an unsupported operator or shape.
         """
-        column = self._column(table, clause.column)
-        kind = clause.whereType
+        column = self._resolveColumn(sources, default, clause.column)
+        kind = clause.where_type
 
         if kind is WhereType.BASIC:
             return self._basicExpression(column, clause)
@@ -807,7 +1203,8 @@ class SQLCompiler:
 
     def _aggregateExpression(
         self,
-        table: Table,
+        sources: SourceMap,
+        default: SqlSource,
         aggregate: AggregateClause,
     ) -> ColumnElement[Any]:
         """
@@ -815,8 +1212,10 @@ class SQLCompiler:
 
         Parameters
         ----------
-        table : Table
-            Engine table metadata.
+        sources : SourceMap
+            Table sources reachable by qualified column references.
+        default : SqlSource
+            Source an unqualified column reference resolves against.
         aggregate : AggregateClause
             Aggregate projection description.
 
@@ -833,7 +1232,9 @@ class SQLCompiler:
         if aggregate.function is AggregateFunction.COUNT:
             if aggregate.column == "*":
                 return func.count()
-            return func.count(self._column(table, aggregate.column))
+            return func.count(
+                self._resolveColumn(sources, default, aggregate.column),
+            )
 
         if aggregate.column == "*":
             error_msg = (
@@ -841,6 +1242,6 @@ class SQLCompiler:
             )
             raise QueryException(error_msg)
 
-        column = self._column(table, aggregate.column)
+        column = self._resolveColumn(sources, default, aggregate.column)
         builder = getattr(func, aggregate.function.value)
         return builder(column)
