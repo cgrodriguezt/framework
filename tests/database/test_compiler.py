@@ -6,12 +6,20 @@ from orionis.orm.query.expressions import (
     AggregateFunction,
     DeletePlan,
     InsertPlan,
+    JoinCondition,
+    JoinExpression,
+    JoinType,
     OrderClause,
     SelectPlan,
     SortDirection,
     UpdatePlan,
     WhereClause,
     WhereType,
+)
+from orionis.orm.schema.constraints import (
+    CompositeForeignKey,
+    TableIndex,
+    UniqueConstraint,
 )
 from orionis.orm.schema.table import TableDefinition
 from orionis.orm.schema.types import (
@@ -22,6 +30,7 @@ from orionis.orm.schema.types import (
     Enum,
     Float,
     Integer,
+    NumericCommon,
     SmallInteger,
     StrictBinary,
     StrictDecimal,
@@ -117,7 +126,7 @@ class TestSQLCompiler(TestCase):
         """
         plan = SelectPlan(table=self._table)
         plan.wheres.append(
-            WhereClause(column="id", whereType=WhereType.IN, value=(1, 2)),
+            WhereClause(column="id", where_type=WhereType.IN, value=(1, 2)),
         )
         sql = self._sql(self._compiler.compileSelect(plan))
         self.assertIn("in", sql)
@@ -130,7 +139,7 @@ class TestSQLCompiler(TestCase):
         """
         plan = SelectPlan(table=self._table)
         plan.wheres.append(
-            WhereClause(column="id", whereType=WhereType.BETWEEN, value=(1,)),
+            WhereClause(column="id", where_type=WhereType.BETWEEN, value=(1,)),
         )
         with self.assertRaises(QueryException):
             self._compiler.compileSelect(plan)
@@ -145,8 +154,8 @@ class TestSQLCompiler(TestCase):
         plan.orders.append(
             OrderClause(column="name", direction=SortDirection.DESC),
         )
-        plan.limitValue = 10
-        plan.offsetValue = 5
+        plan.limit_value = 10
+        plan.offset_value = 5
         sql = self._sql(self._compiler.compileSelect(plan))
         self.assertIn("order by", sql)
         self.assertIn("desc", sql)
@@ -320,7 +329,7 @@ class TestSQLCompiler(TestCase):
         for where_type, expected_fragments in cases:
             plan = SelectPlan(table=self._table)
             plan.wheres.append(
-                WhereClause(column="name", whereType=where_type, value="abc"),
+                WhereClause(column="name", where_type=where_type, value="abc"),
             )
             sql = self._sql(self._compiler.compileSelect(plan))
             for fragment in expected_fragments:
@@ -334,7 +343,7 @@ class TestSQLCompiler(TestCase):
         """
         plan = SelectPlan(table=self._table)
         plan.wheres.append(
-            WhereClause(column="name", whereType=WhereType.REGEXP, value="^a"),
+            WhereClause(column="name", where_type=WhereType.REGEXP, value="^a"),
         )
         sql = self._sql(self._compiler.compileSelect(plan))
         self.assertIn("regexp", sql)
@@ -357,7 +366,7 @@ class TestSQLCompiler(TestCase):
         """
         plan = SelectPlan(table=self._table)
         plan.wheres.append(
-            WhereClause(column="id", whereType=WhereType.NOT_IN, value=(1,)),
+            WhereClause(column="id", where_type=WhereType.NOT_IN, value=(1,)),
         )
         sql = self._sql(self._compiler.compileSelect(plan))
         self.assertIn("not in", sql)
@@ -370,14 +379,14 @@ class TestSQLCompiler(TestCase):
         """
         plan = SelectPlan(table=self._table)
         plan.wheres.append(
-            WhereClause(column="name", whereType=WhereType.NULL),
+            WhereClause(column="name", where_type=WhereType.NULL),
         )
         sql = self._sql(self._compiler.compileSelect(plan))
         self.assertIn("is null", sql)
 
         plan_not = SelectPlan(table=self._table)
         plan_not.wheres.append(
-            WhereClause(column="name", whereType=WhereType.NOT_NULL),
+            WhereClause(column="name", where_type=WhereType.NOT_NULL),
         )
         sql_not = self._sql(self._compiler.compileSelect(plan_not))
         self.assertIn("is not null", sql_not)
@@ -531,3 +540,343 @@ class TestSQLCompiler(TestCase):
         ddl = str(self._compiler.compileDropTable("users")).lower()
         self.assertIn("drop table", ddl)
         self.assertIn("users", ddl)
+
+    # ── Error scenarios and less common table metadata ───────────────────────
+
+    def testNoSqlTypeRegisteredRaises(self) -> None:
+        """
+        Raise QueryException for column types without a registered builder.
+
+        Validates the guard for mixin-only types such as NumericCommon,
+        which exist only to be inherited from and have no SQL type of
+        their own.
+        """
+        column = NumericCommon()
+        column.name = "value"
+        table = TableDefinition(
+            name="mixins", columns={"value": column}, primary_key="value",
+        )
+        with self.assertRaises(QueryException):
+            SQLCompiler().compileCreateTable(table)
+
+    def testDistinctIsIgnoredWhenAggregateIsSet(self) -> None:
+        """
+        Skip DISTINCT when the plan also carries an aggregate.
+
+        Validates that aggregate projections never combine with a
+        dangling DISTINCT flag.
+        """
+        plan = SelectPlan(
+            table=self._table,
+            distinct=True,
+            aggregate=AggregateClause(function=AggregateFunction.COUNT),
+        )
+        sql = self._sql(self._compiler.compileSelect(plan))
+        self.assertNotIn("distinct", sql)
+
+    def testCompositePrimaryKeyRendersInDdl(self) -> None:
+        """
+        Render a multi-column primary key constraint.
+
+        Validates that composite_primary_key takes precedence over the
+        single-column primary_key field for DDL purposes.
+        """
+        columns = {"tenant_id": Integer(), "user_id": Integer()}
+        for key, column in columns.items():
+            column.name = key
+        table = TableDefinition(
+            name="memberships",
+            columns=columns,
+            composite_primary_key=("tenant_id", "user_id"),
+        )
+        ddl = str(SQLCompiler().compileCreateTable(table)).lower()
+        self.assertIn("primary key", ddl)
+        self.assertIn("tenant_id", ddl)
+        self.assertIn("user_id", ddl)
+
+    def testUniqueConstraintRendersInDdl(self) -> None:
+        """
+        Render a composite UNIQUE constraint spanning multiple columns.
+
+        Validates unique_constraints propagation to the table DDL.
+        """
+        columns = {
+            "id": Integer().primary().autoIncrement(),
+            "tenant_id": Integer(),
+            "slug": String(),
+        }
+        for key, column in columns.items():
+            column.name = key
+        table = TableDefinition(
+            name="pages",
+            columns=columns,
+            primary_key="id",
+            unique_constraints=(
+                UniqueConstraint(
+                    columns=("tenant_id", "slug"), name="uq_pages_slug",
+                ),
+            ),
+        )
+        ddl = str(SQLCompiler().compileCreateTable(table)).lower()
+        self.assertIn("unique", ddl)
+        self.assertIn("uq_pages_slug", ddl)
+
+    def testCompositeForeignKeyRendersInDdl(self) -> None:
+        """
+        Render a multi-column foreign key constraint.
+
+        Validates foreign_keys propagation to the table DDL, including
+        prefix application on the referenced table.
+        """
+        columns = {"order_id": Integer(), "product_id": Integer()}
+        for key, column in columns.items():
+            column.name = key
+        table = TableDefinition(
+            name="order_items",
+            columns=columns,
+            foreign_keys=(
+                CompositeForeignKey(
+                    columns=("order_id", "product_id"),
+                    ref_table="order_products",
+                    ref_columns=("order_id", "product_id"),
+                    name="fk_order_items",
+                ),
+            ),
+        )
+        ddl = str(SQLCompiler(prefix="app_").compileCreateTable(table)).lower()
+        self.assertIn("foreign key", ddl)
+        self.assertIn("app_order_products", ddl)
+
+    def testTableIndexIsRegisteredOnEngineTable(self) -> None:
+        """
+        Register a composite index on the engine table metadata.
+
+        Validates that indexes reach the engine Table object, since
+        CREATE TABLE DDL alone does not render index statements.
+        """
+        columns = {
+            "id": Integer().primary().autoIncrement(),
+            "first_name": String(),
+            "last_name": String(),
+        }
+        for key, column in columns.items():
+            column.name = key
+        table = TableDefinition(
+            name="people",
+            columns=columns,
+            primary_key="id",
+            indexes=(
+                TableIndex(columns=("first_name", "last_name"), name="ix_name"),
+            ),
+        )
+        engine_table = SQLCompiler()._sqlTable(table)
+        index_names = {index.name for index in engine_table.indexes}
+        self.assertIn("ix_name", index_names)
+
+    def testTableSchemaAndCommentPropagateToEngineTable(self) -> None:
+        """
+        Propagate the schema and comment fields to the engine table.
+
+        Validates metadata that does not affect column rendering but is
+        still consumed from the table definition.
+        """
+        columns = {"id": Integer().primary().autoIncrement()}
+        for key, column in columns.items():
+            column.name = key
+        table = TableDefinition(
+            name="audit",
+            columns=columns,
+            primary_key="id",
+            schema="reporting",
+            comment="Audit trail table.",
+        )
+        engine_table = SQLCompiler()._sqlTable(table)
+        self.assertEqual(engine_table.schema, "reporting")
+        self.assertEqual(engine_table.comment, "Audit trail table.")
+
+
+def _makePostsTable() -> TableDefinition:
+    """Build a small "posts" table definition referencing "users"."""
+    columns = {
+        "id": Integer().primary().autoIncrement(),
+        "user_id": Integer(),
+        "title": String(),
+    }
+    for key, column in columns.items():
+        column.name = key
+    return TableDefinition(name="posts", columns=columns, primary_key="id")
+
+
+class TestSQLCompilerJoins(TestCase):
+    """Compile SELECT plans spanning multiple table sources."""
+
+    def setUp(self) -> None:
+        """Create a fresh compiler and both table definitions per test."""
+        self._compiler = SQLCompiler()
+        self._users = _makeTable()
+        self._posts = _makePostsTable()
+
+    def _sql(self, statement) -> str:
+        """Render a statement to normalized lowercase SQL."""
+        return str(statement.compile()).lower()
+
+    def testInnerJoinCompilesWithQualifiedCondition(self) -> None:
+        """
+        Compile an INNER JOIN using a column-to-column ON condition.
+
+        Validates that qualified references ("users.id"/"posts.user_id")
+        resolve against their own table instead of the main one.
+        """
+        plan = SelectPlan(
+            table=self._users,
+            joins=[
+                JoinExpression(
+                    join_type=JoinType.INNER,
+                    table=self._posts,
+                    conditions=[
+                        JoinCondition(first="users.id", second="posts.user_id"),
+                    ],
+                ),
+            ],
+        )
+        sql = self._sql(self._compiler.compileSelect(plan))
+        self.assertIn("join posts", sql)
+        self.assertIn("users.id = posts.user_id", sql)
+
+    def testLeftJoinCompilesAsOuterJoin(self) -> None:
+        """
+        Compile a LEFT JOIN as a SQL LEFT OUTER JOIN.
+
+        Validates the outer join flag reaches the rendered statement.
+        """
+        plan = SelectPlan(
+            table=self._users,
+            joins=[
+                JoinExpression(
+                    join_type=JoinType.LEFT,
+                    table=self._posts,
+                    conditions=[
+                        JoinCondition(first="users.id", second="posts.user_id"),
+                    ],
+                ),
+            ],
+        )
+        sql = self._sql(self._compiler.compileSelect(plan))
+        self.assertIn("left outer join posts", sql)
+
+    def testCrossJoinCompilesWithoutConditions(self) -> None:
+        """
+        Compile a CROSS JOIN without requiring any ON condition.
+
+        Validates the cross join escape hatch in the join compiler.
+        """
+        plan = SelectPlan(
+            table=self._users,
+            joins=[JoinExpression(join_type=JoinType.CROSS, table=self._posts)],
+        )
+        sql = self._sql(self._compiler.compileSelect(plan))
+        self.assertIn("join posts", sql)
+
+    def testJoinRespectsAliasesOnBothSides(self) -> None:
+        """
+        Resolve qualified columns through table and join aliases.
+
+        Validates that ``TableReference``-style aliasing threads through
+        the source map used for column resolution.
+        """
+        plan = SelectPlan(
+            table=self._users,
+            alias="u",
+            joins=[
+                JoinExpression(
+                    join_type=JoinType.INNER,
+                    table=self._posts,
+                    alias="p",
+                    conditions=[JoinCondition(first="u.id", second="p.user_id")],
+                ),
+            ],
+        )
+        sql = self._sql(self._compiler.compileSelect(plan))
+        self.assertIn("as u", sql)
+        self.assertIn("as p", sql)
+        self.assertIn("u.id = p.user_id", sql)
+
+    def testJoinWithoutConditionsRaises(self) -> None:
+        """
+        Raise QueryException when a non-cross join declares no ON clause.
+
+        Validates the guard preventing an accidental Cartesian product.
+        """
+        plan = SelectPlan(
+            table=self._users,
+            joins=[JoinExpression(join_type=JoinType.INNER, table=self._posts)],
+        )
+        with self.assertRaises(QueryException):
+            self._compiler.compileSelect(plan)
+
+    def testJoinWithUnknownTableReferenceRaises(self) -> None:
+        """
+        Raise QueryException when an ON condition references an unknown table.
+
+        Validates that column resolution stays scoped to known sources.
+        """
+        plan = SelectPlan(
+            table=self._users,
+            joins=[
+                JoinExpression(
+                    join_type=JoinType.INNER,
+                    table=self._posts,
+                    conditions=[
+                        JoinCondition(first="users.id", second="comments.post_id"),
+                    ],
+                ),
+            ],
+        )
+        with self.assertRaises(QueryException):
+            self._compiler.compileSelect(plan)
+
+    def testUnsupportedJoinTypeRaises(self) -> None:
+        """
+        Raise QueryException for join types not compiled yet.
+
+        Validates the explicit guard for RIGHT/FULL joins, which are
+        intentionally deferred until a real use case needs them.
+        """
+        plan = SelectPlan(
+            table=self._users,
+            joins=[
+                JoinExpression(
+                    join_type=JoinType.RIGHT,
+                    table=self._posts,
+                    conditions=[
+                        JoinCondition(first="users.id", second="posts.user_id"),
+                    ],
+                ),
+            ],
+        )
+        with self.assertRaises(QueryException):
+            self._compiler.compileSelect(plan)
+
+    def testWhereClauseCanQualifyColumnAcrossJoinedTables(self) -> None:
+        """
+        Filter by a qualified column belonging to a joined table.
+
+        Validates that ``WhereClause`` benefits from the same qualified
+        resolution used by ON conditions, without any special-casing.
+        """
+        plan = SelectPlan(
+            table=self._users,
+            joins=[
+                JoinExpression(
+                    join_type=JoinType.INNER,
+                    table=self._posts,
+                    conditions=[
+                        JoinCondition(first="users.id", second="posts.user_id"),
+                    ],
+                ),
+            ],
+        )
+        plan.wheres.append(WhereClause(column="posts.title", value="Hello"))
+        sql = self._sql(self._compiler.compileSelect(plan))
+        self.assertIn("where posts.title", sql)
+
