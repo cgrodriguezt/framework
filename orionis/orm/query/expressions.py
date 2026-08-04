@@ -1,4 +1,3 @@
-# ruff: noqa: N815 (camelCase attributes are an Orionis convention)
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -14,7 +13,6 @@ SUPPORTED_OPERATORS: frozenset[str] = frozenset(
         "like", "not like", "ilike", "not ilike",
     },
 )
-
 
 class WhereType(StrEnum):
     """Kinds of where clauses supported by the query language."""
@@ -34,13 +32,11 @@ class WhereType(StrEnum):
     CONTAINS = "contains"
     REGEXP = "regexp"
 
-
 class SortDirection(StrEnum):
     """Sort directions supported by order clauses."""
 
     ASC = "asc"
     DESC = "desc"
-
 
 class AggregateFunction(StrEnum):
     """Aggregate functions supported by the query language."""
@@ -51,6 +47,14 @@ class AggregateFunction(StrEnum):
     AVG = "avg"
     SUM = "sum"
 
+class JoinType(StrEnum):
+    """Join kinds supported by the query language."""
+
+    INNER = "inner"
+    LEFT = "left"
+    RIGHT = "right"
+    FULL = "full"
+    CROSS = "cross"
 
 @dataclass(slots=True)
 class WhereClause:
@@ -61,7 +65,7 @@ class WhereClause:
     ----------
     column : str
         Column the condition applies to.
-    whereType : WhereType
+    where_type : WhereType
         Kind of condition (basic comparison, in, null, between, like).
     operator : str
         Comparison operator for basic conditions.
@@ -72,11 +76,10 @@ class WhereClause:
     """
 
     column: str
-    whereType: WhereType = WhereType.BASIC  # NOSONAR
+    where_type: WhereType = WhereType.BASIC
     operator: str = "="
     value: Any = None
     boolean: str = "and"
-
 
 @dataclass(slots=True)
 class OrderClause:
@@ -94,7 +97,6 @@ class OrderClause:
     column: str
     direction: SortDirection = SortDirection.ASC
 
-
 @dataclass(slots=True)
 class AggregateClause:
     """
@@ -111,6 +113,56 @@ class AggregateClause:
     function: AggregateFunction
     column: str = "*"
 
+@dataclass(slots=True)
+class JoinCondition:
+    """
+    Single ON condition comparing two column references.
+
+    Both sides may be qualified as ``"table.column"`` to disambiguate
+    across the tables participating in the query; an unqualified side
+    defaults to the table being joined.
+
+    Attributes
+    ----------
+    first : str
+        Left-hand column reference.
+    operator : str
+        Comparison operator relating both sides.
+    second : str
+        Right-hand column reference.
+    boolean : str
+        Logical connector with the previous condition: ``"and"`` or
+        ``"or"``.
+    """
+
+    first: str
+    operator: str = "="
+    second: str = ""
+    boolean: str = "and"
+
+@dataclass(slots=True)
+class JoinExpression:
+    """
+    Single JOIN source attached to a select plan.
+
+    Attributes
+    ----------
+    join_type : JoinType
+        Kind of join to perform.
+    table : TableDefinition
+        Joined table description; carries its own columns so the
+        compiler can resolve qualified references without guessing.
+    alias : str or None
+        Name the joined table is referred to by inside the query, or
+        ``None`` to use its logical table name.
+    conditions : list of JoinCondition
+        ON conditions combined left to right.
+    """
+
+    join_type: JoinType
+    table: TableDefinition
+    alias: str | None = None
+    conditions: list[JoinCondition] = field(default_factory=list)
 
 @dataclass(slots=True)
 class SelectPlan:
@@ -121,8 +173,15 @@ class SelectPlan:
     ----------
     table : TableDefinition
         Table the query runs against.
+    alias : str or None
+        Name the main table is referred to by inside the query, or
+        ``None`` to use its logical table name. Required to self-join a
+        table against itself once joins are composed on top of a plan.
+    joins : list of JoinExpression
+        Additional table sources joined onto the main table.
     columns : tuple of str
-        Projected columns; empty means all columns.
+        Projected columns; empty means all columns. Entries may be
+        qualified as ``"table.column"`` once ``joins`` is non-empty.
     wheres : list of WhereClause
         Filtering conditions combined left to right.
     orders : list of OrderClause
@@ -131,9 +190,9 @@ class SelectPlan:
         Grouping columns.
     havings : list of WhereClause
         Conditions applied after grouping.
-    limitValue : int or None
+    limit_value : int or None
         Maximum number of rows to return.
-    offsetValue : int or None
+    offset_value : int or None
         Number of rows to skip.
     aggregate : AggregateClause or None
         Aggregate projection replacing the column list when present.
@@ -142,13 +201,15 @@ class SelectPlan:
     """
 
     table: TableDefinition
+    alias: str | None = None
+    joins: list[JoinExpression] = field(default_factory=list)
     columns: tuple[str, ...] = ()
     wheres: list[WhereClause] = field(default_factory=list)
     orders: list[OrderClause] = field(default_factory=list)
     groups: list[str] = field(default_factory=list)
     havings: list[WhereClause] = field(default_factory=list)
-    limitValue: int | None = None  # NOSONAR
-    offsetValue: int | None = None  # NOSONAR
+    limit_value: int | None = None
+    offset_value: int | None = None
     aggregate: AggregateClause | None = None
     distinct: bool = False
 
@@ -166,17 +227,18 @@ class SelectPlan:
         """
         return SelectPlan(
             table=self.table,
+            alias=self.alias,
+            joins=list(self.joins),
             columns=self.columns,
             wheres=list(self.wheres),
             orders=list(self.orders),
             groups=list(self.groups),
             havings=list(self.havings),
-            limitValue=self.limitValue,
-            offsetValue=self.offsetValue,
+            limit_value=self.limit_value,
+            offset_value=self.offset_value,
             aggregate=self.aggregate,
             distinct=self.distinct,
         )
-
 
 @dataclass(slots=True)
 class InsertPlan:
@@ -193,7 +255,6 @@ class InsertPlan:
 
     table: TableDefinition
     values: list[dict[str, Any]] = field(default_factory=list)
-
 
 @dataclass(slots=True)
 class UpdatePlan:
@@ -213,7 +274,6 @@ class UpdatePlan:
     table: TableDefinition
     values: dict[str, Any] = field(default_factory=dict)
     wheres: list[WhereClause] = field(default_factory=list)
-
 
 @dataclass(slots=True)
 class DeletePlan:
