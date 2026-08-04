@@ -35,7 +35,9 @@ class DatabaseProvider(ServiceProvider):
         None
             This method does not return a value.
         """
+        # Set up the connection manager for the ORM resolver and pin the DB facade.
         manager = await self.app.make(IConnectionManager)
+
         # Install the manager so models resolve connections statically.
         ConnectionResolver.setManager(manager)
         await DB.pin()
