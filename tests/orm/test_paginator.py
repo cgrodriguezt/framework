@@ -12,7 +12,7 @@ class TestPaginator(TestCase):
             items=Collection([{"id": 1}, {"id": 2}]),
             total=total,
             page=page,
-            perPage=per_page,
+            per_page=per_page,
         )
 
     def testMetadataDerivation(self) -> None:
@@ -22,9 +22,9 @@ class TestPaginator(TestCase):
         Validates the pagination arithmetic.
         """
         paginator = self._make(total=5, page=2, per_page=2)
-        self.assertEqual(paginator.lastPage, 3)
-        self.assertTrue(paginator.hasNext)
-        self.assertTrue(paginator.hasPrevious)
+        self.assertEqual(paginator.last_page, 3)
+        self.assertTrue(paginator.has_next)
+        self.assertTrue(paginator.has_previous)
         self.assertEqual(len(paginator), 2)
 
     def testBoundaryPages(self) -> None:
@@ -34,12 +34,12 @@ class TestPaginator(TestCase):
         Validates the first and last page flags.
         """
         first = self._make(total=4, page=1, per_page=2)
-        self.assertFalse(first.hasPrevious)
-        self.assertTrue(first.hasNext)
+        self.assertFalse(first.has_previous)
+        self.assertTrue(first.has_next)
 
         last = self._make(total=4, page=2, per_page=2)
-        self.assertTrue(last.hasPrevious)
-        self.assertFalse(last.hasNext)
+        self.assertTrue(last.has_previous)
+        self.assertFalse(last.has_next)
 
     def testEmptyResultKeepsOnePage(self) -> None:
         """
@@ -51,10 +51,10 @@ class TestPaginator(TestCase):
             items=Collection([]),
             total=0,
             page=1,
-            perPage=10,
+            per_page=10,
         )
-        self.assertEqual(paginator.lastPage, 1)
-        self.assertFalse(paginator.hasNext)
+        self.assertEqual(paginator.last_page, 1)
+        self.assertFalse(paginator.has_next)
 
     def testInvalidPageArgumentsRaise(self) -> None:
         """
