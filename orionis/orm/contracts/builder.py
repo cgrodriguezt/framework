@@ -558,7 +558,7 @@ class IModelQueryBuilder(ABC):
     async def paginate(
         self,
         page: int = 1,
-        perPage: int = 15,  # noqa: N803 # NOSONAR
+        per_page: int = 15,
     ) -> Paginator:
         """
         Execute the query returning a length-aware page of results.
@@ -567,7 +567,7 @@ class IModelQueryBuilder(ABC):
         ----------
         page : int, optional
             Page number starting at 1.
-        perPage : int, optional
+        per_page : int, optional
             Number of items per page.
 
         Returns
