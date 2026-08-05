@@ -6,9 +6,17 @@ from orionis.orm.exceptions import (
     ModelNotFoundException,
     OrmConfigurationException,
     OrmException,
+    RelationNotFoundException,
 )
 from orionis.orm.model import Model
 from orionis.orm.query.builder import ModelQueryBuilder
+from orionis.orm.relations import (
+    BelongsToManyRelation,
+    BelongsToRelation,
+    HasManyRelation,
+    HasOneRelation,
+    Relation,
+)
 from orionis.orm.resolver import ConnectionResolver
 from orionis.orm.schema.types import (
     BigInteger,
@@ -54,6 +62,8 @@ from orionis.orm.schema.types import (
 )
 
 __all__ = [
+    "BelongsToManyRelation",
+    "BelongsToRelation",
     "BigInteger",
     "Boolean",
     "Collection",
@@ -64,6 +74,8 @@ __all__ = [
     "Double",
     "Enum",
     "Float",
+    "HasManyRelation",
+    "HasOneRelation",
     "Integer",
     "Interval",
     "InvalidQueryException",
@@ -80,6 +92,8 @@ __all__ = [
     "OrmException",
     "Paginator",
     "PickleType",
+    "Relation",
+    "RelationNotFoundException",
     "SchemaType",
     "SmallInteger",
     "StrictArray",
