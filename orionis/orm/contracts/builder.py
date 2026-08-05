@@ -37,6 +37,38 @@ class IModelQueryBuilder(ABC):
         """
 
     @abstractmethod
+    def with_(self, *names: str) -> IModelQueryBuilder:
+        """
+        Eager load the given relationships alongside the query.
+
+        Parameters
+        ----------
+        *names : str
+            Relationship method names declared on the model.
+
+        Returns
+        -------
+        IModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+
+    @abstractmethod
+    def load(self, *names: str) -> IModelQueryBuilder:
+        """
+        Eager load the given relationships; alias of :meth:`with_`.
+
+        Parameters
+        ----------
+        *names : str
+            Relationship method names declared on the model.
+
+        Returns
+        -------
+        IModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+
+    @abstractmethod
     def where(
         self,
         column: str | dict[str, Any],
