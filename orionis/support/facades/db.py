@@ -2,7 +2,6 @@ from orionis.container.facades.facade import Facade
 from orionis.database.contracts.manager import IConnectionManager
 from orionis.orm.query.raw_builder import RawQueryBuilder
 
-
 class DB(Facade):
     """
     Facade for the database connection manager.
