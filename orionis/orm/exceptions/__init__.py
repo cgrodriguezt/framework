@@ -15,10 +15,14 @@ class MassAssignmentException(OrmException):
 class InvalidQueryException(OrmException):
     """Raised when a query builder call receives invalid arguments."""
 
+class RelationNotFoundException(OrmException):
+    """Raised when a relationship name cannot be resolved on a model."""
+
 __all__ = [
     "InvalidQueryException",
     "MassAssignmentException",
     "ModelNotFoundException",
     "OrmConfigurationException",
     "OrmException",
+    "RelationNotFoundException",
 ]
