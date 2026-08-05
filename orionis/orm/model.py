@@ -10,6 +10,7 @@ from orionis.orm.query.expressions import (
     UpdatePlan,
     WhereClause,
 )
+from orionis.orm.relations.mixin import RelationsMixin
 from orionis.orm.schema.types import ColumnType
 from orionis.orm.state import StateMixin
 
@@ -24,10 +25,11 @@ _INTERNAL_ATTRIBUTES: frozenset[str] = frozenset({
     "_changes",
     "_exists",
     "_original",
+    "_relations",
 })
 
 
-class Model(AttributesMixin, StateMixin, metaclass=ModelMeta):
+class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
     """
     Base class of the Orionis active-record models.
 
@@ -38,7 +40,7 @@ class Model(AttributesMixin, StateMixin, metaclass=ModelMeta):
     """
 
     __abstract__ = True
-    __slots__ = ("_attributes", "_changes", "_exists", "_original")
+    __slots__ = ("_attributes", "_changes", "_exists", "_original", "_relations")
 
     # ── Declarative configuration ───────────────────────────────────────────
 
@@ -99,6 +101,7 @@ class Model(AttributesMixin, StateMixin, metaclass=ModelMeta):
         object.__setattr__(self, "_original", {})
         object.__setattr__(self, "_changes", {})
         object.__setattr__(self, "_exists", False)
+        object.__setattr__(self, "_relations", {})
         if attributes:
             self.fill(attributes)
 
@@ -210,6 +213,7 @@ class Model(AttributesMixin, StateMixin, metaclass=ModelMeta):
         object.__setattr__(instance, "_original", dict(attributes))
         object.__setattr__(instance, "_changes", {})
         object.__setattr__(instance, "_exists", True)
+        object.__setattr__(instance, "_relations", {})
         return instance
 
     # ── Query entry points ──────────────────────────────────────────────────
