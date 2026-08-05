@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
-
     from orionis.database.contracts.transaction import ITransaction
     from orionis.database.entities.result import InsertResult
     from orionis.orm.query.expressions import (
@@ -24,6 +23,8 @@ class IConnection(ABC):
     (dictionaries, integers, result entities). Engine objects never leak
     through this interface.
     """
+
+    # ruff: noqa: ANN401
 
     @abstractmethod
     def getName(self) -> str:
@@ -130,7 +131,7 @@ class IConnection(ABC):
         """
 
     @abstractmethod
-    async def scalar(self, plan: SelectPlan) -> Any:  # noqa: ANN401
+    async def scalar(self, plan: SelectPlan) -> Any:
         """
         Run a SELECT plan and return the first column of the first row.
 
