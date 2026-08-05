@@ -33,6 +33,7 @@ _FORWARDED_BUILDER_METHODS: frozenset[str] = frozenset({
     "having",
     "latest",
     "limit",
+    "load",
     "max",
     "min",
     "offset",
@@ -58,6 +59,7 @@ _FORWARDED_BUILDER_METHODS: frozenset[str] = frozenset({
     "whereNull",
     "whereRegexpMatch",
     "whereStartsWith",
+    "with_",
 })
 
 def snake_case(name: str) -> str:
