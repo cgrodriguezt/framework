@@ -1,10 +1,15 @@
 from __future__ import annotations
 import asyncio
+import inspect
 from typing import TYPE_CHECKING, Any
 from orionis.orm.attributes import serialize_for_storage
 from orionis.orm.collections.paginator import Paginator
 from orionis.orm.contracts.builder import IModelQueryBuilder
-from orionis.orm.exceptions import InvalidQueryException, ModelNotFoundException
+from orionis.orm.exceptions import (
+    InvalidQueryException,
+    ModelNotFoundException,
+    RelationNotFoundException,
+)
 from orionis.orm.query.expressions import (
     SUPPORTED_OPERATORS,
     AggregateClause,
@@ -46,7 +51,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
     model instances wrapped in a :class:`Collection`.
     """
 
-    __slots__ = ("_connection_name", "_meta", "_model", "_plan")
+    __slots__ = ("_connection_name", "_eager_loads", "_meta", "_model", "_plan")
 
     def __init__(self, model: type[TModel]) -> None:
         """
@@ -67,6 +72,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._meta = meta
         self._connection_name = meta.connection
         self._plan = SelectPlan(table=meta.table)
+        self._eager_loads: list[str] = []
 
     # ── Projection ──────────────────────────────────────────────────────────
 
@@ -86,6 +92,45 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         """
         self._plan.columns = tuple(columns)
         return self
+
+    # ── Eager loading ────────────────────────────────────────────────────────
+
+    def with_(self, *names: str) -> ModelQueryBuilder[TModel]:
+        """
+        Eager load the given relationships alongside the query.
+
+        Named ``with_`` (trailing underscore) instead of ``with``, which
+        is a reserved Python keyword and cannot be used as a method
+        name; :meth:`load` is a keyword-free alias.
+
+        Parameters
+        ----------
+        *names : str
+            Relationship method names declared on the model.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._eager_loads.extend(names)
+        return self
+
+    def load(self, *names: str) -> ModelQueryBuilder[TModel]:
+        """
+        Eager load the given relationships; alias of :meth:`with_`.
+
+        Parameters
+        ----------
+        *names : str
+            Relationship method names declared on the model.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        return self.with_(*names)
 
     # ── Where clauses ───────────────────────────────────────────────────────
 
@@ -747,10 +792,15 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         ------
         QueryException
             If the statement fails to compile or execute.
+        RelationNotFoundException
+            If an eager-loaded relationship name does not resolve to one.
         """
         rows = await self._connection().select(self._plan)
         hydrate = self._model._newFromDatabase  # noqa: SLF001
-        return Collection([hydrate(row) for row in rows])
+        models = [hydrate(row) for row in rows]
+        if self._eager_loads and models:
+            await self._eagerLoad(models)
+        return Collection(models)
 
     async def first(self) -> TModel | None:
         """
@@ -765,12 +815,17 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         ------
         QueryException
             If the statement fails to compile or execute.
+        RelationNotFoundException
+            If an eager-loaded relationship name does not resolve to one.
         """
         self._plan.limit_value = 1
         rows = await self._connection().select(self._plan)
         if not rows:
             return None
-        return self._model._newFromDatabase(rows[0])  # noqa: SLF001
+        instance = self._model._newFromDatabase(rows[0])  # noqa: SLF001
+        if self._eager_loads:
+            await self._eagerLoad([instance])
+        return instance
 
     async def firstOrFail(self) -> TModel:
         """
@@ -1081,6 +1136,62 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         return await self._connection().delete(plan)
 
     # ── Internal helpers ────────────────────────────────────────────────────
+
+    async def _eagerLoad(self, models: list[TModel]) -> None:
+        """
+        Resolve every pending eager-loaded relationship for a result set.
+
+        Reads each relationship's metadata from the first model (its
+        query is otherwise identical for every instance of the same
+        class), constrains it to the whole batch in a single query, and
+        assigns the grouped results back to each model.
+
+        Parameters
+        ----------
+        models : list of Model
+            Hydrated models to attach the relationships onto.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        RelationNotFoundException
+            If a requested name is not a relationship method.
+        """
+        # Imported locally: Relation subclasses ModelQueryBuilder, so
+        # importing it at module level here would cycle back through
+        # orionis.orm.relations.relation.
+        from orionis.orm.relations.relation import Relation  # noqa: PLC0415
+
+        sample = models[0]
+        for name in self._eager_loads:
+            accessor = getattr(sample, name, None)
+            if not callable(accessor):
+                error_msg = (
+                    f"'{name}' is not a relationship method on model "
+                    f"[{self._model.__name__}]."
+                )
+                raise RelationNotFoundException(error_msg)
+
+            relation = Relation.noConstraints(accessor)
+            if not isinstance(relation, Relation):
+                # The accessor may be an unrelated async method (e.g. a
+                # typo matching `save`); close its coroutine instead of
+                # leaking it, since it was never meant to be awaited.
+                if inspect.iscoroutine(relation):
+                    relation.close()
+                error_msg = (
+                    f"'{name}' is not a relationship method on model "
+                    f"[{self._model.__name__}]."
+                )
+                raise RelationNotFoundException(error_msg)
+
+            relation.addEagerConstraints(models)
+            results = await relation.getEager()
+            relation.match(models, results, name)
 
     def _connection(self) -> IConnection:
         """
