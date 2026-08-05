@@ -121,9 +121,15 @@ class Connection(IConnection):
     nesting through savepoints.
     """
 
+    # ruff: noqa: ANN401
+
     __slots__ = ("_compiler", "_config", "_engine", "_name", "_tx_state")
 
-    def __init__(self, name: str, config: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        name: str,
+        config: dict[str, Any],
+    ) -> None:
         """
         Initialize the connection with its configuration.
 
@@ -208,7 +214,10 @@ class Connection(IConnection):
             # Materialize rows before the connection is released.
             return [dict(row) for row in result.mappings()]
 
-    async def insert(self, plan: InsertPlan) -> InsertResult:
+    async def insert(
+        self,
+        plan: InsertPlan,
+    ) -> InsertResult:
         """
         Run an INSERT statement described by the given plan.
 
@@ -242,7 +251,10 @@ class Connection(IConnection):
                 row_count=int(result.rowcount or 0),
             )
 
-    async def update(self, plan: UpdatePlan) -> int:
+    async def update(
+        self,
+        plan: UpdatePlan,
+    ) -> int:
         """
         Run an UPDATE statement described by the given plan.
 
@@ -266,7 +278,10 @@ class Connection(IConnection):
             result = await self._run(connection, statement)
             return int(result.rowcount or 0)
 
-    async def delete(self, plan: DeletePlan) -> int:
+    async def delete(
+        self,
+        plan: DeletePlan,
+    ) -> int:
         """
         Run a DELETE statement described by the given plan.
 
@@ -290,7 +305,10 @@ class Connection(IConnection):
             result = await self._run(connection, statement)
             return int(result.rowcount or 0)
 
-    async def scalar(self, plan: SelectPlan) -> Any:  # noqa: ANN401
+    async def scalar(
+        self,
+        plan: SelectPlan,
+    ) -> Any:
         """
         Run a SELECT plan and return the first column of the first row.
 
@@ -626,7 +644,7 @@ class Connection(IConnection):
     async def _run(
         self,
         connection: AsyncConnection,
-        statement: Any,  # noqa: ANN401
+        statement: Any,
         parameters: dict[str, Any] | None = None,
     ) -> CursorResult[Any]:
         """
@@ -661,7 +679,10 @@ class Connection(IConnection):
             )
             raise QueryException(error_msg) from exc
 
-    async def _releaseIfSettled(self, state: _TransactionState) -> None:
+    async def _releaseIfSettled(
+        self,
+        state: _TransactionState,
+    ) -> None:
         """
         Close the raw connection once every transaction level is settled.
 
