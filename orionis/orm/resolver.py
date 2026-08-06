@@ -4,7 +4,7 @@ from orionis.orm.exceptions import OrmConfigurationException
 
 if TYPE_CHECKING:
     from orionis.database.contracts.connection import IConnection
-    from orionis.database.contracts.manager import IConnectionManager
+    from orionis.database.contracts.connection_manager import IConnectionManager
 
 class ConnectionResolver:
     """
