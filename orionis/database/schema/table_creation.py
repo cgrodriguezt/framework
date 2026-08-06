@@ -8,7 +8,8 @@ if TYPE_CHECKING:
     from orionis.database.schema.schema import Schema
 
 class TableCreation:
-    """Awaitable and async context manager returned by ``Schema.create``.
+    """
+    Awaitable and async context manager returned by ``Schema.create``.
 
     - ``await schema.create(name, *definitions)`` awaits this object
       directly, creating the table from the definitions given up front.
@@ -26,7 +27,8 @@ class TableCreation:
         name: str,
         definitions: tuple[SchemaDefinition, ...],
     ) -> None:
-        """Store the pending table creation request.
+        """
+        Store the pending table creation request.
 
         Parameters
         ----------
@@ -48,7 +50,8 @@ class TableCreation:
         self.__blueprint: Blueprint | None = None
 
     def __await__(self) -> Generator[object, None, object]:
-        """Create the table from the definitions given to ``create``.
+        """
+        Create the table from the definitions given to ``create``.
 
         Returns
         -------
@@ -61,7 +64,8 @@ class TableCreation:
         ).__await__()
 
     async def __aenter__(self) -> Blueprint:
-        """Start a fluent, per-table column declaration block.
+        """
+        Start a fluent, per-table column declaration block.
 
         Returns
         -------
@@ -77,7 +81,8 @@ class TableCreation:
         exc: BaseException | None,
         traceback: TracebackType | None,
     ) -> bool:
-        """Create the table with the collected columns, unless it raised.
+        """
+        Create the table with the collected columns, unless it raised.
 
         Parameters
         ----------
