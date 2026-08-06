@@ -1,7 +1,7 @@
 import time
 from typing import TYPE_CHECKING, Any
 from orionis.database.contracts.connection import IConnection
-from orionis.database.contracts.manager import IConnectionManager
+from orionis.database.contracts.connection_manager import IConnectionManager
 from orionis.database.contracts.migration import Migration
 from orionis.database.contracts.migrator import IMigrator
 from orionis.database.exceptions import MigrationNotFoundException
@@ -69,13 +69,18 @@ def _build_migrations_table(table: str) -> TableDefinition:
 _MIGRATIONS_TABLE_DEFINITION: TableDefinition = _build_migrations_table(
     _MIGRATIONS_TABLE,
 )
+
 class Migrator(IMigrator):
 
     # ruff: noqa: TC001
 
     __slots__ = ("__app", "__conn_manager", "__discovered_cache")
 
-    def __init__(self, app: IApplication, conn_manager: IConnectionManager) -> None:
+    def __init__(
+        self,
+        app: IApplication,
+        conn_manager: IConnectionManager,
+    ) -> None:
         """
         Initialize the migrator.
 
@@ -325,7 +330,10 @@ class Migrator(IMigrator):
         """
         return await connection.select(
             f"""
-            SELECT id, migration, batch FROM {_MIGRATIONS_TABLE}
+            SELECT
+                id,
+                migration,
+                batch FROM {_MIGRATIONS_TABLE}
             ORDER BY id ASC
             """,
         )
@@ -374,11 +382,21 @@ class Migrator(IMigrator):
         """
         await connection.execute(
             f"""
-            INSERT INTO {_MIGRATIONS_TABLE}
-            (migration, batch, migrated_at)
-            VALUES (:migration, :batch, :migrated_at)
+            INSERT INTO {_MIGRATIONS_TABLE} (
+                migration,
+                batch,
+                migrated_at
+            ) VALUES (
+                :migration,
+                :batch,
+                :migrated_at
+            )
             """,
-            {"migration": name, "batch": batch, "migrated_at": int(time.time())},
+            {
+                "migration": name,
+                "batch": batch,
+                "migrated_at": int(time.time()),
+            },
         )
 
     async def __deleteRecord(self, connection: IConnection, name: str) -> None:
@@ -398,8 +416,6 @@ class Migrator(IMigrator):
             This method does not return a value.
         """
         await connection.execute(
-            f"""
-            DELETE FROM {_MIGRATIONS_TABLE} WHERE migration = :migration
-            """,
+            f"DELETE FROM {_MIGRATIONS_TABLE} WHERE migration = :migration",
             {"migration": name},
         )
