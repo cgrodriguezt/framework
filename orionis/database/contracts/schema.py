@@ -75,7 +75,6 @@ class ISchema(ABC):
             Awaitable and async context manager that performs the
             creation.
         """
-        ...
 
     @abstractmethod
     async def drop(self, name: str) -> bool:
@@ -92,4 +91,3 @@ class ISchema(ABC):
         bool
             ``True`` when the table is dropped without errors.
         """
-        ...
