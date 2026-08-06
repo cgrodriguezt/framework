@@ -49,7 +49,6 @@ class IMigrator(ABC):
             Any exception raised by a migration's ``up`` method aborts
             the run and propagates to the caller.
         """
-        ...
 
     @abstractmethod
     async def rollback(
@@ -93,4 +92,3 @@ class IMigrator(ABC):
             Any exception raised by a migration's ``down`` method aborts
             the rollback and propagates to the caller.
         """
-        ...
