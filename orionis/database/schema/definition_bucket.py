@@ -16,7 +16,8 @@ class DefinitionBucket:
     )
 
     def __init__(self) -> None:
-        """Initialize empty containers for each definition kind.
+        """
+        Initialize empty containers for each definition kind.
 
         Returns
         -------
