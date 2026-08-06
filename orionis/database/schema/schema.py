@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Self
 from orionis.database.contracts.connection import IConnection
-from orionis.database.contracts.manager import IConnectionManager
+from orionis.database.contracts.connection_manager import IConnectionManager
 from orionis.database.contracts.schema import ISchema
 from orionis.database.schema.column import Column
 from orionis.database.schema.comment import Comment
@@ -25,7 +25,8 @@ class Schema(ISchema):
     __SCHEMA_TABLE_PARTS: int = 2
 
     def __init__(self, conn_manager: IConnectionManager) -> None:
-        """Initialize the Schema instance.
+        """
+        Initialize the Schema instance.
 
         Parameters
         ----------
@@ -41,7 +42,8 @@ class Schema(ISchema):
         self.__connection_name: str | None = None
 
     def connection(self, name: str | None = None) -> Self:
-        """Set the connection name for schema operations.
+        """
+        Set the connection name for schema operations.
 
         Parameters
         ----------
@@ -66,7 +68,8 @@ class Schema(ISchema):
         return self
 
     def create(self, name: str, *definitions: SchemaDefinition) -> TableCreation:
-        """Create a new table with the given definitions.
+        """
+        Create a new table with the given definitions.
 
         The result can be used two ways:
 
@@ -98,7 +101,8 @@ class Schema(ISchema):
         return TableCreation(self, name, definitions)
 
     async def drop(self, name: str) -> bool:
-        """Drop an existing table.
+        """
+        Drop an existing table.
 
         Parameters
         ----------
@@ -120,7 +124,8 @@ class Schema(ISchema):
         name: str,
         definitions: tuple[SchemaDefinition, ...],
     ) -> bool:
-        """Compile and execute the ``CREATE TABLE`` for ``name``.
+        """
+        Compile and execute the ``CREATE TABLE`` for ``name``.
 
         Parameters
         ----------
@@ -138,7 +143,8 @@ class Schema(ISchema):
         return await connection.createTable(self.__buildTable(name, definitions))
 
     def __resolveConnection(self) -> IConnection:
-        """Resolve the connection bound to the configured connection name.
+        """
+        Resolve the connection bound to the configured connection name.
 
         Returns
         -------
@@ -153,7 +159,8 @@ class Schema(ISchema):
         name: str,
         definitions: tuple[SchemaDefinition, ...],
     ) -> TableDefinition:
-        """Build the table definition from a name and its definitions.
+        """
+        Build the table definition from a name and its definitions.
 
         Parameters
         ----------
@@ -185,7 +192,8 @@ class Schema(ISchema):
             ...,
         ],
     ) -> dict[str, object]:
-        """Group heterogeneous schema definitions into constructor kwargs.
+        """
+        Group heterogeneous schema definitions into constructor kwargs.
 
         Parameters
         ----------
@@ -231,7 +239,8 @@ class Schema(ISchema):
         ),
         bucket: DefinitionBucket,
     ) -> None:
-        """Route a single schema definition into the shared bucket.
+        """
+        Route a single schema definition into the shared bucket.
 
         Parameters
         ----------
@@ -276,7 +285,8 @@ class Schema(ISchema):
         definition: Timestamps,
         bucket: DefinitionBucket,
     ) -> None:
-        """Expand a ``Timestamps`` marker into its two nullable columns.
+        """
+        Expand a ``Timestamps`` marker into its two nullable columns.
 
         Parameters
         ----------
@@ -300,7 +310,8 @@ class Schema(ISchema):
         column_names: list[str],
         kwargs: dict[str, object],
     ) -> None:
-        """Assign the primary key columns, rejecting duplicate definitions.
+        """
+        Assign the primary key columns, rejecting duplicate definitions.
 
         Parameters
         ----------
@@ -331,7 +342,8 @@ class Schema(ISchema):
             kwargs["primary_key"] = column_names[0]
 
     def __parseTableName(self, name: str) -> tuple[str | None, str]:
-        """Parse the table name to extract schema and table components.
+        """
+        Parse the table name to extract schema and table components.
 
         Parameters
         ----------
