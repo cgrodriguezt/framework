@@ -1,5 +1,5 @@
 from orionis.container.contracts.facade import IFacade
-from orionis.database.contracts.manager import IConnectionManager
+from orionis.database.contracts.connection_manager import IConnectionManager
 from orionis.orm.query.raw_builder import RawQueryBuilder
 
 class DB(IConnectionManager, IFacade):
