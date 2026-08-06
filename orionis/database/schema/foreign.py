@@ -9,7 +9,8 @@ class ForeignKey:
         ref_column: str,
         name: str | None = None,
     ) -> None:
-        """Initialize a foreign key constraint.
+        """
+        Initialize a foreign key constraint.
 
         Parameters
         ----------
