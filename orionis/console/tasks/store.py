@@ -3,7 +3,7 @@ from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from sqlalchemy.engine.url import URL
 from orionis.console.contracts.store import IScheduleStore
-from orionis.database.contracts.manager import IConnectionManager
+from orionis.database.contracts.connection_manager import IConnectionManager
 from orionis.database.dialect import (
     build_engine_url,
     engine_options,
