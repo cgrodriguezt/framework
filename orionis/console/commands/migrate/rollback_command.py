@@ -60,3 +60,4 @@ class MigrateRollbackCommand(BaseCommand):
 
         if not reverted:
             self.info("Nothing to roll back.")
+            self.newLine()
