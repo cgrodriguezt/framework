@@ -47,17 +47,28 @@ from orionis.orm.schema.types import (
 )
 
 class Blueprint:
-    def id(self, name: str = "id") -> BigInteger: ...
-    def bigInteger(self, name: str) -> BigInteger: ...
+
+    def id(self, name: str = "id") -> BigInteger:
+        ...
+
+    def bigInteger(self, name: str) -> BigInteger:
+        ...
+
     def boolean(
         self,
         name: str,
         *,
         create_constraint: bool = False,
         constraint_name: str | None = None,
-    ) -> Boolean: ...
-    def date(self, name: str) -> Date: ...
-    def dateTime(self, name: str, *, timezone: bool = False) -> DateTime: ...
+    ) -> Boolean:
+        ...
+
+    def date(self, name: str) -> Date:
+        ...
+
+    def dateTime(self, name: str, *, timezone: bool = False) -> DateTime:
+        ...
+
     def double(
         self,
         name: str,
@@ -65,7 +76,9 @@ class Blueprint:
         *,
         asdecimal: bool = False,
         decimal_return_scale: int | None = None,
-    ) -> Double: ...
+    ) -> Double:
+        ...
+
     def enum(
         self,
         name: str,
@@ -75,7 +88,9 @@ class Blueprint:
         native_enum: bool = True,
         length: int | None = None,
         validate_strings: bool = False,
-    ) -> Enum: ...
+    ) -> Enum:
+        ...
+
     def float(
         self,
         name: str,
@@ -83,8 +98,12 @@ class Blueprint:
         *,
         asdecimal: bool = False,
         decimal_return_scale: int | None = None,
-    ) -> Float: ...
-    def integer(self, name: str) -> Integer: ...
+    ) -> Float:
+        ...
+
+    def integer(self, name: str) -> Integer:
+        ...
+
     def interval(
         self,
         name: str,
@@ -92,9 +111,15 @@ class Blueprint:
         native: bool = True,
         second_precision: int | None = None,
         day_precision: int | None = None,
-    ) -> Interval: ...
-    def largeBinary(self, name: str, length: int | None = None) -> LargeBinary: ...
-    def matchType(self, name: str) -> MatchType: ...
+    ) -> Interval:
+        ...
+
+    def largeBinary(self, name: str, length: int | None = None) -> LargeBinary:
+        ...
+
+    def matchType(self, name: str) -> MatchType:
+        ...
+
     def numeric(
         self,
         name: str,
@@ -103,53 +128,75 @@ class Blueprint:
         decimal_return_scale: int | None = None,
         *,
         asdecimal: bool = True,
-    ) -> Numeric: ...
-    def numericCommon(self, name: str) -> NumericCommon: ...
+    ) -> Numeric:
+        ...
+
+    def numericCommon(self, name: str) -> NumericCommon:
+        ...
+
     def pickleType(
         self,
         name: str,
         protocol: int = 5,
         pickler: object | None = None,
         impl: object | None = None,
-    ) -> PickleType: ...
+    ) -> PickleType:
+        ...
+
     def schemaType(
         self,
         name: str,
         schema_name: str | None = None,
-    ) -> SchemaType: ...
-    def smallInteger(self, name: str) -> SmallInteger: ...
+    ) -> SchemaType:
+        ...
+
+    def smallInteger(self, name: str) -> SmallInteger:
+        ...
+
     def string(
         self,
         name: str,
         length: int | None = 255,
         collation: str | None = None,
-    ) -> String: ...
+    ) -> String:
+        ...
+
     def text(
         self,
         name: str,
         length: int | None = None,
         collation: str | None = None,
-    ) -> Text: ...
-    def time(self, name: str) -> Time: ...
+    ) -> Text:
+        ...
+
+    def time(self, name: str) -> Time:
+        ...
+
     def unicode(
         self,
         name: str,
         length: int | None = None,
         collation: str | None = None,
-    ) -> Unicode: ...
+    ) -> Unicode:
+        ...
+
     def unicodeText(
         self,
         name: str,
         length: int | None = None,
         collation: str | None = None,
-    ) -> UnicodeText: ...
+    ) -> UnicodeText:
+        ...
+
     def uuid(
         self,
         name: str,
         *,
         as_uuid: bool = True,
         native_uuid: bool = True,
-    ) -> Uuid: ...
+    ) -> Uuid:
+        ...
+
     def strictArray(
         self,
         name: str,
@@ -158,26 +205,38 @@ class Blueprint:
         as_tuple: bool = False,
         dimensions: int | None = None,
         zero_indexes: bool = False,
-    ) -> StrictArray: ...
-    def strictBigInt(self, name: str) -> StrictBigInt: ...
+    ) -> StrictArray:
+        ...
+
+    def strictBigInt(self, name: str) -> StrictBigInt:
+        ...
+
     def strictBinary(
         self,
         name: str,
         length: int | None = None,
-    ) -> StrictBinary: ...
-    def strictBlob(self, name: str, length: int | None = None) -> StrictBlob: ...
+    ) -> StrictBinary:
+        ...
+
+    def strictBlob(self, name: str, length: int | None = None) -> StrictBlob:
+        ...
+
     def strictChar(
         self,
         name: str,
         length: int | None = None,
         collation: str | None = None,
-    ) -> StrictChar: ...
+    ) -> StrictChar:
+        ...
+
     def strictClob(
         self,
         name: str,
         length: int | None = None,
         collation: str | None = None,
-    ) -> StrictClob: ...
+    ) -> StrictClob:
+        ...
+
     def strictDecimal(
         self,
         name: str,
@@ -186,7 +245,9 @@ class Blueprint:
         decimal_return_scale: int | None = None,
         *,
         asdecimal: bool = True,
-    ) -> StrictDecimal: ...
+    ) -> StrictDecimal:
+        ...
+
     def strictDoublePrecision(
         self,
         name: str,
@@ -194,26 +255,35 @@ class Blueprint:
         *,
         asdecimal: bool = False,
         decimal_return_scale: int | None = None,
-    ) -> StrictDoublePrecision: ...
-    def strictInt(self, name: str) -> StrictInt: ...
+    ) -> StrictDoublePrecision:
+        ...
+
+    def strictInt(self, name: str) -> StrictInt:
+        ...
+
     def strictJson(
         self,
         name: str,
         *,
         none_as_null: bool = False,
-    ) -> StrictJson: ...
+    ) -> StrictJson:
+        ...
+
     def strictNChar(
         self,
         name: str,
         length: int | None = None,
         collation: str | None = None,
-    ) -> StrictNChar: ...
+    ) -> StrictNChar:
+        ...
+
     def strictNVarChar(
         self,
         name: str,
         length: int | None = None,
         collation: str | None = None,
-    ) -> StrictNVarChar: ...
+    ) -> StrictNVarChar:
+        ...
     def strictReal(
         self,
         name: str,
@@ -221,46 +291,60 @@ class Blueprint:
         *,
         asdecimal: bool = False,
         decimal_return_scale: int | None = None,
-    ) -> StrictReal: ...
-    def strictSmallInt(self, name: str) -> StrictSmallInt: ...
+    ) -> StrictReal:
+        ...
+
+    def strictSmallInt(self, name: str) -> StrictSmallInt:
+        ...
+
     def strictTimestamp(
         self,
         name: str,
         *,
         timezone: bool = False,
-    ) -> StrictTimestamp: ...
+    ) -> StrictTimestamp:
+        ...
+
     def strictVarBinary(
         self,
         name: str,
         length: int | None = None,
-    ) -> StrictVarBinary: ...
+    ) -> StrictVarBinary:
+        ...
+
     def strictVarChar(
         self,
         name: str,
         length: int | None = 255,
         collation: str | None = None,
-    ) -> StrictVarChar: ...
+    ) -> StrictVarChar:
+        ...
 
-    def timestamps(self, *, timezone: bool = False) -> None: ...
-    def comment(self, text: str) -> Comment: ...
+    def timestamps(self, *, timezone: bool = False) -> None:
+        ...
+
+    def comment(self, text: str) -> Comment:
+        ...
+
     def foreignKey(
         self,
         column: str,
         ref_table: str,
         ref_column: str,
         name: str | None = None,
-    ) -> ForeignKey: ...
+    ) -> ForeignKey:
+        ...
+
     def index(
         self,
         *columns: str,
         name: str | None = None,
         unique: bool = False,
-    ) -> Index: ...
-    def primaryKey(self, *columns: str) -> PrimaryKey: ...
-    def unique(self, *columns: str, name: str | None = None) -> Unique: ...
-    def columns(self) -> tuple[ColumnDefinition, ...]: ...
-    def definitions(
-        self,
-    ) -> tuple[
-        ColumnDefinition | Comment | ForeignKey | Index | PrimaryKey | Unique, ...,
-    ]: ...
+    ) -> Index:
+        ...
+
+    def primaryKey(self, *columns: str) -> PrimaryKey:
+        ...
+
+    def unique(self, *columns: str, name: str | None = None) -> Unique:
+        ...
