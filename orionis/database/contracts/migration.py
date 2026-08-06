@@ -44,7 +44,6 @@ class Migration(ABC):
             Any exception raised during execution should indicate that the
             migration could not be applied successfully.
         """
-        ...
 
     @abstractmethod
     async def down(self) -> None:
@@ -66,4 +65,3 @@ class Migration(ABC):
             Any exception raised during execution should indicate that the
             migration rollback could not be completed successfully.
         """
-        ...
