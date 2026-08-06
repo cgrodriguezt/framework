@@ -47,3 +47,4 @@ class MigrateCommand(BaseCommand):
 
         if not applied:
             self.info("Nothing to migrate. Database is already up to date.")
+            self.newLine()
