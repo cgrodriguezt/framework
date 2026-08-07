@@ -166,6 +166,21 @@ class BelongsToManyRelation[TRelated: "Model"](
         }
         self._parent_keys = tuple(keys)
 
+    def _pivotQuery(self) -> RawQueryBuilder:
+        """
+        Build a model-less query targeting the pivot table.
+
+        Returns
+        -------
+        RawQueryBuilder
+            Fresh builder bound to the pivot table and the connection
+            the relationship runs on.
+        """
+        builder = RawQueryBuilder()
+        if self._connection_name is not None:
+            builder.connection(self._connection_name)
+        return builder.table(self._table)
+
     async def getResults(self) -> Collection:
         """
         Retrieve every related row linked to the parent instance.
@@ -248,7 +263,7 @@ class BelongsToManyRelation[TRelated: "Model"](
         """
         if not self._parent_keys:
             return {}
-        builder = RawQueryBuilder(self._table, connection=self._connection_name)
+        builder = self._pivotQuery()
         builder.whereIn(self._foreign_pivot_key, self._parent_keys)
         for column, args in self._pivot_wheres:
             builder.where(column, *args)
@@ -383,7 +398,7 @@ class BelongsToManyRelation[TRelated: "Model"](
             )
         if not rows:
             return 0
-        builder = RawQueryBuilder(self._table, connection=self._connection_name)
+        builder = self._pivotQuery()
         result = await builder.insert(rows)
         return result.row_count
 
@@ -403,7 +418,7 @@ class BelongsToManyRelation[TRelated: "Model"](
             Number of pivot rows deleted.
         """
         parent_value = getattr(self._parent, self._parent_key)
-        builder = RawQueryBuilder(self._table, connection=self._connection_name)
+        builder = self._pivotQuery()
         builder.where(self._foreign_pivot_key, parent_value)
         if ids is not None:
             id_list = self._normalizeIds(ids)
@@ -473,7 +488,7 @@ class BelongsToManyRelation[TRelated: "Model"](
             Related ids currently linked to the parent instance.
         """
         parent_value = getattr(self._parent, self._parent_key)
-        builder = RawQueryBuilder(self._table, connection=self._connection_name)
+        builder = self._pivotQuery()
         builder.where(self._foreign_pivot_key, parent_value)
         builder.select(self._related_pivot_key)
         rows = await builder.get()
