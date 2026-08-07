@@ -7,7 +7,6 @@ from orionis.orm.schema.constraints.foreign_reference import ForeignReference
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
     from orionis.orm.schema.types.column_type import ColumnType
 
 # Sentinel used to distinguish "no default" from a legitimate ``None`` default.
@@ -226,7 +225,7 @@ class ColumnDefinition:
         ColumnDefinition
             The same definition, enabling fluent chaining.
         """
-        self.comment_text = text
+        self.comment_text = str(text).strip()
         return self
 
     # ── Introspection helpers ───────────────────────────────────────────────
