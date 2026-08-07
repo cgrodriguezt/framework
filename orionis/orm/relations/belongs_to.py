@@ -7,7 +7,6 @@ if TYPE_CHECKING:
     from orionis.orm.model import Model
     from orionis.support.types.collection import Collection
 
-
 class BelongsToRelation[TRelated: "Model"](Relation[TRelated]):
     """
     Inverse relationship: the foreign key lives on the parent row.
