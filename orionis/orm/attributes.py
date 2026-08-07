@@ -272,7 +272,11 @@ class AttributesMixin:
 
     def setAttribute(self, key: str, value: Any) -> None:  # noqa: ANN401
         """
-        Assign a single attribute applying its cast when declared.
+        Assign a single attribute applying its mutator and cast.
+
+        A declared ``set<Name>Attribute`` mutator runs first and its
+        return value is what gets stored; the declared cast is applied
+        afterwards so both features compose.
 
         Parameters
         ----------
@@ -286,14 +290,22 @@ class AttributesMixin:
         None
             This method does not return a value.
         """
-        handler = self.__meta__.cast_lookup.get(key)
+        meta = self.__meta__
+        mutator = meta.mutators.get(key)
+        if mutator is not None:
+            value = getattr(self, mutator)(value)
+        handler = meta.cast_lookup.get(key)
         if handler is not None and value is not None:
             value = handler(value)
         self._attributes[key] = value
 
     def getAttribute(self, key: str, default: Any = None) -> Any:  # noqa: ANN401
         """
-        Return a single attribute value.
+        Return a single attribute value through its accessor.
+
+        A declared ``get<Name>Attribute`` accessor receives the stored
+        value (``None`` for computed attributes with no column) and its
+        return value is what the caller sees.
 
         Parameters
         ----------
@@ -307,7 +319,26 @@ class AttributesMixin:
         Any
             Attribute value, or the default when absent.
         """
+        accessor = self.__meta__.accessors.get(key)
+        if accessor is not None:
+            return getattr(self, accessor)(self._attributes.get(key, default))
         return self._attributes.get(key, default)
+
+    def hasAccessor(self, key: str) -> bool:
+        """
+        Report whether an attribute is served by an accessor.
+
+        Parameters
+        ----------
+        key : str
+            Attribute name.
+
+        Returns
+        -------
+        bool
+            ``True`` when the model declares an accessor for the key.
+        """
+        return key in self.__meta__.accessors
 
     # ── Serialization ───────────────────────────────────────────────────────
 
@@ -315,21 +346,29 @@ class AttributesMixin:
         """
         Serialize the visible attributes into a dictionary.
 
-        Attributes listed in ``hidden`` are omitted.
+        Accessors are applied, attributes listed in ``hidden`` are
+        omitted, and accessor-backed attributes listed in ``appends``
+        are added even though they have no column.
 
         Returns
         -------
         dict
             Visible attribute values keyed by name.
         """
-        hidden = self.__meta__.hidden
-        if not hidden:
-            return dict(self._attributes)
-        return {
-            key: value
+        meta = self.__meta__
+        hidden = meta.hidden
+        accessors = meta.accessors
+        data = {
+            key: getattr(self, accessors[key])(value)
+            if key in accessors
+            else value
             for key, value in self._attributes.items()
             if key not in hidden
         }
+        for key in meta.appends:
+            if key not in hidden:
+                data[key] = self.getAttribute(key)
+        return data
 
     def serialize(self) -> dict[str, Any]:
         """
