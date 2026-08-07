@@ -18,6 +18,9 @@ class InvalidQueryException(OrmException):
 class RelationNotFoundException(OrmException):
     """Raised when a relationship name cannot be resolved on a model."""
 
+class ScopeNotFoundException(OrmException):
+    """Raised when a query scope name is not declared by the model."""
+
 __all__ = [
     "InvalidQueryException",
     "MassAssignmentException",
@@ -25,4 +28,5 @@ __all__ = [
     "OrmConfigurationException",
     "OrmException",
     "RelationNotFoundException",
+    "ScopeNotFoundException",
 ]
