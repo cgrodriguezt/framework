@@ -1,57 +1,55 @@
 from __future__ import annotations
 import asyncio
 import inspect
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 from orionis.orm.attributes import serialize_for_storage
-from orionis.orm.collections.paginator import Paginator
 from orionis.orm.contracts.builder import IModelQueryBuilder
 from orionis.orm.exceptions import (
     InvalidQueryException,
     ModelNotFoundException,
     RelationNotFoundException,
+    ScopeNotFoundException,
 )
-from orionis.orm.query.expressions import (
-    SUPPORTED_OPERATORS,
-    AggregateClause,
-    AggregateFunction,
-    DeletePlan,
-    InsertPlan,
-    OrderClause,
-    SelectPlan,
-    SortDirection,
-    UpdatePlan,
-    WhereClause,
-    WhereType,
-)
+from orionis.orm.query.base_builder import QueryBuilderBase
+from orionis.orm.query.expressions import AggregateFunction, DeletePlan
 from orionis.orm.resolver import ConnectionResolver
 from orionis.support.types.collection import Collection
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
     from orionis.database.contracts.connection import IConnection
-    from orionis.database.entities.result import InsertResult
+    from orionis.orm.collections.paginator import Paginator
     from orionis.orm.model import Model
-
-# Number of values required by a BETWEEN boundary pair.
-_BETWEEN_BOUNDS: int = 2
-
-# Number of arguments in the (operator, value) where form.
-_WHERE_WITH_OPERATOR: int = 2
 
 # Default page size used by pagination.
 _DEFAULT_PER_PAGE: int = 15
 
+# Soft delete visibility modes a model query can run under.
+_TRASHED_EXCLUDE: str = "exclude"
+_TRASHED_INCLUDE: str = "with"
+_TRASHED_ONLY: str = "only"
 
-class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
+
+class ModelQueryBuilder[TModel: "Model"](QueryBuilderBase, IModelQueryBuilder):
     """
-    Fluent, chainable query builder bound to a model class.
+    Fluent query builder bound to a model class.
 
-    The builder accumulates an engine-agnostic :class:`SelectPlan` and
-    delegates execution to the model connection, hydrating results into
-    model instances wrapped in a :class:`Collection`.
+    It adds model awareness on top of :class:`QueryBuilderBase`: rows
+    are hydrated into model instances, written values go through the
+    declared casts, timestamps are maintained, and relationships can be
+    eager loaded. The query language itself is entirely inherited, so a
+    model query and a ``DB.table(...)`` query compile identically.
     """
 
-    __slots__ = ("_connection_name", "_eager_loads", "_meta", "_model", "_plan")
+    __slots__ = (
+        "_eager_loads",
+        "_meta",
+        "_model",
+        "_scopes_applied",
+        "_trashed_mode",
+        "_without_scopes",
+    )
+
+    # ruff: noqa: ANN401
 
     def __init__(self, model: type[TModel]) -> None:
         """
@@ -67,35 +65,73 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         None
             This method does not return a value.
         """
+        super().__init__()
         meta = model.__meta__
         self._model = model
         self._meta = meta
         self._connection_name = meta.connection
-        self._plan = SelectPlan(table=meta.table)
+        self._plan.table = meta.table
         self._eager_loads: list[str] = []
+        self._without_scopes: set[str] = set()
+        self._trashed_mode: str = _TRASHED_EXCLUDE
+        self._scopes_applied: bool = False
 
-    # ── Projection ──────────────────────────────────────────────────────────
-
-    def select(self, *columns: str) -> ModelQueryBuilder[TModel]:
+    def __getattr__(self, name: str) -> Any:
         """
-        Restrict the query projection to the given columns.
+        Expose the local scopes declared by the bound model.
 
         Parameters
         ----------
-        *columns : str
-            Column names to project; empty selects every column.
+        name : str
+            Attribute requested on the builder.
 
         Returns
         -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
+        Any
+            Callable applying the scope and returning the builder.
+
+        Raises
+        ------
+        AttributeError
+            If the name is neither a builder member nor a local scope.
         """
-        self._plan.columns = tuple(columns)
-        return self
+        # Reached only when normal attribute lookup already failed, so a
+        # missing slot during construction must not be masked.
+        if name.startswith("_"):
+            error_msg = f"'{type(self).__name__}' object has no attribute '{name}'"
+            raise AttributeError(error_msg)
 
-    # ── Eager loading ────────────────────────────────────────────────────────
+        method = self._meta.scopes.get(name)
+        if method is None:
+            error_msg = f"'{type(self).__name__}' object has no attribute '{name}'"
+            raise AttributeError(error_msg)
 
-    def with_(self, *names: str) -> ModelQueryBuilder[TModel]:
+        scope = getattr(self._model, method)
+
+        def apply(*args: Any, **kwargs: Any) -> Self:
+            """
+            Apply the local scope to this builder.
+
+            Parameters
+            ----------
+            *args : Any
+                Positional arguments forwarded to the scope.
+            **kwargs : Any
+                Keyword arguments forwarded to the scope.
+
+            Returns
+            -------
+            ModelQueryBuilder
+                The same builder, enabling fluent chaining.
+            """
+            scope(self, *args, **kwargs)
+            return self
+
+        return apply
+
+    # ── Eager loading ───────────────────────────────────────────────────────
+
+    def with_(self, *names: str) -> Self:
         """
         Eager load the given relationships alongside the query.
 
@@ -116,7 +152,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         self._eager_loads.extend(names)
         return self
 
-    def load(self, *names: str) -> ModelQueryBuilder[TModel]:
+    def load(self, *names: str) -> Self:
         """
         Eager load the given relationships; alias of :meth:`with_`.
 
@@ -132,25 +168,57 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         """
         return self.with_(*names)
 
-    # ── Where clauses ───────────────────────────────────────────────────────
+    # ── Scopes and soft deletes ─────────────────────────────────────────────
 
-    def where(
-        self,
-        column: str | dict[str, Any],
-        *args: Any,  # noqa: ANN401
-    ) -> ModelQueryBuilder[TModel]:
+    def withoutGlobalScope(self, name: str) -> Self:
         """
-        Add an AND-combined filtering condition.
-
-        Accepts ``where("col", value)``, ``where("col", op, value)``,
-        or a mapping of equality conditions.
+        Disable one global scope for this query.
 
         Parameters
         ----------
-        column : str or dict
-            Column name, or a mapping of column/value equality pairs.
+        name : str
+            Name the global scope was registered under.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._without_scopes.add(name)
+        return self
+
+    def withoutGlobalScopes(self, *names: str) -> Self:
+        """
+        Disable several global scopes, or every one of them.
+
+        Parameters
+        ----------
+        *names : str
+            Scope names to disable; empty disables all of them.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._without_scopes.update(names or self._meta.global_scopes)
+        return self
+
+    def scope(self, name: str, *args: Any, **kwargs: Any) -> Self:
+        """
+        Apply a local scope by name.
+
+        Useful when the scope name collides with a builder method; the
+        attribute form (``query.active()``) is the common one.
+
+        Parameters
+        ----------
+        name : str
+            Scope name, without the ``scope`` prefix.
         *args : Any
-            Either the bound value, or an operator followed by a value.
+            Positional arguments forwarded to the scope.
+        **kwargs : Any
+            Keyword arguments forwarded to the scope.
 
         Returns
         -------
@@ -159,623 +227,98 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
 
         Raises
         ------
-        InvalidQueryException
-            If the arguments do not match a supported form.
+        ScopeNotFoundException
+            If the model declares no such scope.
         """
-        self._addWhere(self._plan.wheres, column, args, boolean="and")
-        return self
-
-    def orWhere(
-        self,
-        column: str | dict[str, Any],
-        *args: Any,  # noqa: ANN401
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Add an OR-combined filtering condition.
-
-        Parameters
-        ----------
-        column : str or dict
-            Column name, or a mapping of column/value equality pairs.
-        *args : Any
-            Either the bound value, or an operator followed by a value.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-
-        Raises
-        ------
-        InvalidQueryException
-            If the arguments do not match a supported form.
-        """
-        self._addWhere(self._plan.wheres, column, args, boolean="or")
-        return self
-
-    def whereIn(
-        self,
-        column: str,
-        values: Iterable[Any],
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows whose column value belongs to the given set.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        values : Iterable
-            Accepted values; collections are unwrapped automatically.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(
-                column=column,
-                where_type=WhereType.IN,
-                value=self._materializeValues(values),
-            ),
-        )
-        return self
-
-    def whereNotIn(
-        self,
-        column: str,
-        values: Iterable[Any],
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows whose column value is outside the given set.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        values : Iterable
-            Rejected values; collections are unwrapped automatically.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(
-                column=column,
-                where_type=WhereType.NOT_IN,
-                value=self._materializeValues(values),
-            ),
-        )
-        return self
-
-    def whereNull(self, column: str) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows whose column value is ``NULL``.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(column=column, where_type=WhereType.NULL),
-        )
-        return self
-
-    def whereNotNull(self, column: str) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows whose column value is not ``NULL``.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(column=column, where_type=WhereType.NOT_NULL),
-        )
-        return self
-
-    def whereBetween(
-        self,
-        column: str,
-        bounds: Iterable[Any],
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows whose column value lies between two boundaries.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        bounds : Iterable
-            Exactly two values: the lower and upper boundaries.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-
-        Raises
-        ------
-        InvalidQueryException
-            If the boundaries are not exactly two values.
-        """
-        values = tuple(bounds)
-        if len(values) != _BETWEEN_BOUNDS:
-            error_msg = "whereBetween requires exactly two boundary values."
-            raise InvalidQueryException(error_msg)
-        self._plan.wheres.append(
-            WhereClause(
-                column=column,
-                where_type=WhereType.BETWEEN,
-                value=values,
-            ),
-        )
-        return self
-
-    def whereLike(
-        self,
-        column: str,
-        pattern: str,
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows whose column value matches an SQL LIKE pattern.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        pattern : str
-            SQL LIKE pattern, using ``%`` and ``_`` wildcards.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(
-                column=column,
-                where_type=WhereType.LIKE,
-                value=pattern,
-            ),
-        )
-        return self
-
-    def whereNotLike(
-        self,
-        column: str,
-        pattern: str,
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows whose column value does not match an SQL LIKE pattern.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        pattern : str
-            SQL LIKE pattern, using ``%`` and ``_`` wildcards.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(
-                column=column,
-                where_type=WhereType.NOT_LIKE,
-                value=pattern,
-            ),
-        )
-        return self
-
-    def whereILike(
-        self,
-        column: str,
-        pattern: str,
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows matching a case-insensitive SQL LIKE pattern.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        pattern : str
-            SQL LIKE pattern, using ``%`` and ``_`` wildcards.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(
-                column=column,
-                where_type=WhereType.ILIKE,
-                value=pattern,
-            ),
-        )
-        return self
-
-    def whereNotILike(
-        self,
-        column: str,
-        pattern: str,
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows not matching a case-insensitive SQL LIKE pattern.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        pattern : str
-            SQL LIKE pattern, using ``%`` and ``_`` wildcards.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(
-                column=column,
-                where_type=WhereType.NOT_ILIKE,
-                value=pattern,
-            ),
-        )
-        return self
-
-    def whereStartsWith(
-        self,
-        column: str,
-        value: str,
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows whose column value starts with the given text.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        value : str
-            Literal prefix to match.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(
-                column=column,
-                where_type=WhereType.STARTS_WITH,
-                value=value,
-            ),
-        )
-        return self
-
-    def whereEndsWith(
-        self,
-        column: str,
-        value: str,
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows whose column value ends with the given text.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        value : str
-            Literal suffix to match.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(
-                column=column,
-                where_type=WhereType.ENDS_WITH,
-                value=value,
-            ),
-        )
-        return self
-
-    def whereContains(
-        self,
-        column: str,
-        value: str,
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows whose column value contains the given text.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        value : str
-            Literal substring to match.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(
-                column=column,
-                where_type=WhereType.CONTAINS,
-                value=value,
-            ),
-        )
-        return self
-
-    def whereRegexpMatch(
-        self,
-        column: str,
-        pattern: str,
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Filter rows whose column value matches a regular expression.
-
-        The exact regular expression dialect depends on the underlying
-        database engine.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        pattern : str
-            Regular expression pattern.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.wheres.append(
-            WhereClause(
-                column=column,
-                where_type=WhereType.REGEXP,
-                value=pattern,
-            ),
-        )
-        return self
-
-    def distinct(self) -> ModelQueryBuilder[TModel]:
-        """
-        Collapse duplicate rows from the query results.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.distinct = True
-        return self
-
-    # ── Ordering, grouping, pagination ──────────────────────────────────────
-
-    def orderBy(
-        self,
-        column: str,
-        direction: str = "asc",
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Add an ordering rule to the query.
-
-        Parameters
-        ----------
-        column : str
-            Column to sort by.
-        direction : str, optional
-            ``"asc"`` or ``"desc"``. Defaults to ascending.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-
-        Raises
-        ------
-        InvalidQueryException
-            If the direction is not ``"asc"`` or ``"desc"``.
-        """
-        normalized = str(direction).strip().lower()
-        try:
-            resolved = SortDirection(normalized)
-        except ValueError as exc:
+        method = self._meta.scopes.get(name)
+        if method is None:
             error_msg = (
-                f"Invalid sort direction '{direction}'; use 'asc' or 'desc'."
+                f"Model [{self._model.__name__}] declares no scope '{name}'."
             )
-            raise InvalidQueryException(error_msg) from exc
-        self._plan.orders.append(
-            OrderClause(column=column, direction=resolved),
+            raise ScopeNotFoundException(error_msg)
+        getattr(self._model, method)(self, *args, **kwargs)
+        return self
+
+    def withTrashed(self) -> Self:
+        """
+        Include soft deleted rows in the query results.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._trashed_mode = _TRASHED_INCLUDE
+        return self
+
+    def onlyTrashed(self) -> Self:
+        """
+        Restrict the query to soft deleted rows.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._trashed_mode = _TRASHED_ONLY
+        return self
+
+    def withoutTrashed(self) -> Self:
+        """
+        Exclude soft deleted rows; the default behavior.
+
+        Returns
+        -------
+        ModelQueryBuilder
+            The same builder, enabling fluent chaining.
+        """
+        self._trashed_mode = _TRASHED_EXCLUDE
+        return self
+
+    async def restore(self) -> int:
+        """
+        Restore every soft deleted row matched by the query.
+
+        Returns
+        -------
+        int
+            Number of restored rows.
+        """
+        column = self._meta.deleted_column
+        if column is None:
+            return 0
+        return await self.withTrashed().onlyTrashed().update({column: None})
+
+    async def forceDelete(self) -> int:
+        """
+        Delete the matched rows permanently, ignoring soft deletes.
+
+        Returns
+        -------
+        int
+            Number of affected rows.
+        """
+        self._trashed_mode = _TRASHED_INCLUDE
+        self._beforeExecute()
+        plan = DeletePlan(
+            table=self._plan.table,
+            wheres=list(self._plan.wheres),
         )
-        return self
+        return await self._connection().delete(plan)
 
-    def latest(self, column: str | None = None) -> ModelQueryBuilder[TModel]:
+    async def delete(self) -> int:
         """
-        Order the query by a timestamp column in descending order.
-
-        Parameters
-        ----------
-        column : str or None, optional
-            Column to sort by; defaults to the creation timestamp when
-            declared, or the primary key otherwise.
+        Delete the matched rows, honoring soft deletes when enabled.
 
         Returns
         -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
+        int
+            Number of affected rows.
         """
-        target = column or self._meta.created_column or self._meta.primary_key
-        return self.orderBy(target, "desc")
-
-    def oldest(self, column: str | None = None) -> ModelQueryBuilder[TModel]:
-        """
-        Order the query by a timestamp column in ascending order.
-
-        Parameters
-        ----------
-        column : str or None, optional
-            Column to sort by; defaults to the creation timestamp when
-            declared, or the primary key otherwise.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        target = column or self._meta.created_column or self._meta.primary_key
-        return self.orderBy(target, "asc")
-
-    def groupBy(self, *columns: str) -> ModelQueryBuilder[TModel]:
-        """
-        Add grouping columns to the query.
-
-        Parameters
-        ----------
-        *columns : str
-            Columns to group by.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        self._plan.groups.extend(columns)
-        return self
-
-    def having(
-        self,
-        column: str,
-        *args: Any,  # noqa: ANN401
-    ) -> ModelQueryBuilder[TModel]:
-        """
-        Add a post-grouping condition to the query.
-
-        Parameters
-        ----------
-        column : str
-            Column name the condition applies to.
-        *args : Any
-            Either the bound value, or an operator followed by a value.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-
-        Raises
-        ------
-        InvalidQueryException
-            If the arguments do not match a supported form.
-        """
-        self._addWhere(self._plan.havings, column, args, boolean="and")
-        return self
-
-    def limit(self, value: int) -> ModelQueryBuilder[TModel]:
-        """
-        Limit the number of rows returned by the query.
-
-        Parameters
-        ----------
-        value : int
-            Maximum number of rows, must not be negative.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-
-        Raises
-        ------
-        InvalidQueryException
-            If the value is negative.
-        """
-        if value < 0:
-            error_msg = "Limit must not be negative."
-            raise InvalidQueryException(error_msg)
-        self._plan.limit_value = value
-        return self
-
-    def offset(self, value: int) -> ModelQueryBuilder[TModel]:
-        """
-        Skip the given number of rows before returning results.
-
-        Parameters
-        ----------
-        value : int
-            Number of rows to skip, must not be negative.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-
-        Raises
-        ------
-        InvalidQueryException
-            If the value is negative.
-        """
-        if value < 0:
-            error_msg = "Offset must not be negative."
-            raise InvalidQueryException(error_msg)
-        self._plan.offset_value = value
-        return self
-
-    def take(self, value: int) -> ModelQueryBuilder[TModel]:
-        """
-        Limit the number of rows returned; alias of :meth:`limit`.
-
-        Parameters
-        ----------
-        value : int
-            Maximum number of rows, must not be negative.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        return self.limit(value)
-
-    def skip(self, value: int) -> ModelQueryBuilder[TModel]:
-        """
-        Skip the given number of rows; alias of :meth:`offset`.
-
-        Parameters
-        ----------
-        value : int
-            Number of rows to skip, must not be negative.
-
-        Returns
-        -------
-        ModelQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-        return self.offset(value)
+        column = self._meta.deleted_column
+        if column is None:
+            return await super().delete()
+        return await self.update({column: self._model.freshTimestamp()})
 
     # ── Retrieval terminals ─────────────────────────────────────────────────
 
@@ -795,9 +338,11 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         RelationNotFoundException
             If an eager-loaded relationship name does not resolve to one.
         """
+        self._beforeExecute()
         rows = await self._connection().select(self._plan)
         hydrate = self._model._newFromDatabase  # noqa: SLF001
         models = [hydrate(row) for row in rows]
+        await self._fireRetrieved(models)
         if self._eager_loads and models:
             await self._eagerLoad(models)
         return Collection(models)
@@ -818,11 +363,13 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         RelationNotFoundException
             If an eager-loaded relationship name does not resolve to one.
         """
+        self._beforeExecute()
         self._plan.limit_value = 1
         rows = await self._connection().select(self._plan)
         if not rows:
             return None
         instance = self._model._newFromDatabase(rows[0])  # noqa: SLF001
+        await self._fireRetrieved([instance])
         if self._eager_loads:
             await self._eagerLoad([instance])
         return instance
@@ -843,13 +390,11 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         """
         instance = await self.first()
         if instance is None:
-            error_msg = (
-                f"No records found for model [{self._model.__name__}]."
-            )
+            error_msg = f"No records found for model [{self._model.__name__}]."
             raise ModelNotFoundException(error_msg)
         return instance
 
-    async def find(self, key: Any) -> TModel | None:  # noqa: ANN401
+    async def find(self, key: Any) -> TModel | None:
         """
         Retrieve a model by its primary key.
 
@@ -865,7 +410,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         """
         return await self.where(self._meta.primary_key, key).first()
 
-    async def findOrFail(self, key: Any) -> TModel:  # noqa: ANN401
+    async def findOrFail(self, key: Any) -> TModel:
         """
         Retrieve a model by primary key or raise when absent.
 
@@ -892,6 +437,40 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
             )
             raise ModelNotFoundException(error_msg)
         return instance
+
+    async def value(self, column: str) -> Any:
+        """
+        Return a single column value of the first matching row.
+
+        Parameters
+        ----------
+        column : str
+            Column whose value is returned.
+
+        Returns
+        -------
+        Any
+            Column value, or ``None`` without matches.
+        """
+        instance = await self.clone().select(column).first()
+        return getattr(instance, column) if instance is not None else None
+
+    async def pluck(self, column: str) -> Collection:
+        """
+        Return one column of every matching row.
+
+        Parameters
+        ----------
+        column : str
+            Column whose values are collected.
+
+        Returns
+        -------
+        Collection
+            Collection of column values.
+        """
+        models = await self.clone().select(column).get()
+        return Collection([getattr(model, column) for model in models])
 
     async def paginate(
         self,
@@ -922,8 +501,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
             error_msg = "Page and per_page must be positive integers."
             raise InvalidQueryException(error_msg)
 
-        self._plan.limit_value = per_page
-        self._plan.offset_value = (page - 1) * per_page
+        self.forPage(page, per_page)
 
         if self._connection().inTransaction():
             # A shared transactional connection cannot serve two
@@ -939,155 +517,104 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
             )
             total = int(count_result or 0)
 
-        return Paginator(items=items, total=total, page=page, per_page=per_page)
+        return self._paginator(items, total, page, per_page)
 
-    # ── Aggregate terminals ─────────────────────────────────────────────────
+    # ── Model-aware hooks ───────────────────────────────────────────────────
 
-    async def count(self) -> int:
+    def clone(self) -> Self:
         """
-        Count the rows matched by the query.
+        Return an independent copy of this builder.
 
         Returns
         -------
-        int
-            Number of matching rows.
+        ModelQueryBuilder
+            Detached copy carrying its own plan and eager-load list.
         """
-        return int(await self._aggregate(AggregateFunction.COUNT, "*") or 0)
+        duplicate = super().clone()
+        duplicate._eager_loads = list(self._eager_loads)  # noqa: SLF001
+        duplicate._without_scopes = set(self._without_scopes)  # noqa: SLF001
+        return duplicate
 
-    async def exists(self) -> bool:
+    def _beforeExecute(self) -> None:
         """
-        Report whether the query matches at least one row.
+        Apply the global scopes and the soft delete filter once.
 
-        Returns
-        -------
-        bool
-            ``True`` when a matching row exists.
-        """
-        probe = self._plan.clone()
-        probe.columns = (self._meta.primary_key,)
-        probe.limit_value = 1
-        probe.offset_value = None
-        rows = await self._connection().select(probe)
-        return bool(rows)
-
-    async def doesntExist(self) -> bool:
-        """
-        Report whether the query matches no rows.
+        Scopes are folded into the plan at execution time, not at
+        construction, so ``withoutGlobalScope`` and ``withTrashed`` can
+        be called anywhere in the chain.
 
         Returns
         -------
-        bool
-            ``True`` when no matching row exists.
+        None
+            This method does not return a value.
         """
-        return not await self.exists()
+        if self._scopes_applied:
+            return
+        self._scopes_applied = True
 
-    async def max(self, column: str) -> Any:  # noqa: ANN401
+        for name, scope in self._meta.global_scopes.items():
+            if name not in self._without_scopes:
+                scope(self)
+
+        column = self._meta.deleted_column
+        if column is None:
+            return
+        if self._trashed_mode == _TRASHED_EXCLUDE:
+            self.whereNull(column)
+        elif self._trashed_mode == _TRASHED_ONLY:
+            self.whereNotNull(column)
+
+    async def _fireRetrieved(self, models: list[TModel]) -> None:
         """
-        Return the maximum value of a column among matching rows.
+        Dispatch the ``retrieved`` event for freshly hydrated models.
 
         Parameters
         ----------
-        column : str
-            Column to aggregate.
+        models : list of Model
+            Models hydrated by the terminal that just ran.
 
         Returns
         -------
-        Any
-            Maximum value, or ``None`` without matches.
+        None
+            This method does not return a value.
         """
-        return await self._aggregate(AggregateFunction.MAX, column)
+        # Skip the whole loop when no listener is registered, which is
+        # the common case on a hot hydration path.
+        if not self._meta.events.get("retrieved"):
+            return
+        for model in models:
+            await model.fireEvent("retrieved")
 
-    async def min(self, column: str) -> Any:  # noqa: ANN401
+    def _connection(self) -> IConnection:
         """
-        Return the minimum value of a column among matching rows.
+        Resolve the database connection for the bound model.
+
+        Returns
+        -------
+        IConnection
+            Connection declared by the model, or the default one.
+        """
+        return ConnectionResolver.connection(self._connection_name)
+
+    def _serializeValues(self, values: dict[str, Any]) -> dict[str, Any]:
+        """
+        Apply the model casts before values reach the database.
 
         Parameters
         ----------
-        column : str
-            Column to aggregate.
+        values : dict
+            Column values to write.
 
         Returns
         -------
-        Any
-            Minimum value, or ``None`` without matches.
+        dict
+            Values converted to their storage representation.
         """
-        return await self._aggregate(AggregateFunction.MIN, column)
+        return serialize_for_storage(self._meta, values)
 
-    async def avg(self, column: str) -> float | None:
+    def _prepareUpdate(self, values: dict[str, Any]) -> dict[str, Any]:
         """
-        Return the average value of a column among matching rows.
-
-        Parameters
-        ----------
-        column : str
-            Column to aggregate.
-
-        Returns
-        -------
-        float or None
-            Average value, or ``None`` without matches.
-        """
-        value = await self._aggregate(AggregateFunction.AVG, column)
-        return float(value) if value is not None else None
-
-    async def sum(self, column: str) -> Any:  # noqa: ANN401
-        """
-        Return the sum of a column among matching rows.
-
-        Parameters
-        ----------
-        column : str
-            Column to aggregate.
-
-        Returns
-        -------
-        Any
-            Sum of the values, or ``0`` without matches.
-        """
-        value = await self._aggregate(AggregateFunction.SUM, column)
-        return value if value is not None else 0
-
-    # ── Mutation terminals ──────────────────────────────────────────────────
-
-    async def insert(
-        self,
-        values: dict[str, Any] | list[dict[str, Any]],
-    ) -> InsertResult:
-        """
-        Insert one or many rows into the model table.
-
-        Parameters
-        ----------
-        values : dict or list of dict
-            Column values for one row, or a list of rows.
-
-        Returns
-        -------
-        InsertResult
-            Result carrying the generated key and affected row count.
-
-        Raises
-        ------
-        InvalidQueryException
-            If no values are provided.
-        """
-        rows = values if isinstance(values, list) else [values]
-        if not rows:
-            error_msg = "Cannot insert without values."
-            raise InvalidQueryException(error_msg)
-
-        serialized = [
-            serialize_for_storage(self._meta, row) for row in rows
-        ]
-        plan = InsertPlan(table=self._meta.table, values=serialized)
-        return await self._connection().insert(plan)
-
-    async def update(self, values: dict[str, Any]) -> int:
-        """
-        Mass update the rows matched by the query.
-
-        The update timestamp is refreshed automatically when the model
-        maintains timestamps.
+        Refresh the update timestamp of a mass update payload.
 
         Parameters
         ----------
@@ -1096,44 +623,37 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
 
         Returns
         -------
-        int
-            Number of affected rows.
-
-        Raises
-        ------
-        InvalidQueryException
-            If no values are provided.
+        dict
+            Payload including the refreshed update timestamp, when the
+            model maintains timestamps.
         """
-        if not values:
-            error_msg = "Cannot update without values."
-            raise InvalidQueryException(error_msg)
-
-        payload = dict(values)
         updated_column = self._meta.updated_column
-        if updated_column and updated_column not in payload:
-            payload[updated_column] = self._model.freshTimestamp()
+        if updated_column and updated_column not in values:
+            values[updated_column] = self._model.freshTimestamp()
+        return values
 
-        plan = UpdatePlan(
-            table=self._meta.table,
-            values=serialize_for_storage(self._meta, payload),
-            wheres=list(self._plan.wheres),
-        )
-        return await self._connection().update(plan)
-
-    async def delete(self) -> int:
+    def _existsColumns(self) -> tuple[str, ...]:
         """
-        Delete the rows matched by the query.
+        Return the projection used by existence probes.
 
         Returns
         -------
-        int
-            Number of affected rows.
+        tuple of str
+            The primary key alone, the cheapest column to fetch.
         """
-        plan = DeletePlan(
-            table=self._meta.table,
-            wheres=list(self._plan.wheres),
-        )
-        return await self._connection().delete(plan)
+        return (self._meta.primary_key,)
+
+    def _defaultTimestampColumn(self) -> str:
+        """
+        Return the column :meth:`latest` and :meth:`oldest` default to.
+
+        Returns
+        -------
+        str
+            Creation timestamp column when declared, primary key
+            otherwise.
+        """
+        return self._meta.created_column or self._meta.primary_key
 
     # ── Internal helpers ────────────────────────────────────────────────────
 
@@ -1170,11 +690,7 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
         for name in self._eager_loads:
             accessor = getattr(sample, name, None)
             if not callable(accessor):
-                error_msg = (
-                    f"'{name}' is not a relationship method on model "
-                    f"[{self._model.__name__}]."
-                )
-                raise RelationNotFoundException(error_msg)
+                raise RelationNotFoundException(self._relationErrorMessage(name))
 
             relation = Relation.noConstraints(accessor)
             if not isinstance(relation, Relation):
@@ -1183,138 +699,27 @@ class ModelQueryBuilder[TModel: "Model"](IModelQueryBuilder):
                 # leaking it, since it was never meant to be awaited.
                 if inspect.iscoroutine(relation):
                     relation.close()
-                error_msg = (
-                    f"'{name}' is not a relationship method on model "
-                    f"[{self._model.__name__}]."
-                )
-                raise RelationNotFoundException(error_msg)
+                raise RelationNotFoundException(self._relationErrorMessage(name))
 
             relation.addEagerConstraints(models)
             results = await relation.getEager()
             relation.match(models, results, name)
 
-    def _connection(self) -> IConnection:
+    def _relationErrorMessage(self, name: str) -> str:
         """
-        Resolve the database connection for the bound model.
-
-        Returns
-        -------
-        IConnection
-            Connection declared by the model, or the default one.
-        """
-        return ConnectionResolver.connection(self._connection_name)
-
-    def _addWhere(
-        self,
-        target: list[WhereClause],
-        column: str | dict[str, Any],
-        args: tuple[Any, ...],
-        boolean: str,
-    ) -> None:
-        """
-        Parse and append a basic condition to a clause list.
+        Build the error message for an unresolvable relationship name.
 
         Parameters
         ----------
-        target : list of WhereClause
-            Clause list receiving the condition.
-        column : str or dict
-            Column name, or a mapping of column/value equality pairs.
-        args : tuple
-            Either the bound value, or an operator followed by a value.
-        boolean : str
-            Logical connector with the previous clause.
+        name : str
+            Relationship name requested for eager loading.
 
         Returns
         -------
-        None
-            This method does not return a value.
-
-        Raises
-        ------
-        InvalidQueryException
-            If the arguments do not match a supported form.
+        str
+            Human readable error message.
         """
-        # Mapping form: a batch of equality conditions.
-        if isinstance(column, dict):
-            if args:
-                error_msg = (
-                    "Mapping conditions do not accept extra arguments."
-                )
-                raise InvalidQueryException(error_msg)
-            target.extend(
-                WhereClause(column=key, value=value, boolean=boolean)
-                for key, value in column.items()
-            )
-            return
-
-        if len(args) == 1:
-            target.append(
-                WhereClause(column=column, value=args[0], boolean=boolean),
-            )
-            return
-
-        if len(args) == _WHERE_WITH_OPERATOR:
-            operator = str(args[0]).strip().lower()
-            if operator not in SUPPORTED_OPERATORS:
-                error_msg = f"Unsupported comparison operator '{args[0]}'."
-                raise InvalidQueryException(error_msg)
-            target.append(
-                WhereClause(
-                    column=column,
-                    operator=operator,
-                    value=args[1],
-                    boolean=boolean,
-                ),
-            )
-            return
-
-        error_msg = (
-            "where() expects (column, value) or (column, operator, value)."
+        return (
+            f"'{name}' is not a relationship method on model "
+            f"[{self._model.__name__}]."
         )
-        raise InvalidQueryException(error_msg)
-
-    async def _aggregate(
-        self,
-        function: AggregateFunction,
-        column: str,
-    ) -> Any:  # noqa: ANN401
-        """
-        Execute an aggregate projection over the current plan.
-
-        Parameters
-        ----------
-        function : AggregateFunction
-            Aggregate function to apply.
-        column : str
-            Target column, or ``"*"`` for ``COUNT``.
-
-        Returns
-        -------
-        Any
-            Aggregate scalar value.
-        """
-        probe = self._plan.clone()
-        probe.aggregate = AggregateClause(function=function, column=column)
-        probe.limit_value = None
-        probe.offset_value = None
-        return await self._connection().scalar(probe)
-
-    @staticmethod
-    def _materializeValues(values: Iterable[Any]) -> tuple[Any, ...]:
-        """
-        Materialize an iterable of bound values into a tuple.
-
-        Parameters
-        ----------
-        values : Iterable
-            Values to materialize; collections are unwrapped.
-
-        Returns
-        -------
-        tuple
-            Materialized values.
-        """
-        if isinstance(values, Collection):
-            return tuple(values.all())
-        return tuple(values)
