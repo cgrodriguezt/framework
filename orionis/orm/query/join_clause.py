@@ -5,7 +5,6 @@ from orionis.orm.query.expressions import JoinCondition
 if TYPE_CHECKING:
     from typing import Self
 
-
 class JoinClause:
     """
     Accumulator of ON conditions for a join declared with a callback.
