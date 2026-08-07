@@ -1,7 +1,6 @@
 from orionis.console.commands.migrate.base_command import MigrationCommand
 from orionis.database.migrations.migrator import Migrator
 
-
 class MigrateResetCommand(MigrationCommand):
     """Revert every migration recorded on the connection."""
 
