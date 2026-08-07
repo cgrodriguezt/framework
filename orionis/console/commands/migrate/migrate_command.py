@@ -1,7 +1,6 @@
 from orionis.console.commands.migrate.base_command import MigrationCommand
 from orionis.database.migrations.migrator import Migrator
 
-
 class MigrateCommand(MigrationCommand):
     """Apply every migration that has not been run yet."""
 
