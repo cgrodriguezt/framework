@@ -6,7 +6,6 @@ if TYPE_CHECKING:
     from orionis.orm.model import Model
     from orionis.support.types.collection import Collection
 
-
 class HasOneRelation[TRelated: "Model"](HasOneOrManyRelation[TRelated]):
     """
     One-to-one relationship: the related table owns the foreign key.
