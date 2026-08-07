@@ -28,7 +28,6 @@ _TRASHED_EXCLUDE: str = "exclude"
 _TRASHED_INCLUDE: str = "with"
 _TRASHED_ONLY: str = "only"
 
-
 class ModelQueryBuilder[TModel: "Model"](QueryBuilderBase, IModelQueryBuilder):
     """
     Fluent query builder bound to a model class.
