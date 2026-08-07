@@ -16,7 +16,6 @@ _HALTABLE_EVENTS: frozenset[str] = frozenset({
     "restoring",
 })
 
-
 class EventsMixin:
     """
     Lifecycle event behavior shared by every model.
