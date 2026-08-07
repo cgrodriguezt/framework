@@ -7,7 +7,6 @@ if TYPE_CHECKING:
     from orionis.orm.model import Model
     from orionis.support.types.collection import Collection
 
-
 class HasOneOrManyRelation[TRelated: "Model"](Relation[TRelated]):
     """
     Shared machinery for the ``hasOne``/``hasMany`` relationship kinds.
