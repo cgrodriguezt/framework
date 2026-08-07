@@ -5,10 +5,8 @@ from orionis.orm.query.builder import ModelQueryBuilder
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator
-
     from orionis.orm.model import Model
     from orionis.support.types.collection import Collection
-
 
 class Relation[TRelated: "Model"](ModelQueryBuilder[TRelated], IRelation):
     """
