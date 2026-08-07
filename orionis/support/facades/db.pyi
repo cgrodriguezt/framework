@@ -1,14 +1,5 @@
 from orionis.container.contracts.facade import IFacade
-from orionis.database.contracts.connection_manager import IConnectionManager
-from orionis.orm.query.raw_builder import RawQueryBuilder
+from orionis.orm.contracts.query_builder import IQueryBuilder
 
-class DB(IConnectionManager, IFacade):
-    @classmethod
-    def table(
-        cls,
-        name: str,
-        *,
-        alias: str | None = None,
-        connection: str | None = None,
-    ) -> RawQueryBuilder: ...
-
+class DB(IQueryBuilder, IFacade):
+    ...
