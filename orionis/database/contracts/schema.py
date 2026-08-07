@@ -15,7 +15,8 @@ class ISchema(ABC):
 
     @abstractmethod
     def connection(self, name: str | None = None) -> Self:
-        """Set the connection name for schema operations.
+        """
+        Set the connection name for schema operations.
 
         Parameters
         ----------
@@ -47,7 +48,8 @@ class ISchema(ABC):
             | Unique
         ),
     ) -> TableCreation:
-        """Create a new table with the given definitions.
+        """
+        Create a new table with the given definitions.
 
         The result can be used two ways:
 
@@ -78,7 +80,8 @@ class ISchema(ABC):
 
     @abstractmethod
     async def drop(self, name: str) -> bool:
-        """Drop an existing table.
+        """
+        Drop an existing table.
 
         Parameters
         ----------
