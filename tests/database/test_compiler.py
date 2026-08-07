@@ -835,12 +835,12 @@ class TestSQLCompilerJoins(TestCase):
         with self.assertRaises(QueryException):
             self._compiler.compileSelect(plan)
 
-    def testUnsupportedJoinTypeRaises(self) -> None:
+    def testRightJoinCompilesAsSwappedOuterJoin(self) -> None:
         """
-        Raise QueryException for join types not compiled yet.
+        Compile a RIGHT JOIN through an equivalent swapped LEFT JOIN.
 
-        Validates the explicit guard for RIGHT/FULL joins, which are
-        intentionally deferred until a real use case needs them.
+        Validates that the toolkit's missing RIGHT JOIN construct is
+        emulated without changing the produced result set.
         """
         plan = SelectPlan(
             table=self._users,
@@ -854,8 +854,31 @@ class TestSQLCompilerJoins(TestCase):
                 ),
             ],
         )
-        with self.assertRaises(QueryException):
-            self._compiler.compileSelect(plan)
+        sql = str(self._compiler.compileSelect(plan))
+        self.assertIn("LEFT OUTER JOIN", sql)
+        self.assertIn("posts", sql)
+        self.assertIn("users", sql)
+
+    def testFullJoinCompilesAsFullOuterJoin(self) -> None:
+        """
+        Compile a FULL JOIN into a full outer join statement.
+
+        Validates the direct mapping onto the toolkit's ``full`` flag.
+        """
+        plan = SelectPlan(
+            table=self._users,
+            joins=[
+                JoinExpression(
+                    join_type=JoinType.FULL,
+                    table=self._posts,
+                    conditions=[
+                        JoinCondition(first="users.id", second="posts.user_id"),
+                    ],
+                ),
+            ],
+        )
+        sql = str(self._compiler.compileSelect(plan))
+        self.assertIn("FULL OUTER JOIN", sql)
 
     def testWhereClauseCanQualifyColumnAcrossJoinedTables(self) -> None:
         """
