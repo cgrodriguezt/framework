@@ -8,7 +8,6 @@ from orionis.orm.schema.types import ColumnType
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
     from orionis.orm.metaclass import ModelMetadata
 
 # Strings interpreted as truthy when casting to bool.
