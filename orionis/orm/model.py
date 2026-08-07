@@ -1,7 +1,9 @@
 from __future__ import annotations
+import uuid
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, ClassVar
 from orionis.orm.attributes import AttributesMixin, serialize_for_storage
+from orionis.orm.events import EventsMixin
 from orionis.orm.metaclass import ModelMeta
 from orionis.orm.query.builder import ModelQueryBuilder
 from orionis.orm.query.expressions import (
@@ -12,9 +14,11 @@ from orionis.orm.query.expressions import (
 )
 from orionis.orm.relations.mixin import RelationsMixin
 from orionis.orm.schema.types import ColumnType
+from orionis.orm.soft_deletes import SoftDeletesMixin
 from orionis.orm.state import StateMixin
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from orionis.orm.collections.paginator import Paginator  # noqa: F401
     from orionis.orm.metaclass import ModelMetadata
     from orionis.support.types.collection import Collection
@@ -29,7 +33,14 @@ _INTERNAL_ATTRIBUTES: frozenset[str] = frozenset({
 })
 
 
-class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
+class Model(
+    AttributesMixin,
+    StateMixin,
+    RelationsMixin,
+    EventsMixin,
+    SoftDeletesMixin,
+    metaclass=ModelMeta,
+):
     """
     Base class of the Orionis active-record models.
 
@@ -71,9 +82,19 @@ class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
     # Whether creation/update timestamps are maintained automatically.
     timestamps: ClassVar[bool] = True
 
+    # Whether deletes stamp a column instead of removing the row.
+    soft_deletes: ClassVar[bool] = False
+
+    # Whether the primary key is a client-generated unique identifier.
+    uuids: ClassVar[bool] = False
+
+    # Accessor-backed attributes added to the serialized output.
+    appends: ClassVar[list[str]] = []
+
     # Timestamp column names, overridable per model.
     CREATED_AT: ClassVar[str] = "created_at"
     UPDATED_AT: ClassVar[str] = "updated_at"
+    DELETED_AT: ClassVar[str] = "deleted_at"
 
     # Metadata attached by the metaclass.
     __meta__: ClassVar[ModelMetadata | None]
@@ -109,7 +130,7 @@ class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
 
     def __getattr__(self, key: str) -> Any:  # noqa: ANN401
         """
-        Serve column values from the attribute store.
+        Serve column values and accessor-backed attributes.
 
         Parameters
         ----------
@@ -124,7 +145,8 @@ class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
         Raises
         ------
         AttributeError
-            If the name is neither loaded nor a declared column.
+            If the name is neither loaded, a declared column, nor an
+            accessor-backed attribute.
         """
         # Internal names reaching here mean the instance is mid-construction.
         if key.startswith("_"):
@@ -133,11 +155,14 @@ class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
             )
             raise AttributeError(error_msg)
 
+        meta = type(self).__meta__
+        if meta is not None and key in meta.accessors:
+            return self.getAttribute(key)
+
         attributes = self._attributes
         if key in attributes:
             return attributes[key]
 
-        meta = type(self).__meta__
         if meta is not None and key in meta.columns:
             return None
 
@@ -167,7 +192,7 @@ class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
             return
 
         meta = type(self).__meta__
-        if meta is not None and key in meta.columns:
+        if meta is not None and (key in meta.columns or key in meta.mutators):
             self.setAttribute(key, value)
             return
 
@@ -229,6 +254,49 @@ class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
             Fresh builder targeting the model table.
         """
         return ModelQueryBuilder(cls)
+
+    @classmethod
+    def addGlobalScope(
+        cls,
+        name: str,
+        scope: Callable[[ModelQueryBuilder[Any]], None],
+    ) -> type[Model]:
+        """
+        Register a constraint applied to every query of this model.
+
+        Parameters
+        ----------
+        name : str
+            Name the scope is registered under, used to disable it later
+            with ``withoutGlobalScope``.
+        scope : Callable
+            Callable receiving the builder and constraining it in place.
+
+        Returns
+        -------
+        type
+            The model class, enabling fluent chaining.
+        """
+        cls.__meta__.global_scopes[name] = scope
+        return cls
+
+    @classmethod
+    def removeGlobalScope(cls, name: str) -> type[Model]:
+        """
+        Unregister a previously added global scope.
+
+        Parameters
+        ----------
+        name : str
+            Name the scope was registered under.
+
+        Returns
+        -------
+        type
+            The model class, enabling fluent chaining.
+        """
+        cls.__meta__.global_scopes.pop(name, None)
+        return cls
 
     @classmethod
     async def all(cls) -> Collection:
@@ -363,21 +431,34 @@ class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
 
         New models are inserted, receiving their generated primary key;
         existing models write only their dirty attributes. Timestamps
-        are maintained automatically when enabled.
+        are maintained automatically when enabled, and the ``saving``,
+        ``creating``/``updating``, ``created``/``updated`` and ``saved``
+        events are dispatched around the write.
 
         Returns
         -------
         bool
-            ``True`` when the operation succeeds or nothing changed.
+            ``True`` when the operation succeeds or nothing changed,
+            ``False`` when a listener vetoed the write.
 
         Raises
         ------
         QueryException
             If the statement fails to execute.
         """
-        if self._exists:
-            return await self._performUpdate()
-        return await self._performInsert()
+        if not await self.fireEvent("saving"):
+            return False
+
+        exists = self._exists
+        event = "updating" if exists else "creating"
+        if not await self.fireEvent(event):
+            return False
+
+        saved = await self._performUpdate() if exists else await self._performInsert()
+
+        await self.fireEvent("updated" if exists else "created")
+        await self.fireEvent("saved")
+        return saved
 
     async def update(self, attributes: dict[str, Any]) -> bool:
         """
@@ -405,13 +486,17 @@ class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
 
     async def delete(self) -> bool:
         """
-        Delete the model row from the database.
+        Delete the model row, honoring soft deletes when enabled.
+
+        Models declaring ``soft_deletes`` stamp their delete column
+        instead of removing the row; every other model is deleted
+        permanently.
 
         Returns
         -------
         bool
-            ``True`` when a row was deleted, ``False`` for unsaved
-            models.
+            ``True`` when a row was deleted or stamped, ``False`` for
+            unsaved models or when a listener vetoed the operation.
 
         Raises
         ------
@@ -420,12 +505,41 @@ class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
         """
         if not self._exists:
             return False
+        if not await self.fireEvent("deleting"):
+            return False
 
         meta = type(self).__meta__
-        key = meta.primary_key
+        if meta.deleted_column is not None:
+            deleted = await self._performSoftDelete(self.freshTimestamp())
+        else:
+            deleted = await self._performForceDelete()
+
+        await self.fireEvent("deleted")
+        return deleted
+
+    async def _performForceDelete(self) -> bool:
+        """
+        Remove the persisted row permanently.
+
+        Returns
+        -------
+        bool
+            ``True`` when a row was removed.
+
+        Raises
+        ------
+        QueryException
+            If the statement fails to execute.
+        """
+        meta = type(self).__meta__
         plan = DeletePlan(
             table=meta.table,
-            wheres=[WhereClause(column=key, value=self._primaryKeyValue())],
+            wheres=[
+                WhereClause(
+                    column=meta.primary_key,
+                    value=self._primaryKeyValue(),
+                ),
+            ],
         )
         deleted = await self.query()._connection().delete(plan)  # noqa: SLF001
         self._exists = False
@@ -457,6 +571,21 @@ class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
             if not aware:
                 return now.replace(tzinfo=None)
         return now
+
+    @classmethod
+    def newUniqueId(cls) -> Any:  # noqa: ANN401
+        """
+        Produce a client-generated primary key value.
+
+        Overridable by models needing a different identifier scheme,
+        such as ULIDs or prefixed keys.
+
+        Returns
+        -------
+        Any
+            Fresh unique identifier.
+        """
+        return uuid.uuid4()
 
     # ── Internal persistence helpers ────────────────────────────────────────
 
@@ -492,6 +621,10 @@ class Model(AttributesMixin, StateMixin, RelationsMixin, metaclass=ModelMeta):
             If the statement fails to execute.
         """
         meta = type(self).__meta__
+
+        # Client-generated keys are produced before the row is written.
+        if meta.uses_unique_ids and self._attributes.get(meta.primary_key) is None:
+            self._attributes[meta.primary_key] = self.newUniqueId()
 
         # Maintain creation and update timestamps on first persist.
         if meta.created_column and meta.created_column not in self._attributes:
