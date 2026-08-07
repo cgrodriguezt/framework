@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 from orionis.orm.schema.types import (
     BigInteger, Boolean, Date, DateTime, Double, Enum, Float, Integer,
     Interval, LargeBinary, MatchType, Numeric, NumericCommon, PickleType,
@@ -14,7 +16,7 @@ if TYPE_CHECKING:
     from orionis.orm.schema.column import ColumnDefinition
 
 class Column:
-    """Factory of :class:`ColumnDefinition` builders for schema declarations."""
+    """Create :class:`ColumnDefinition` builders for schema declarations."""
 
     @staticmethod
     def id(name: str = "id") -> BigInteger:
