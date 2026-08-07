@@ -19,13 +19,16 @@
 9. [Recuperación, agregados y paginación](#9-recuperación-agregados-y-paginación)
 10. [Colecciones](#10-colecciones)
 11. [Relaciones entre modelos](#11-relaciones-entre-modelos)
-12. [Consultas sin modelo: `DB.table()` y JOINs](#12-consultas-sin-modelo-dbtable-y-joins)
-13. [Esquema y migraciones](#13-esquema-y-migraciones)
-14. [Transacciones](#14-transacciones)
-15. [Conexiones múltiples](#15-conexiones-múltiples)
-16. [Excepciones](#16-excepciones)
-17. [Tabla resumen: Eloquent ↔ Orionis](#17-tabla-resumen-eloquent--orionis)
-18. [Limitaciones actuales](#18-limitaciones-actuales)
+12. [Soft deletes](#12-soft-deletes)
+13. [Scopes locales y globales](#13-scopes-locales-y-globales)
+14. [Accessors, mutators y eventos del modelo](#14-accessors-mutators-y-eventos-del-modelo)
+15. [Motor compartido: `DB.table()` y JOINs](#15-motor-compartido-dbtable-y-joins)
+16. [Esquema y migraciones](#16-esquema-y-migraciones)
+17. [Transacciones](#17-transacciones)
+18. [Conexiones múltiples](#18-conexiones-múltiples)
+19. [Excepciones](#19-excepciones)
+20. [Tabla resumen: Eloquent ↔ Orionis](#20-tabla-resumen-eloquent--orionis)
+21. [Limitaciones actuales](#21-limitaciones-actuales)
 
 ---
 
@@ -35,8 +38,9 @@
 flowchart TD
     A["Model (Active Record)<br/>User.where(...) / User.query()"] --> B["ModelQueryBuilder"]
     A2["DB.table(&quot;posts&quot;)"] --> B2["RawQueryBuilder"]
-    B --> C["SelectPlan / InsertPlan /<br/>UpdatePlan / DeletePlan<br/>(dataclasses puras, sin SQL)"]
-    B2 --> C
+    B --> Q["QueryBuilderBase<br/>(lenguaje de consulta compartido)"]
+    B2 --> Q
+    Q --> C["SelectPlan / InsertPlan /<br/>UpdatePlan / DeletePlan<br/>(dataclasses puras, sin SQL)"]
     C --> D["ConnectionResolver"]
     D --> E["IConnection (Connection real)"]
     E --> F["SQLCompiler<br/>(traduce el plan a SQLAlchemy Core 2.0 async)"]
@@ -48,6 +52,10 @@ Puntos que conviene interiorizar antes de seguir, si vienes de Laravel:
 - **Todo es `async`/`await`.** `save()`, `find()`, `get()`, `create()`,
   `delete()`... son corrutinas. Eloquent es 100% síncrono; en Orionis
   siempre hay que `await` cualquier operación que toque la base de datos.
+- **Un único motor de consulta.** `ModelQueryBuilder` y `RawQueryBuilder`
+  heredan de `QueryBuilderBase`: el modelo no reimplementa el lenguaje de
+  consulta, solo añade hidratación, casts, scopes, eventos y soft
+  deletes encima del mismo plan y el mismo compilador.
 - Orionis **no usa el ORM/Session propio de SQLAlchemy** (nada de
   `declarative_base`, `relationship()`, `Session`). Solo aprovecha
   **SQLAlchemy Core 2.0** como "motor de traducción" de SQL — de forma
@@ -57,12 +65,12 @@ Puntos que conviene interiorizar antes de seguir, si vienes de Laravel:
 - Los modelos **no resuelven su conexión a través del contenedor de DI**;
   hablan con `ConnectionResolver` (`orionis/orm/resolver.py`), un puente
   estático equivalente a `Model::setConnectionResolver()` de Eloquent. El
-  `DatabaseProvider` instala el manager ahí durante el `boot()`.
+  `ConnectionManagerProvider` instala el manager ahí durante el `boot()`.
 - Las **relaciones** (`hasOne`/`hasMany`/`belongsTo`/`belongsToMany`, ver
   [§11](#11-relaciones-entre-modelos)) no son un mecanismo aparte: cada
   una es una subclase de `ModelQueryBuilder` con una restricción
-  precargada — reutilizan exactamente el mismo camino `B → C → D → E → F → G`
-  de este diagrama, sin ninguna ruta de datos paralela.
+  precargada — reutilizan exactamente el mismo camino del diagrama, sin
+  ninguna ruta de datos paralela.
 
 ---
 
@@ -74,10 +82,11 @@ Puntos que conviene interiorizar antes de seguir, si vienes de Laravel:
 | Esquema del modelo | Se infiere en runtime desde la BD | **Se declara explícitamente** en la clase con tipos (`String()`, `Integer()`, ...) |
 | Motor SQL subyacente | PDO + Query Builder propio | SQLAlchemy Core 2.0 (async), nunca su ORM |
 | Relaciones (`hasMany`, `belongsTo`...) | Sí | Sí (ver [§11](#11-relaciones-entre-modelos)) — declaradas como **métodos de instancia**, no como propiedades mágicas |
-| Soft deletes | Sí (`SoftDeletes` trait) | No existen todavía |
-| Accessors/mutators, events, scopes | Sí | No existen todavía |
-| JOIN fluido sobre un modelo | Sí (`User::join(...)`) | Solo vía `DB.table()` (`RawQueryBuilder`), no en `ModelQueryBuilder` |
-| Migraciones | `php artisan migrate` | `reactor migrate` / `reactor migrate:rollback` |
+| Soft deletes | Sí (`SoftDeletes` trait) | Sí (`soft_deletes = True`, ver [§12](#12-soft-deletes)) |
+| Scopes locales y globales | Sí | Sí (ver [§13](#13-scopes-locales-y-globales)) |
+| Accessors/mutators, eventos, observers | Sí | Sí (ver [§14](#14-accessors-mutators-y-eventos-del-modelo)) |
+| JOIN fluido sobre un modelo | Sí (`User::join(...)`) | Sí, misma sintaxis que `DB.table()` (motor compartido) |
+| Migraciones | `php artisan migrate` | `reactor migrate` (+ `:rollback`, `:reset`, `:refresh`, `:fresh`, `:status`) |
 
 ---
 
@@ -220,8 +229,11 @@ Equivalente 1 a 1 de las propiedades estáticas de Eloquent, como
 | `casts: dict[str, str]` | `protected $casts` | Casts soportados: `int`, `float`, `bool`, `datetime`, `date`, `json`, `uuid` |
 | `primary_key: str \| None` | `protected $primaryKey` | Si se omite: primera columna con `.primary()`, o `"id"` como último recurso |
 | `incrementing: bool` | `public $incrementing` | Si es `True` y hay PK autogenerada, se adopta tras el `INSERT` |
+| `uuids: bool` | trait `HasUuids` | Genera la clave primaria en el cliente antes del `INSERT` (`newUniqueId()`) |
 | `timestamps: bool` | `public $timestamps` | Requiere además que la columna exista realmente declarada en el modelo |
-| `CREATED_AT` / `UPDATED_AT` | `const CREATED_AT` / `UPDATED_AT` | Nombres de columna de timestamps, idéntico a Laravel |
+| `soft_deletes: bool` | trait `SoftDeletes` | Activa el borrado lógico ([§12](#12-soft-deletes)); requiere la columna `deleted_at` declarada |
+| `appends: list[str]` | `protected $appends` | Atributos calculados por accessor añadidos a `toDict()`/`toJson()` |
+| `CREATED_AT` / `UPDATED_AT` / `DELETED_AT` | `const CREATED_AT` / `UPDATED_AT` / `DELETED_AT` | Nombres de columna de timestamps, idéntico a Laravel |
 
 Reglas de precedencia de `fillable`/`guarded` (idénticas a Eloquent):
 
@@ -298,6 +310,16 @@ await user.delete()                 # elimina solo esa fila por su PK
 deleted_count = await User.destroy(1, 2, 3)   # elimina por PK sin instanciar
 ```
 
+> Si el modelo declara `soft_deletes = True`, `delete()` **marca** la
+> fila en vez de borrarla; ver [§12](#12-soft-deletes).
+
+### Eventos
+
+Cada escritura dispara la cadena `saving` → `creating`/`updating` →
+`created`/`updated` → `saved`, y cada borrado `deleting` → `deleted`.
+Un listener de un evento "previo" puede abortar la operación devolviendo
+`False` — ver [§14](#14-accessors-mutators-y-eventos-del-modelo).
+
 ### Timestamps
 
 `Model.freshTimestamp()` produce un `datetime` con zona horaria UTC
@@ -312,12 +334,16 @@ tipo específico `StrictTimestamp` — en ese caso produce un valor *naive*
 Serialización (`AttributesMixin`, `orionis/orm/attributes.py`):
 
 ```python
-user.toDict()          # dict con los atributos visibles (respeta `hidden`)
+user.toDict()          # dict con los atributos visibles (respeta `hidden` y `appends`)
 user.toJson()           # igual, en JSON
 user.only("name", "email")     # subconjunto de atributos
 user.exclude("password")       # todos menos los indicados (alias de except_)
 user.getAttribute("name", default=None)
 ```
+
+> `toDict()` aplica los **accessors** declarados y añade los atributos
+> de `appends`; `hidden` tiene prioridad sobre ambos. Ver
+> [§14](#14-accessors-mutators-y-eventos-del-modelo).
 
 Estado / dirty tracking (`StateMixin`, `orionis/orm/state.py`), idéntico
 en espíritu a los métodos homónimos de Eloquent:
@@ -354,6 +380,14 @@ users = await User.query().where("active", True).get()
 > `delete`...) también funciona **sin cambios** sobre una relación
 > (`user.posts().where(...)`) — ver [§11](#11-relaciones-entre-modelos).
 
+> **Un solo motor.** Todo lo descrito en esta sección vive en
+> `QueryBuilderBase` (`orionis/orm/query/base_builder.py`), la clase de
+> la que heredan **tanto** `ModelQueryBuilder` (`User.query()`) **como**
+> `RawQueryBuilder` (`DB.table(...)`). No hay dos implementaciones del
+> lenguaje de consulta: el modelo es únicamente una capa de hidratación
+> y casts sobre el mismo `SelectPlan` y el mismo compilador
+> (ver [§15](#15-motor-compartido-dbtable-y-joins)).
+
 ### Condiciones `where`
 
 Tres formas de invocación, igual que en Laravel:
@@ -365,19 +399,61 @@ User.where({"active": True, "country": "PE"})     # mapping -> igualdad AND
 ```
 
 Operadores soportados en la forma básica: `=`, `==`, `!=`, `<>`, `<`,
-`<=`, `>`, `>=`, `like`, `not like`, `ilike`, `not ilike`.
+`<=`, `>`, `>=`, `like`, `not like`, `ilike`, `not ilike`. Cualquier otro
+operador es rechazado con `InvalidQueryException` **antes** de llegar al
+SQL, de modo que la cadena del operador nunca se interpola.
 
 ```python
 User.orWhere("email", "ana@example.com")   # combinado con OR
 ```
+
+### Agrupación de condiciones (paréntesis)
+
+Pasar un *callable* a `where()`/`orWhere()` abre un grupo: las
+condiciones declaradas dentro se compilan entre paréntesis, exactamente
+igual que la clausura de Laravel.
+
+```python
+# WHERE status = 'active' AND (role = 'admin' OR role = 'manager')
+await (
+    User.where("status", "active")
+    .where(lambda query: query.where("role", "admin").orWhere("role", "manager"))
+    .get()
+)
+
+# WHERE (country = 'CO' OR country = 'MX') AND (age >= 18 AND age <= 60)
+await (
+    User.where(lambda q: q.where("country", "CO").orWhere("country", "MX"))
+    .where(lambda q: q.where("age", ">=", 18).where("age", "<=", 60))
+    .get()
+)
+
+# WHERE active = 1 OR (role = 'admin' AND verified = 1)
+await (
+    User.where("active", True)
+    .orWhere(lambda q: q.where("role", "admin").where("verified", True))
+    .get()
+)
+```
+
+El anidamiento es **recursivo y sin límite de profundidad**: un grupo
+puede contener otros grupos, y el orden lógico de evaluación se conserva
+tal cual se declaró. Un grupo vacío no filtra nada (es el elemento
+neutro).
 
 ### Condiciones especializadas
 
 | Método | Equivalente Laravel |
 |---|---|
 | `whereIn(col, valores)` / `whereNotIn(col, valores)` | `whereIn` / `whereNotIn` |
+| `orWhereIn(...)` / `orWhereNotIn(...)` | `orWhereIn` / `orWhereNotIn` |
 | `whereNull(col)` / `whereNotNull(col)` | `whereNull` / `whereNotNull` |
-| `whereBetween(col, [a, b])` | `whereBetween` |
+| `orWhereNull(...)` / `orWhereNotNull(...)` | `orWhereNull` / `orWhereNotNull` |
+| `whereBetween(col, [a, b])` / `whereNotBetween(...)` | `whereBetween` / `whereNotBetween` |
+| `whereColumn(a, op, b)` / `orWhereColumn(...)` | `whereColumn` / `orWhereColumn` |
+| `whereRaw(sql, bindings)` / `orWhereRaw(...)` | `whereRaw` / `orWhereRaw` |
+| `whereExists(sub)` / `whereNotExists(sub)` | `whereExists` / `whereNotExists` |
+| `orWhereExists(...)` / `orWhereNotExists(...)` | `orWhereExists` / `orWhereNotExists` |
 | `whereLike(col, patrón)` / `whereNotLike(col, patrón)` | `where(col, 'like', ...)` |
 | `whereILike(col, patrón)` / `whereNotILike(col, patrón)` | `whereLike(..., caseSensitive: false)` |
 | `whereStartsWith(col, valor)` | `whereStartsWith` (Laravel 11+) |
@@ -388,9 +464,51 @@ User.orWhere("email", "ana@example.com")   # combinado con OR
 
 ```python
 User.whereIn("id", [1, 2, 3])
-User.whereBetween("age", [18, 30])
+User.whereNotBetween("age", [18, 30])
+User.whereColumn("updated_at", ">", "created_at")
 User.whereLike("email", "%@gmail.com")
 User.whereStartsWith("name", "An")
+```
+
+`whereRaw()` y `havingRaw()` aceptan un fragmento SQL con marcadores
+`:nombre`; **los valores viajan siempre como parámetros vinculados**, de
+modo que el driver los escapa y el fragmento no puede usarse para
+inyectar literales:
+
+```python
+User.whereRaw("age > :floor", {"floor": 40})
+```
+
+### Proyección
+
+```python
+User.select("id", "name")
+User.addSelect("email")                       # añade sin reemplazar
+User.selectRaw("count(*)", alias="total")     # fragmento SQL etiquetado
+User.selectSub(
+    lambda q: q.table("posts")
+               .selectRaw("count(*)")
+               .whereColumn("posts.user_id", "=", "users.id"),
+    "posts_count",
+)                                              # subconsulta escalar correlacionada
+```
+
+### Subconsultas
+
+Cualquier método que acepte una subconsulta admite tres formas: un
+*callable* que recibe un builder nuevo, otro builder ya construido, o un
+`SelectPlan` listo.
+
+```python
+# IN con subconsulta
+User.whereIn("id", lambda q: q.table("posts").select("user_id"))
+
+# EXISTS correlacionado (la subconsulta ve las columnas de la consulta externa)
+User.whereExists(
+    lambda q: q.table("posts")
+               .select("id")
+               .whereColumn("posts.user_id", "=", "users.id"),
+)
 ```
 
 ### Orden, agrupación, límites
@@ -400,8 +518,52 @@ User.orderBy("name", "desc")
 User.latest()              # ORDER BY created_at DESC (o la PK si no hay timestamps)
 User.oldest("id")
 User.groupBy("country").having("country", "PE")
+User.groupBy("country").havingRaw("count(*) > :n", {"n": 5})
 User.limit(10).offset(20)  # alias: .take(10).skip(20)
+User.forPage(2, 15)        # limit + offset de una página
 ```
+
+### Bloqueos y consultas compuestas
+
+```python
+await User.where("id", 1).lockForUpdate().first()   # SELECT ... FOR UPDATE
+await User.where("id", 1).sharedLock().first()       # SELECT ... FOR SHARE
+
+await (
+    User.select("name").where("country", "CO")
+    .unionAll(lambda q: q.table("users").select("name").where("country", "MX"))
+    .get()
+)
+```
+
+### JOINs desde el modelo
+
+Los JOIN están disponibles con la **misma sintaxis** desde el modelo y
+desde `DB.table()`; la referencia completa (tipos, alias, callbacks,
+subconsultas) está en [§15](#15-motor-compartido-dbtable-y-joins).
+
+```python
+await (
+    User.select("users.name", "posts.title")
+    .join("posts", "posts.user_id", "=", "users.id")
+    .where("posts.published", True)
+    .get()
+)
+```
+
+### Reutilización y composición
+
+`clone()` devuelve una copia con un plan **independiente**, para derivar
+varias consultas de una base común sin contaminarla:
+
+```python
+base = User.where("active", True)
+admins = await base.clone().where("role", "admin").get()
+total = await base.clone().count()
+```
+
+`toPlan()` expone el `SelectPlan` acumulado, que es lo que permite
+incrustar un builder como subconsulta de otro.
 
 ---
 
@@ -415,6 +577,8 @@ await User.where("active", True).first()        # instancia o None
 await User.where("active", True).firstOrFail()   # ModelNotFoundException si no hay match
 await User.query().find(1)                       # por clave primaria
 await User.query().findOrFail(1)
+await User.query().value("email")                # un único valor de la primera fila
+await User.query().pluck("email")                # Collection con una sola columna
 ```
 
 ### Agregados
@@ -966,7 +1130,207 @@ async with DB.connection().transaction():
 
 ---
 
-## 12. Consultas sin modelo: `DB.table()` y JOINs
+## 12. Soft deletes
+
+Un modelo activa el borrado lógico declarando `soft_deletes = True` y una
+columna de marca temporal (`deleted_at` por defecto, renombrable con
+`DELETED_AT`):
+
+```python
+class Account(Model):
+    soft_deletes = True
+
+    id = Integer().primary().autoIncrement()
+    name = String()
+    deleted_at = DateTime()      # la metaclase la fuerza a NULLABLE
+```
+
+> La metaclase marca automáticamente la columna de borrado lógico como
+> `nullable()`: una columna `NOT NULL` haría imposible representar una
+> fila viva, así que el framework corrige la declaración en vez de
+> fallar en el primer `INSERT`.
+
+A partir de ahí el comportamiento es el de Eloquent:
+
+```python
+await account.delete()          # UPDATE ... SET deleted_at = <now>
+account.trashed()               # True
+await account.restore()         # UPDATE ... SET deleted_at = NULL
+await account.forceDelete()     # DELETE real
+
+await Account.count()                    # excluye las filas marcadas
+await Account.withTrashed().count()      # incluye las marcadas
+await Account.onlyTrashed().get()        # solo las marcadas
+await Account.withoutTrashed().get()     # comportamiento por defecto, explícito
+```
+
+El builder también respeta el borrado lógico en las operaciones masivas:
+
+```python
+await Account.where("active", False).delete()        # marca, no borra
+await Account.onlyTrashed().restore()                # restaura en bloque
+await Account.where("active", False).forceDelete()   # borra de verdad
+```
+
+La exclusión de filas marcadas se aplica **en el momento de ejecutar**
+la consulta, no al construirla, por lo que `withTrashed()` puede
+llamarse en cualquier punto de la cadena. Las relaciones
+([§11](#11-relaciones-entre-modelos)) heredan esta lógica sin ningún
+código adicional, porque `Relation` extiende `ModelQueryBuilder`.
+
+---
+
+## 13. Scopes locales y globales
+
+### Scopes locales
+
+Un scope local es un método de clase con el prefijo `scope`; se invoca
+sin el prefijo y con la inicial en minúscula, igual que en Laravel:
+
+```python
+class Account(Model):
+
+    @classmethod
+    def scopeActive(cls, query):
+        return query.where("active", True)
+
+    @classmethod
+    def scopeOfRole(cls, query, role: str):
+        return query.where("role", role)
+```
+
+```python
+await Account.active().get()                    # desde la clase
+await Account.query().active().get()            # desde el builder
+await Account.query().ofRole("admin").get()     # con argumentos
+await Account.query().scope("ofRole", "admin")  # forma explícita por nombre
+```
+
+> Los scopes deben declararse como `@classmethod` (o `@staticmethod`):
+> se invocan sin instancia, recibiendo el builder como primer argumento.
+> Un nombre inexistente lanza `ScopeNotFoundException` con `scope(...)`,
+> y `AttributeError` con la forma de atributo (para no enmascarar
+> errores de tipeo).
+
+### Scopes globales
+
+Un scope global se aplica a **todas** las consultas del modelo:
+
+```python
+Account.addGlobalScope("active", lambda query: query.where("active", True))
+
+await Account.count()                                  # ya filtrado
+await Account.withoutGlobalScope("active").count()      # excepción puntual
+await Account.withoutGlobalScopes().count()             # desactiva todos
+Account.removeGlobalScope("active")                     # lo quita del modelo
+```
+
+Los scopes globales se heredan por las subclases del modelo (se copian
+al construir la metadata) y, igual que el filtro de soft deletes, se
+inyectan en el plan justo antes de ejecutar la consulta.
+
+---
+
+## 14. Accessors, mutators y eventos del modelo
+
+### Accessors y mutators
+
+La convención es la de Eloquent adaptada a los nombres camelCase del
+framework: `get<Nombre>Attribute` y `set<Nombre>Attribute`, donde
+`<Nombre>` se convierte a `snake_case` para obtener el atributo.
+
+```python
+class Account(Model):
+    appends = ["display_name"]
+
+    first_name = String()
+    last_name = String()
+    role = String()
+    secret = String()
+
+    def getRoleAttribute(self, value):
+        """Se aplica al LEER account.role."""
+        return str(value).upper()
+
+    def setSecretAttribute(self, value):
+        """Se aplica al ESCRIBIR account.secret; el retorno es lo que se guarda."""
+        return hash_it(value)
+
+    def getDisplayNameAttribute(self, value):
+        """Atributo calculado: no necesita columna."""
+        return f"{self._attributes['first_name']} {self._attributes['last_name']}"
+```
+
+- El **accessor** recibe el valor almacenado y su retorno es lo que ve
+  quien lee el atributo; el valor crudo sigue accesible con
+  `getOriginal("role")` o `model._attributes["role"]`.
+- El **mutator** se ejecuta antes que el *cast* declarado, de modo que
+  ambos se componen.
+- `appends` añade a `toDict()`/`toJson()` atributos que solo existen
+  como accessor; `hidden` sigue teniendo prioridad sobre `appends`.
+
+### Eventos del ciclo de vida
+
+Eventos disponibles: `retrieved`, `saving`, `creating`, `created`,
+`updating`, `updated`, `saved`, `deleting`, `deleted`, `restoring`,
+`restored`.
+
+```python
+Account.registerEvent("creating", lambda model: print("creando", model.name))
+
+async def audit(model):
+    await AuditLog.create({"account_id": model.id})
+
+Account.registerEvent("created", audit)     # los listeners pueden ser async
+```
+
+Un *observer* registra de golpe todos los métodos que coincidan con un
+nombre de evento:
+
+```python
+class AccountObserver:
+    def creating(self, account): ...
+    def deleted(self, account): ...
+
+Account.observe(AccountObserver)
+Account.flushEvents()            # limpia todos; flushEvents("created") limpia uno
+```
+
+Los eventos "previos" (`saving`, `creating`, `updating`, `deleting`,
+`restoring`) **abortan la operación** si un listener devuelve `False`,
+igual que en Eloquent:
+
+```python
+Account.registerEvent("creating", lambda model: bool(model.email))
+await Account.create({"name": "Ada"})   # False -> no se inserta nada
+```
+
+Orden de disparo en una escritura: `saving` → `creating`/`updating` →
+`created`/`updated` → `saved`. En un borrado: `deleting` → `deleted`.
+En una restauración: `restoring` → `restored`. `retrieved` se dispara
+por cada instancia hidratada (y se omite por completo si no hay
+listeners registrados, para no penalizar la hidratación masiva).
+
+### Claves primarias generadas por el cliente
+
+```python
+class Token(Model):
+    incrementing = False
+    uuids = True
+
+    id = Uuid().primary()
+    label = String()
+
+token = await Token.create({"label": "api"})
+token.id      # UUID generado antes del INSERT
+```
+
+`Model.newUniqueId()` es sobrescribible si necesitas ULIDs o claves con
+prefijo.
+
+---
+
+## 15. Motor compartido: `DB.table()` y JOINs
 
 Equivalente al Query Builder "plano" de Laravel (`DB::table('x')`), para
 casos donde no hace falta (o no conviene) un modelo:
@@ -978,14 +1342,40 @@ rows = await DB.table("posts").where("published", True).get()   # Collection[dic
 row = await DB.table("posts").where("id", 1).first()             # dict | None
 ```
 
-Diferencias clave frente a `ModelQueryBuilder`:
+`DB.table(...)` y `Model.query()` **comparten exactamente el mismo
+motor**: ambos son subclases de `QueryBuilderBase`, acumulan el mismo
+`SelectPlan` y se compilan con el mismo `SQLCompiler`. Todo lo de
+[§8](#8-query-builder-fluido-del-modelo) (grupos anidados, subconsultas,
+raw, uniones, bloqueos, `clone()`...) está disponible en ambos sin
+diferencias.
+
+Lo único que cambia es la capa de arriba:
 
 - Los resultados son **`dict` planos**, tal cual los entrega el driver
   (sin hidratación ni casts — por ejemplo, un booleano de SQLite vuelve
   como `1`/`0`, no como `True`/`False`).
 - La tabla no tiene un esquema Python declarado (`TableDefinition` vacía);
   el compilador declara perezosamente cada columna referenciada.
-- **Es el único lugar donde hoy existen JOINs fluidos.**
+- No hay scopes, eventos ni soft deletes (son comportamiento de modelo).
+
+```python
+DB.table("posts", alias="p")            # alias de la tabla principal
+DB.connection("reporting").table("x")   # gateway acotado a otra conexión
+DB.table("x", connection="reporting")   # equivalente, por llamada
+```
+
+> `DB.connection(name)` devuelve un gateway **nuevo** acotado a esa
+> conexión; nunca muta el servicio compartido del contenedor, de modo
+> que peticiones concurrentes no pueden reapuntarse entre sí.
+
+También expone SQL crudo y control de transacciones por conexión:
+
+```python
+await DB.select("SELECT * FROM users WHERE id = :id", {"id": 1})
+await DB.execute("UPDATE users SET active = :a", {"a": 1})
+await DB.statement("VACUUM")
+DB.getDefaultName() / DB.setDefaultName("pgsql")
+```
 
 ### JOINs
 
@@ -999,12 +1389,57 @@ posts = await (
     .get()
 )
 
-# LEFT OUTER JOIN
 await DB.table("posts").leftJoin("comments", "posts.id", "=", "comments.post_id").get()
-
-# CROSS JOIN (sin condición ON)
-await DB.table("sizes").crossJoin("colors").get()
+await DB.table("posts").rightJoin("users", "posts.user_id", "=", "users.id").get()
+await DB.table("posts").fullJoin("users", "posts.user_id", "=", "users.id").get()
+await DB.table("sizes").crossJoin("colors").get()        # sin condición ON
 ```
+
+**Alias** en ambos lados:
+
+```python
+await (
+    DB.table("users", alias="u")
+    .select("u.name", "p.title")
+    .join("posts", "p.user_id", "=", "u.id", alias="p")
+    .get()
+)
+```
+
+**Múltiples condiciones ON** mediante callback:
+
+```python
+await (
+    DB.table("users")
+    .join(
+        "posts",
+        lambda join: join
+            .on("posts.user_id", "=", "users.id")
+            .orOn("posts.author_id", "=", "users.id"),
+    )
+    .get()
+)
+```
+
+**JOIN con subconsulta** (tabla derivada, el alias es obligatorio):
+
+```python
+await (
+    DB.table("users")
+    .select("users.name", "stats.total")
+    .joinSub(
+        lambda q: q.table("posts")
+                   .select("user_id")
+                   .selectRaw("sum(views)", alias="total")
+                   .groupBy("user_id"),
+        "stats",
+        "stats.user_id", "=", "users.id",
+    )
+    .get()
+)
+```
+
+También existen `leftJoinSub()` y `rightJoinSub()`.
 
 Para unir contra la tabla real de un modelo (con su esquema completo, en
 vez de una tabla "sin columnas conocidas"), se puede pasar
@@ -1014,23 +1449,19 @@ vez de una tabla "sin columnas conocidas"), se puede pasar
 await DB.table("posts").join(User.__meta__.table, "posts.user_id", "=", "users.id").get()
 ```
 
-**Limitaciones actuales del JOIN** (deliberadas, no bugs):
+**Notas de implementación:**
 
-- Solo `INNER`, `LEFT` y `CROSS` están implementados. `RIGHT` y `FULL`
-  lanzan `QueryException` ("not supported yet") — SQLAlchemy Core no
-  soporta `RIGHT JOIN` nativo.
-- Un `JOIN` que no sea `CROSS` y no declare condiciones también lanza
+- `RIGHT JOIN` se compila invirtiendo los lados de un `LEFT OUTER JOIN`
+  (SQLAlchemy Core no tiene un constructor `RIGHT` nativo); el conjunto
+  de resultados es idéntico.
+- Un `JOIN` que no sea `CROSS` y no declare condiciones lanza
   `QueryException` (evita productos cartesianos accidentales).
-- `ModelQueryBuilder` (`User.where(...)`) **todavía no expone** `.join()`
-  — hoy los JOINs solo están disponibles a través de `DB.table()`.
-- `RawQueryBuilder` tampoco tiene aún `whereBetween`, `whereLike` ni
-  `paginate()` (sí tiene `where`/`orWhere`/`whereIn`/`whereNotIn`/
-  `whereNull`/`whereNotNull`, `orderBy`, `groupBy`, `having`, `limit`,
-  `offset`, y los terminales `get`/`first`/`count`/`insert`/`update`/`delete`).
+- Un `joinSub()` sin alias lanza `QueryException`: una tabla derivada sin
+  nombre no podría referenciarse desde el `ON` ni desde el `SELECT`.
 
 ---
 
-## 13. Esquema y migraciones
+## 16. Esquema y migraciones
 
 ### `Schema` y `Blueprint` (equivalente a `Schema::create` de Laravel)
 
@@ -1114,12 +1545,19 @@ class CreatePostsTable(Migration):
         await Schema.drop("posts")
 ```
 
-Comandos de consola (equivalentes a `php artisan migrate`/`migrate:rollback`):
+Comandos de consola (equivalentes a la familia `php artisan migrate*`):
 
 ```powershell
-reactor migrate
-reactor migrate:rollback --step=1
+reactor migrate                      # aplica las pendientes
+reactor migrate:rollback --step=1    # revierte los N últimos lotes
+reactor migrate:reset                # revierte todas las aplicadas
+reactor migrate:refresh --step=2     # revierte y vuelve a aplicar
+reactor migrate:fresh                # borra la tabla de tracking y migra desde cero
+reactor migrate:status               # tabla de aplicadas / pendientes
 ```
+
+Todos aceptan `--database=<conexión>` (`-d`) para operar sobre una
+conexión distinta de la predeterminada.
 
 `reactor migrate` descubre los archivos en `database/migrations/`,
 ejecuta `up()` en orden cronológico (prefijo numérico del nombre de
@@ -1128,9 +1566,20 @@ propia (`migrations`). `migrate:rollback` revierte por **lote** (el
 último grupo de migraciones aplicado en una misma corrida), igual que
 Laravel, no una cantidad fija de archivos.
 
+**Atomicidad.** Cada migración se ejecuta dentro de su propia
+transacción junto con su registro de tracking: si `up()` falla a mitad,
+se revierte todo lo de esa migración y la tabla `migrations` nunca queda
+afirmando que una migración se aplicó cuando no fue así. (En motores sin
+DDL transaccional —MySQL— el `ROLLBACK` no puede deshacer el DDL ya
+confirmado, pero el registro de tracking sigue siendo coherente.)
+
+El runner es agnóstico de la consola: `Migrator` acepta un objeto
+`MigrationEvents` con los callbacks `on_start`/`on_success`/`on_error`,
+y son los comandos quienes deciden cómo pintarlos.
+
 ---
 
-## 14. Transacciones
+## 17. Transacciones
 
 ```python
 from orionis.support.facades import DB
@@ -1165,7 +1614,7 @@ paralelizar `COUNT` + `SELECT`).
 
 ---
 
-## 15. Conexiones múltiples
+## 18. Conexiones múltiples
 
 Declaradas en `config/database.py` (equivalente a `config/database.php`),
 con soporte para `sqlite`, `mysql`, `pgsql`, `oracle` y `sqlserver`:
@@ -1188,7 +1637,7 @@ DB.setDefaultName("pgsql")
 
 ---
 
-## 16. Excepciones
+## 19. Excepciones
 
 ### ORM (`orionis.orm.exceptions`)
 
@@ -1198,7 +1647,9 @@ DB.setDefaultName("pgsql")
 | `OrmConfigurationException` | Se usa el ORM antes de instalar el `ConnectionResolver` (app no booteada) |
 | `ModelNotFoundException` | `findOrFail`/`firstOrFail` sin resultados |
 | `MassAssignmentException` | Columna no declarada, o no permitida por `fillable`/`guarded` |
-| `InvalidQueryException` | Argumentos inválidos en el builder (operador no soportado, límites negativos, `whereBetween` con ≠2 valores, ...) |
+| `InvalidQueryException` | Argumentos inválidos en el builder (operador no soportado, límites negativos, `whereBetween` con ≠2 valores, JOIN sin condición ON, consulta sin tabla, ...) |
+| `RelationNotFoundException` | `with_()`/`load()` con un nombre que no resuelve a una relación |
+| `ScopeNotFoundException` | `scope("nombre")` con un scope no declarado por el modelo |
 
 ### Base de datos (`orionis.database.exceptions`)
 
@@ -1214,7 +1665,7 @@ DB.setDefaultName("pgsql")
 
 ---
 
-## 17. Tabla resumen: Eloquent ↔ Orionis
+## 20. Tabla resumen: Eloquent ↔ Orionis
 
 | Laravel Eloquent | Orionis |
 |---|---|
@@ -1229,11 +1680,27 @@ DB.setDefaultName("pgsql")
 | `User::destroy($ids)` | `await User.destroy(*ids)` |
 | `User::where(...)->get()` | `await User.where(...).get()` |
 | `$user->isDirty()` / `getChanges()` | `user.isDirty()` / `user.getChanges()` |
+| `where(fn ($q) => ...)` (agrupación) | `where(lambda q: ...)` (idéntico, anidable) |
+| `whereColumn` / `whereRaw` / `whereExists` | `whereColumn` / `whereRaw` / `whereExists` |
+| `selectSub` / `joinSub` / `union` | `selectSub` / `joinSub` / `union` / `unionAll` |
+| `lockForUpdate()` / `sharedLock()` | `lockForUpdate()` / `sharedLock()` |
 | `DB::table('x')` | `DB.table('x')` (sin casts, resultados `dict`) |
+| `DB::connection('x')->table('y')` | `DB.connection('x').table('y')` |
+| `join` / `leftJoin` / `rightJoin` / `crossJoin` | Idénticos, y disponibles también sobre el modelo |
+| `SoftDeletes` (trait) | `soft_deletes = True` + columna `deleted_at` |
+| `withTrashed()` / `onlyTrashed()` / `restore()` | Idénticos |
+| `scopeActive()` → `User::active()` | `@classmethod scopeActive(cls, query)` → `User.active()` |
+| `addGlobalScope('x', ...)` | `User.addGlobalScope('x', ...)` |
+| `getFooAttribute` / `setFooAttribute` | `getFooAttribute` / `setFooAttribute` |
+| `$appends` | `appends = [...]` |
+| `User::creating(fn ($m) => ...)` | `User.registerEvent("creating", fn)` |
+| `User::observe(Observer::class)` | `User.observe(Observer)` |
+| `HasUuids` (trait) | `uuids = True` + `newUniqueId()` sobrescribible |
 | `Schema::create('x', fn ($t) => ...)` | `async with Schema.create('x') as t:` |
 | `$table->string('name')` | `table.string('name', 255)` |
 | `php artisan migrate` | `reactor migrate` |
 | `php artisan migrate:rollback` | `reactor migrate:rollback --step=N` |
+| `php artisan migrate:reset/refresh/fresh/status` | `reactor migrate:reset` / `:refresh` / `:fresh` / `:status` |
 | `DB::transaction(fn () => ...)` | `async with DB.connection().transaction():` |
 | `$user->hasMany(Post::class)` (método) | `self.hasMany(Post)` (método de instancia, idéntico) |
 | `$user->posts` (propiedad mágica) | `await user.posts()` (atajo `__await__`, con paréntesis) |
@@ -1241,57 +1708,49 @@ DB.setDefaultName("pgsql")
 | `$role->users()->attach($id)` | `await role.users().attach(id)` |
 | `$role->users()->sync([...])` / `->toggle([...])` | `await role.users().sync([...])` / `.toggle([...])` |
 | `User::with('posts')->get()` | `await User.with_("posts").get()` (o `.load("posts")`) |
-| Soft deletes | **No existen todavía** |
-| Accessors/mutators, events, scopes | **No existen todavía** |
-| JOIN fluido sobre el modelo | Solo vía `DB.table()` |
 
 ---
 
-## 18. Limitaciones actuales
+## 21. Limitaciones actuales
 
 Para no generar expectativas equivocadas viniendo de Eloquent, a la fecha
 de este manual **no existen todavía** en Orionis:
 
-- **Soft deletes** (`deleted_at`, `withTrashed()`, etc.).
-- **Accessors/mutators** de atributo (`getXAttribute`/`setXAttribute`),
-  **eventos del ciclo de vida** (`creating`, `saved`, ...) ni
-  **observers**.
-- **Query scopes** locales o globales.
-- **JOIN fluido en `ModelQueryBuilder`** (`User.join(...)`) — el `IR`
-  (`SelectPlan`) y el compilador ya soportan joins multi-tabla
-  internamente (es lo que usa `RawQueryBuilder`), pero la API pública
-  del builder atado a un modelo todavía no los expone.
-- Varias comodidades de `RawQueryBuilder` presentes en `ModelQueryBuilder`
-  (`whereBetween`, `whereLike`, `paginate()`).
+- **Claves primarias compuestas.** `Model.primary_key` es siempre una
+  única columna en todo el ORM (misma restricción que Eloquent). El DDL
+  sí puede declararlas (`PrimaryKey(*cols)` en `Schema`), pero el modelo
+  no puede usarlas para localizar filas: en ese caso, trabaja con
+  `DB.table()` o añade una clave sustituta.
+- **Relaciones polimórficas** (`morphOne`, `morphMany`, `morphTo`,
+  `morphToMany`) y **relaciones "through"** (`hasOneThrough`,
+  `hasManyThrough`) — la arquitectura de clases (`Relation` como base
+  común) está preparada para incorporarlas sin tocar el código existente,
+  pero esta versión solo cubre `hasOne`/`hasMany`/`belongsTo`/
+  `belongsToMany`.
+- **Casts personalizados por clase** (`CastsAttributes` de Laravel): el
+  catálogo de `casts` es fijo (`int`, `float`, `bool`, `datetime`,
+  `date`, `json`, `uuid`); para conversiones a medida se usan
+  accessors/mutators ([§14](#14-accessors-mutators-y-eventos-del-modelo)).
+- **Migraciones por conexión declaradas en la propia migración**: el
+  destino se elige con `--database` en el comando, no con un atributo
+  dentro de la clase `Migration`.
 
 Limitaciones específicas de las **relaciones** (§11), todas deliberadas
 y documentadas en detalle en su sección correspondiente:
 
-- **Relaciones polimórficas** (`morphOne`, `morphMany`, `morphTo`,
-  `morphToMany`) y **relaciones "through"** (`hasOneThrough`,
-  `hasManyThrough`) no están implementadas todavía — la arquitectura de
-  clases (`Relation` como base común) está preparada para incorporarlas
-  sin tocar el código existente, pero esta primera versión solo cubre
-  `hasOne`/`hasMany`/`belongsTo`/`belongsToMany`.
 - **Claves compuestas** no soportadas en ninguna relación (consistente
-  con que `Model.primary_key` es siempre una única columna en todo el
-  ORM, no una limitación exclusiva de las relaciones).
+  con la limitación general de arriba).
 - **`belongsToMany` no usa un único `JOIN`** contra la tabla pivote —
   resuelve en dos consultas (pivote → ids → tabla relacionada) para
-  evitar colisiones de columnas que el compilador SQL no soporta alias
-  todavía. El costo adicional desaparece por completo en *eager loading*
-  (siempre 2 consultas totales, nunca N+1).
+  evitar colisiones de columnas, ya que el compilador SQL todavía no
+  aplica alias por columna en el `SELECT`. El costo adicional desaparece
+  por completo en *eager loading* (siempre 2 consultas totales, nunca
+  N+1).
 - **Sin acceso al "objeto pivote"** por fila relacionada (Eloquent expone
-  `$model->pivot->created_at`); esta primera versión no adjunta las
-  columnas extra de la tabla pivote a cada instancia relacionada —
-  usa `wherePivot()` para filtrar por ellas, o consulta la tabla pivote
+  `$model->pivot->created_at`); esta versión no adjunta las columnas
+  extra de la tabla pivote a cada instancia relacionada — usa
+  `wherePivot()` para filtrar por ellas, o consulta la tabla pivote
   directamente con `DB.table(...)` si necesitas leer sus valores.
-- **`max()`/`min()`/`avg()`/`sum()`/`paginate()` no están cubiertos por
-  los tests de `BelongsToManyRelation`** (sí funcionan en `hasOne`/
-  `hasMany`/`belongsTo`, que no sobrescriben ningún terminal) — se
-  recomienda usar `count()`/`exists()`/`get()` sobre relaciones
-  `belongsToMany`, o `DB.table()` directo para agregados más complejos
-  sobre la tabla pivote.
 - El método se llama `with_()` (con guion bajo) y no `with()`, porque
   `with` es palabra reservada de Python — `load()` es un alias idéntico
   sin esa restricción.
@@ -1301,6 +1760,6 @@ y documentadas en detalle en su sección correspondiente:
 
 Estas ausencias son deliberadas (diseño en evolución activa), no errores;
 si tu flujo de trabajo depende de alguna, la alternativa actual es
-combinar consultas explícitas (`DB.table()` para los JOINs, seguido de
-hidratación manual si hace falta) hasta que la API correspondiente se
-incorpore al framework.
+combinar consultas explícitas (`DB.table()` para casos que el modelo no
+cubra, seguido de hidratación manual si hace falta) hasta que la API
+correspondiente se incorpore al framework.
