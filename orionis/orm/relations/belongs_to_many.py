@@ -8,9 +8,7 @@ from orionis.support.types.collection import Collection
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-
     from orionis.orm.model import Model
-
 
 class BelongsToManyRelation[TRelated: "Model"](
     Relation[TRelated],
