@@ -10,13 +10,28 @@ class TestSQLServerEntity(TestCase):
         """
         Build the entity with its default values.
 
+        Only the driver discriminator is pinned to a literal: every
+        other field falls back to a ``DB_*`` environment variable, so
+        asserting them would make the test depend on the machine.
+
         Validates the default SQL Server configuration.
         """
         entity = SQLServer()
         self.assertEqual(entity.driver, "sqlserver")
+        self.assertIsInstance(entity.port, int)
+        self.assertIsInstance(entity.username, str)
+        self.assertIsInstance(entity.odbc_driver, str)
+
+    def testExplicitValuesAreHonored(self) -> None:
+        """
+        Keep explicitly supplied values untouched.
+
+        Validates that the environment fallback never overrides an
+        explicit value.
+        """
+        entity = SQLServer(port=1433, username="sa")
         self.assertEqual(entity.port, 1433)
         self.assertEqual(entity.username, "sa")
-        self.assertEqual(entity.odbc_driver, "ODBC Driver 18 for SQL Server")
 
     def testInvalidDriverRaises(self) -> None:
         """
