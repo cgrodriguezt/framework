@@ -8,7 +8,6 @@ from orionis.orm.relations.has_one import HasOneRelation
 if TYPE_CHECKING:
     from orionis.orm.model import Model
 
-
 class RelationsMixin:
     """
     Relationship factories and loaded-relation storage for every model.
