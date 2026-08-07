@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from orionis.orm.query.expressions import SelectPlan
     from orionis.orm.schema.table import TableDefinition
 
-
 class IQueryBuilderBase(ABC):
     """
     Contract of the query language shared by every Orionis builder.
