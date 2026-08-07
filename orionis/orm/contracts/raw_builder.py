@@ -7,7 +7,6 @@ if TYPE_CHECKING:
     from orionis.orm.collections.paginator import Paginator
     from orionis.support.types.collection import Collection
 
-
 class IRawQueryBuilder(IQueryBuilderBase):
     """
     Contract for the model-less query builder over a plain table name.
