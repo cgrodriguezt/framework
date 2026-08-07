@@ -1,7 +1,6 @@
 from orionis.console.commands.migrate.base_command import MigrationCommand
 from orionis.database.migrations.migrator import Migrator
 
-
 class MigrateStatusCommand(MigrationCommand):
     """Report which migrations are applied and which are pending."""
 
