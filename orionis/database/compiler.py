@@ -7,16 +7,21 @@ from sqlalchemy import ForeignKey, MetaData, Table, and_, func, or_
 from sqlalchemy.schema import CreateTable, DropTable
 from orionis.database.exceptions import QueryException
 from orionis.orm.query.expressions import (
+    COLUMNLESS_WHERE_TYPES,
     AggregateFunction,
     JoinType,
+    LockMode,
+    RawExpression,
+    SelectPlan,
     SortDirection,
+    SubQueryColumn,
     WhereType,
 )
 from orionis.orm.schema.types import ColumnType
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
-    from sqlalchemy.sql import Delete, Insert, Select, Update
+    from sqlalchemy.sql import CompoundSelect, Delete, Insert, Select, Update
     from sqlalchemy.sql.elements import ColumnElement
     from sqlalchemy.sql.expression import Executable
     from sqlalchemy.types import TypeEngine
@@ -26,7 +31,6 @@ if TYPE_CHECKING:
         InsertPlan,
         JoinCondition,
         JoinExpression,
-        SelectPlan,
         UpdatePlan,
         WhereClause,
     )
@@ -68,10 +72,33 @@ _PATTERN_OPERATORS: dict[str, Callable[[Any, Any], Any]] = {
 # Number of boundaries required by a BETWEEN condition.
 _BETWEEN_BOUNDS: int = 2
 
+# Sequence kinds a set-membership clause materializes before binding.
+_SEQUENCE_TYPES: tuple[type, ...] = (list, tuple, set, frozenset)
+
+def _membership_values(value: Any) -> Any:  # noqa: ANN401
+    """
+    Normalize the right-hand side of a set-membership condition.
+
+    Parameters
+    ----------
+    value : Any
+        Bound sequence, or an already compiled subquery statement.
+
+    Returns
+    -------
+    Any
+        A list for sequences, or the value untouched for subqueries.
+    """
+    if value is None:
+        return []
+    if isinstance(value, _SEQUENCE_TYPES):
+        return list(value)
+    return value
+
 # Handlers for where clause kinds with a single-expression translation.
 _SIMPLE_CLAUSES: dict[WhereType, Callable[[Any, Any], Any]] = {
-    WhereType.IN: lambda col, val: col.in_(list(val or ())),
-    WhereType.NOT_IN: lambda col, val: col.not_in(list(val or ())),
+    WhereType.IN: lambda col, val: col.in_(_membership_values(val)),
+    WhereType.NOT_IN: lambda col, val: col.not_in(_membership_values(val)),
     WhereType.NULL: lambda col, _val: col.is_(None),
     WhereType.NOT_NULL: lambda col, _val: col.is_not(None),
     WhereType.LIKE: lambda col, val: col.like(val),
@@ -194,7 +221,7 @@ class SQLCompiler:
 
     # ── Statement compilation ───────────────────────────────────────────────
 
-    def compileSelect(self, plan: SelectPlan) -> Select[Any]:
+    def compileSelect(self, plan: SelectPlan) -> Select[Any] | CompoundSelect:
         """
         Compile a select plan into an executable SELECT statement.
 
@@ -202,6 +229,71 @@ class SQLCompiler:
         ----------
         plan : SelectPlan
             Engine-agnostic select description.
+
+        Returns
+        -------
+        Select or CompoundSelect
+            Executable SELECT statement; a compound statement when the
+            plan carries unions.
+
+        Raises
+        ------
+        QueryException
+            If the plan references unknown columns or invalid clauses.
+        """
+        statement = self._buildSelect(plan, {})
+        if not plan.unions:
+            return statement
+        return self._applyUnions(statement, plan)
+
+    def _applyUnions(
+        self,
+        statement: Select[Any],
+        plan: SelectPlan,
+    ) -> CompoundSelect:
+        """
+        Combine a compiled statement with the plan union branches.
+
+        Branches are folded left to right so a query mixing ``UNION``
+        and ``UNION ALL`` keeps the order it was declared in.
+
+        Parameters
+        ----------
+        statement : Select
+            Statement compiled from the owning plan.
+        plan : SelectPlan
+            Engine-agnostic select description carrying the unions.
+
+        Returns
+        -------
+        CompoundSelect
+            Compound statement combining every branch.
+        """
+        combined: Any = statement
+        for union in plan.unions:
+            branch = self._buildSelect(union.plan, {})
+            combined = (
+                sqlalchemy.union_all(combined, branch)
+                if union.all_rows
+                else sqlalchemy.union(combined, branch)
+            )
+        return combined
+
+    def _buildSelect(
+        self,
+        plan: SelectPlan,
+        outer_sources: SourceMap,
+    ) -> Select[Any]:
+        """
+        Compile a select plan, correlating it with an enclosing query.
+
+        Parameters
+        ----------
+        plan : SelectPlan
+            Engine-agnostic select description.
+        outer_sources : SourceMap
+            Table sources of the enclosing query, so a subquery can
+            reference outer columns and be correlated by the engine.
 
         Returns
         -------
@@ -214,7 +306,10 @@ class SQLCompiler:
             If the plan references unknown columns or invalid clauses.
         """
         self._ensureSelectRawColumns(plan)
-        default, sources, from_clause = self._resolveSources(plan)
+        default, own_sources, from_clause = self._resolveSources(plan)
+        sources: SourceMap = (
+            {**outer_sources, **own_sources} if outer_sources else own_sources
+        )
         statement = self._selectProjection(default, sources, plan)
         if plan.joins:
             statement = statement.select_from(from_clause)
@@ -243,6 +338,11 @@ class SQLCompiler:
                 sources, default, statement, plan,
             )
 
+        if plan.lock is not None:
+            statement = statement.with_for_update(
+                read=plan.lock is LockMode.SHARE,
+            )
+
         return statement
 
     # ── Schemaless (raw) table support ──────────────────────────────────────
@@ -269,6 +369,36 @@ class SQLCompiler:
             return column
         return None
 
+    def _collectClauseColumnNames(
+        self,
+        clauses: Sequence[WhereClause],
+        names: set[str],
+    ) -> None:
+        """
+        Collect the column references of a clause list, recursing groups.
+
+        Parameters
+        ----------
+        clauses : Sequence of WhereClause
+            Conditions to inspect.
+        names : set of str
+            Accumulator receiving every referenced column name.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+        """
+        for clause in clauses:
+            if clause.where_type is WhereType.NESTED:
+                self._collectClauseColumnNames(clause.value or (), names)
+                continue
+            if clause.where_type in COLUMNLESS_WHERE_TYPES:
+                continue
+            names.add(clause.column)
+            if clause.where_type is WhereType.COLUMN:
+                names.add(str(clause.value))
+
     def _collectPlanColumnNames(self, plan: SelectPlan) -> set[str]:
         """
         Collect every column reference touched anywhere in a select plan.
@@ -283,9 +413,11 @@ class SQLCompiler:
         set of str
             Every column name referenced by the plan, qualified or not.
         """
-        names: set[str] = set(plan.columns)
-        names.update(clause.column for clause in plan.wheres)
-        names.update(clause.column for clause in plan.havings)
+        names: set[str] = {
+            column for column in plan.columns if isinstance(column, str)
+        }
+        self._collectClauseColumnNames(plan.wheres, names)
+        self._collectClauseColumnNames(plan.havings, names)
         names.update(order.column for order in plan.orders)
         names.update(plan.groups)
         if plan.aggregate is not None and plan.aggregate.column != "*":
@@ -360,12 +492,18 @@ class SQLCompiler:
         """
         # Every source already has a declared schema in the common,
         # model-backed case; skip scanning every clause for nothing.
-        if plan.table.columns and all(join.table.columns for join in plan.joins):
+        joined_tables = [
+            join.table
+            for join in plan.joins
+            if not isinstance(join.table, SelectPlan)
+        ]
+        if plan.table.columns and all(table.columns for table in joined_tables):
             return
         names = self._collectPlanColumnNames(plan)
         self._ensureRawColumns(plan.table, plan.alias, names)
         for join in plan.joins:
-            self._ensureRawColumns(join.table, join.alias, names)
+            if not isinstance(join.table, SelectPlan):
+                self._ensureRawColumns(join.table, join.alias, names)
 
     def _resolveSources(
         self,
@@ -405,6 +543,36 @@ class SQLCompiler:
 
         return default, sources, from_clause
 
+    def _joinSource(self, join: JoinExpression) -> tuple[str, SqlSource]:
+        """
+        Build the FROM source contributed by a single join expression.
+
+        Parameters
+        ----------
+        join : JoinExpression
+            Join description to materialize.
+
+        Returns
+        -------
+        tuple of (str, SqlSource)
+            The identifier the joined source is reachable by, and the
+            source itself.
+
+        Raises
+        ------
+        QueryException
+            If a subquery join declares no alias to be referenced by.
+        """
+        if isinstance(join.table, SelectPlan):
+            if not join.alias:
+                error_msg = "A subquery join requires an alias."
+                raise QueryException(error_msg)
+            return join.alias, self._buildSelect(join.table, {}).subquery(join.alias)
+
+        joined_table = self._sqlTable(join.table)
+        source = joined_table.alias(join.alias) if join.alias else joined_table
+        return join.alias or join.table.name, source
+
     def _applyJoin(
         self,
         from_clause: SqlSource,
@@ -432,12 +600,10 @@ class SQLCompiler:
         Raises
         ------
         QueryException
-            If the join type is not supported yet, or its ON conditions
+            If the join type is not supported, or its ON conditions
             cannot be resolved.
         """
-        joined_table = self._sqlTable(join.table)
-        joined_source = joined_table.alias(join.alias) if join.alias else joined_table
-        joined_name = join.alias or join.table.name
+        joined_name, joined_source = self._joinSource(join)
 
         if join.join_type is JoinType.CROSS:
             return from_clause.join(joined_source, sqlalchemy.true()), \
@@ -448,11 +614,12 @@ class SQLCompiler:
             joined = from_clause.join(joined_source, condition)
         elif join.join_type is JoinType.LEFT:
             joined = from_clause.join(joined_source, condition, isouter=True)
+        elif join.join_type is JoinType.FULL:
+            joined = from_clause.join(joined_source, condition, full=True)
         else:
-            error_msg = (
-                f"Join type '{join.join_type}' is not supported yet."
-            )
-            raise QueryException(error_msg)
+            # The SQL toolkit has no native RIGHT JOIN construct; a LEFT
+            # JOIN with both sides swapped is its exact equivalent.
+            joined = joined_source.join(from_clause, condition, isouter=True)
         return joined, joined_name, joined_source
 
     def _joinCondition(
@@ -566,16 +733,21 @@ class SQLCompiler:
             Statement projecting the aggregate, explicit columns, or
             every column of the main table.
         """
+        # An explicit FROM is only added when the plan has no joins: with
+        # joins the caller sets the composed FROM clause instead, and
+        # declaring the main table twice would duplicate it.
         if plan.aggregate is not None:
-            return sqlalchemy.select(
+            statement = sqlalchemy.select(
                 self._aggregateExpression(sources, default, plan.aggregate),
-            ).select_from(default)
+            )
+            return statement if plan.joins else statement.select_from(default)
         if plan.columns:
             projected = [
-                self._resolveColumn(sources, default, name)
-                for name in plan.columns
+                self._projectionElement(sources, default, entry)
+                for entry in plan.columns
             ]
-            return sqlalchemy.select(*projected)
+            statement = sqlalchemy.select(*projected)
+            return statement if plan.joins else statement.select_from(default)
         if not plan.table.columns:
             # Schemaless table: its real column list is unknowable up
             # front, so project literally instead of guessing a subset.
@@ -584,8 +756,64 @@ class SQLCompiler:
             ).select_from(default)
         return sqlalchemy.select(default)
 
-    def _applyOrderingAndPaging(
+    @staticmethod
+    def _rawElement(raw: RawExpression) -> ColumnElement[Any]:
+        """
+        Turn a raw SQL fragment into a bound engine element.
+
+        Every value travels as a bound parameter, so the driver escapes
+        it and the fragment cannot be used to smuggle literals. A raw
+        fragment carrying an alias is compiled as a labeled column so it
+        stays addressable when the query is used as a derived table.
+
+        Parameters
+        ----------
+        raw : RawExpression
+            Fragment, its named bindings, and its optional alias.
+
+        Returns
+        -------
+        ColumnElement
+            Textual element ready to be embedded in a statement.
+        """
+        if raw.alias:
+            return sqlalchemy.literal_column(raw.sql).label(raw.alias)
+        element = sqlalchemy.text(raw.sql)
+        if raw.bindings:
+            element = element.bindparams(**raw.bindings)
+        return element
+
+    def _projectionElement(
         self,
+        sources: SourceMap,
+        default: SqlSource,
+        entry: str | SubQueryColumn | RawExpression,
+    ) -> ColumnElement[Any]:
+        """
+        Compile a single entry of a select projection.
+
+        Parameters
+        ----------
+        sources : SourceMap
+            Table sources reachable by qualified column references.
+        default : SqlSource
+            Source an unqualified column reference resolves against.
+        entry : str or SubQueryColumn or RawExpression
+            Projected column name, scalar subquery, or raw fragment.
+
+        Returns
+        -------
+        ColumnElement
+            Engine element for the projection entry.
+        """
+        if isinstance(entry, SubQueryColumn):
+            subquery = self._buildSelect(entry.plan, sources)
+            return subquery.scalar_subquery().label(entry.alias)
+        if isinstance(entry, RawExpression):
+            return self._rawElement(entry)
+        return self._resolveColumn(sources, default, entry)
+
+    def _applyOrderingAndPaging(        self,
         sources: SourceMap,
         default: SqlSource,
         statement: Select[Any],
@@ -681,7 +909,8 @@ class SQLCompiler:
             raise QueryException(error_msg)
 
         if not plan.table.columns:
-            names = set(plan.values) | {clause.column for clause in plan.wheres}
+            names = set(plan.values)
+            self._collectClauseColumnNames(plan.wheres, names)
             self._ensureRawColumns(plan.table, None, names)
 
         table = self._sqlTable(plan.table)
@@ -707,7 +936,8 @@ class SQLCompiler:
             Executable DELETE statement.
         """
         if not plan.table.columns:
-            names = {clause.column for clause in plan.wheres}
+            names: set[str] = set()
+            self._collectClauseColumnNames(plan.wheres, names)
             self._ensureRawColumns(plan.table, None, names)
 
         table = self._sqlTable(plan.table)
@@ -1107,6 +1337,45 @@ class SQLCompiler:
                 expression = and_(expression, piece)
         return expression
 
+    def _columnlessExpression(
+        self,
+        sources: SourceMap,
+        default: SqlSource,
+        clause: WhereClause,
+    ) -> ColumnElement[bool] | None:
+        """
+        Compile the clause kinds that carry no column reference.
+
+        Covers nested groups, raw fragments, and correlated ``EXISTS``
+        subqueries; every other kind is left to the caller.
+
+        Parameters
+        ----------
+        sources : SourceMap
+            Table sources reachable by qualified column references.
+        default : SqlSource
+            Source an unqualified column reference resolves against.
+        clause : WhereClause
+            Condition to compile.
+
+        Returns
+        -------
+        ColumnElement or None
+            Boolean expression, or ``None`` when the clause kind is
+            column-based and must be handled by the caller.
+        """
+        kind = clause.where_type
+        if kind is WhereType.NESTED:
+            nested = self._whereExpression(sources, default, clause.value or ())
+            # An empty group must not change the truth of the query.
+            return sqlalchemy.true() if nested is None else nested.self_group()
+        if kind is WhereType.RAW:
+            return self._rawElement(clause.value)
+        if kind in (WhereType.EXISTS, WhereType.NOT_EXISTS):
+            subquery = self._buildSelect(clause.value, sources).exists()
+            return ~subquery if kind is WhereType.NOT_EXISTS else subquery
+        return None
+
     def _clauseExpression(
         self,
         sources: SourceMap,
@@ -1135,25 +1404,118 @@ class SQLCompiler:
         QueryException
             If the clause uses an unsupported operator or shape.
         """
+        standalone = self._columnlessExpression(sources, default, clause)
+        if standalone is not None:
+            return standalone
+
         column = self._resolveColumn(sources, default, clause.column)
         kind = clause.where_type
 
         if kind is WhereType.BASIC:
             return self._basicExpression(column, clause)
-        if kind is WhereType.BETWEEN:
-            bounds = tuple(clause.value or ())
-            if len(bounds) != _BETWEEN_BOUNDS:
-                error_msg = (
-                    "BETWEEN conditions require exactly two boundary values."
-                )
-                raise QueryException(error_msg)
-            return column.between(bounds[0], bounds[1])
+        if kind is WhereType.COLUMN:
+            return self._columnComparison(sources, default, column, clause)
+        if kind in (WhereType.BETWEEN, WhereType.NOT_BETWEEN):
+            return self._betweenExpression(column, clause)
 
         handler = _SIMPLE_CLAUSES.get(kind)
         if handler is None:
             error_msg = f"Unsupported where clause type '{kind}'."
             raise QueryException(error_msg)
-        return handler(column, clause.value)
+        return handler(column, self._clauseValue(sources, clause.value))
+
+    def _clauseValue(self, sources: SourceMap, value: Any) -> Any:  # noqa: ANN401
+        """
+        Resolve the bound value of a clause, compiling nested subqueries.
+
+        Parameters
+        ----------
+        sources : SourceMap
+            Table sources of the enclosing query, used to correlate a
+            subquery with the columns it references from outside.
+        value : Any
+            Raw clause value taken from the plan.
+
+        Returns
+        -------
+        Any
+            The value untouched, or the compiled subquery statement.
+        """
+        if isinstance(value, SelectPlan):
+            return self._buildSelect(value, sources)
+        return value
+
+    @staticmethod
+    def _betweenExpression(
+        column: ColumnElement[Any],
+        clause: WhereClause,
+    ) -> ColumnElement[bool]:
+        """
+        Compile an inclusive range condition into a boolean expression.
+
+        Parameters
+        ----------
+        column : ColumnElement
+            Column the range applies to.
+        clause : WhereClause
+            Range condition carrying exactly two boundary values.
+
+        Returns
+        -------
+        ColumnElement
+            Boolean expression for the range.
+
+        Raises
+        ------
+        QueryException
+            If the clause does not carry exactly two boundaries.
+        """
+        bounds = tuple(clause.value or ())
+        if len(bounds) != _BETWEEN_BOUNDS:
+            error_msg = "BETWEEN conditions require exactly two boundary values."
+            raise QueryException(error_msg)
+        expression = column.between(bounds[0], bounds[1])
+        if clause.where_type is WhereType.NOT_BETWEEN:
+            return ~expression
+        return expression
+
+    def _columnComparison(
+        self,
+        sources: SourceMap,
+        default: SqlSource,
+        column: ColumnElement[Any],
+        clause: WhereClause,
+    ) -> ColumnElement[bool]:
+        """
+        Compile a comparison between two columns of the same query.
+
+        Parameters
+        ----------
+        sources : SourceMap
+            Table sources reachable by qualified column references.
+        default : SqlSource
+            Source an unqualified column reference resolves against.
+        column : ColumnElement
+            Left-hand column of the comparison.
+        clause : WhereClause
+            Condition carrying the right-hand column reference.
+
+        Returns
+        -------
+        ColumnElement
+            Boolean expression comparing both columns.
+
+        Raises
+        ------
+        QueryException
+            If the operator is not supported.
+        """
+        other = self._resolveColumn(sources, default, str(clause.value))
+        comparator = _COMPARATORS.get(clause.operator.strip().lower())
+        if comparator is None:
+            error_msg = f"Unsupported comparison operator '{clause.operator}'."
+            raise QueryException(error_msg)
+        return comparator(column, other)
 
     def _basicExpression(
         self,
