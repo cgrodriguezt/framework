@@ -21,45 +21,107 @@ _VOWELS: frozenset[str] = frozenset("aeiou")
 # Wildcard marking every attribute as guarded.
 _GUARD_ALL: str = "*"
 
+# Prefixes and suffix identifying the accessor/mutator naming convention.
+_ACCESSOR_PREFIX: str = "get"
+_MUTATOR_PREFIX: str = "set"
+_ACCESSOR_SUFFIX: str = "Attribute"
+
+# Prefix identifying a local query scope declared on a model.
+_SCOPE_PREFIX: str = "scope"
+
+# Lifecycle events a model can dispatch.
+MODEL_EVENTS: tuple[str, ...] = (
+    "retrieved",
+    "saving",
+    "creating",
+    "created",
+    "updating",
+    "updated",
+    "saved",
+    "deleting",
+    "deleted",
+    "restoring",
+    "restored",
+)
+
 # Builder entry points forwarded from the model class via the metaclass.
 _FORWARDED_BUILDER_METHODS: frozenset[str] = frozenset({
+    "addSelect",
     "avg",
     "count",
+    "crossJoin",
     "distinct",
     "doesntExist",
     "exists",
+    "forPage",
+    "fullJoin",
     "get",
     "groupBy",
     "having",
+    "havingRaw",
+    "join",
+    "joinSub",
     "latest",
+    "leftJoin",
+    "leftJoinSub",
     "limit",
     "load",
+    "lockForUpdate",
     "max",
     "min",
     "offset",
     "oldest",
+    "orHaving",
     "orWhere",
+    "orWhereColumn",
+    "orWhereExists",
+    "orWhereIn",
+    "orWhereNotExists",
+    "orWhereNotIn",
+    "orWhereNotNull",
+    "orWhereNull",
+    "orWhereRaw",
     "orderBy",
     "paginate",
+    "pluck",
+    "rightJoin",
+    "rightJoinSub",
+    "scope",
     "select",
+    "selectRaw",
+    "selectSub",
+    "sharedLock",
     "skip",
     "sum",
     "take",
+    "union",
+    "unionAll",
+    "value",
     "where",
     "whereBetween",
+    "whereColumn",
     "whereContains",
     "whereEndsWith",
+    "whereExists",
     "whereILike",
     "whereIn",
     "whereLike",
+    "whereNotBetween",
+    "whereNotExists",
     "whereNotILike",
     "whereNotIn",
     "whereNotLike",
     "whereNotNull",
     "whereNull",
+    "whereRaw",
     "whereRegexpMatch",
     "whereStartsWith",
     "with_",
+    "withTrashed",
+    "withoutGlobalScope",
+    "withoutGlobalScopes",
+    "withoutTrashed",
+    "onlyTrashed",
 })
 
 def snake_case(name: str) -> str:
@@ -141,6 +203,22 @@ class ModelMetadata:
         Creation timestamp column, when present.
     updated_column : str or None
         Update timestamp column, when present.
+    deleted_column : str or None
+        Soft delete timestamp column, when the model soft deletes.
+    uses_unique_ids : bool
+        Whether the primary key is a client-generated unique identifier.
+    accessors : dict of str to str
+        Accessor method names keyed by the attribute they expose.
+    mutators : dict of str to str
+        Mutator method names keyed by the attribute they transform.
+    appends : frozenset of str
+        Accessor-backed attributes added to the serialized output.
+    scopes : dict of str to str
+        Local scope method names keyed by their fluent call name.
+    global_scopes : dict of str to Callable
+        Constraints applied to every query, keyed by scope name.
+    events : dict of str to list of Callable
+        Lifecycle listeners keyed by event name.
     """
 
     table_name: str
@@ -157,6 +235,14 @@ class ModelMetadata:
     connection: str | None = None
     created_column: str | None = None
     updated_column: str | None = None
+    deleted_column: str | None = None
+    uses_unique_ids: bool = False
+    accessors: dict[str, str] = field(default_factory=dict)
+    mutators: dict[str, str] = field(default_factory=dict)
+    appends: frozenset[str] = frozenset()
+    scopes: dict[str, str] = field(default_factory=dict)
+    global_scopes: dict[str, Callable[[Any], None]] = field(default_factory=dict)
+    events: dict[str, list[Callable[..., Any]]] = field(default_factory=dict)
 
     def isFillable(self, key: str) -> bool:
         """
@@ -248,11 +334,19 @@ class ModelMeta(type):
         table_name = mcs._resolveTableName(cls, name, namespace)
         primary_key = mcs._resolvePrimaryKey(cls, namespace, columns)
         casts = mcs._collectCasts(cls)
+        accessors, mutators, scopes = mcs._collectBehaviours(cls)
 
         # Timestamp columns are tracked only when actually declared.
         created = str(getattr(cls, "CREATED_AT", "created_at"))
         updated = str(getattr(cls, "UPDATED_AT", "updated_at"))
+        deleted = str(getattr(cls, "DELETED_AT", "deleted_at"))
         timestamps = bool(getattr(cls, "timestamps", True))
+        soft_deletes = bool(getattr(cls, "soft_deletes", False))
+        deleted_column = deleted if soft_deletes and deleted in columns else None
+
+        # A soft delete column must accept NULL to mark a live row.
+        if deleted_column is not None:
+            columns[deleted_column].nullable()
 
         cls.__meta__ = ModelMetadata(
             table_name=table_name,
@@ -275,6 +369,14 @@ class ModelMeta(type):
             connection=getattr(cls, "connection", None),
             created_column=created if timestamps and created in columns else None,
             updated_column=updated if timestamps and updated in columns else None,
+            deleted_column=deleted_column,
+            uses_unique_ids=bool(getattr(cls, "uuids", False)),
+            accessors=accessors,
+            mutators=mutators,
+            appends=frozenset(getattr(cls, "appends", ()) or ()),
+            scopes=scopes,
+            global_scopes=mcs._inheritGlobalScopes(cls),
+            events=mcs._inheritEvents(cls),
         )
         return cls
 
@@ -293,17 +395,20 @@ class ModelMeta(type):
         Returns
         -------
         Any
-            Bound builder method for whitelisted entry points.
+            Bound builder method for whitelisted entry points, or a
+            bound local scope declared by the model.
 
         Raises
         ------
         AttributeError
-            If the attribute is not a forwarded builder method.
+            If the attribute is neither a forwarded builder method nor a
+            local scope.
         """
-        if name in _FORWARDED_BUILDER_METHODS:
-            meta = cls.__dict__.get("__meta__")
-            if meta is not None:
-                return getattr(cls.query(), name)
+        meta = cls.__dict__.get("__meta__")
+        if meta is not None and (
+            name in _FORWARDED_BUILDER_METHODS or name in meta.scopes
+        ):
+            return getattr(cls.query(), name)
         error_msg = (
             f"type object '{cls.__name__}' has no attribute '{name}'"
         )
@@ -482,3 +587,120 @@ class ModelMeta(type):
             if isinstance(declared, dict):
                 casts.update(declared)
         return casts
+
+    @staticmethod
+    def _behaviourEntry(name: str) -> tuple[str, str] | None:
+        """
+        Classify a method name as an accessor, mutator, or local scope.
+
+        Parameters
+        ----------
+        name : str
+            Method name declared on the model.
+
+        Returns
+        -------
+        tuple of (str, str) or None
+            The behaviour kind (``"accessor"``, ``"mutator"``, or
+            ``"scope"``) and the key it registers under, or ``None``
+            when the name follows no convention.
+        """
+        if name.endswith(_ACCESSOR_SUFFIX):
+            for prefix, kind in (
+                (_ACCESSOR_PREFIX, "accessor"),
+                (_MUTATOR_PREFIX, "mutator"),
+            ):
+                if name.startswith(prefix):
+                    middle = name[len(prefix) : -len(_ACCESSOR_SUFFIX)]
+                    # ``getAttribute``/``setAttribute`` have no middle part.
+                    if middle:
+                        return kind, snake_case(middle)
+        if name.startswith(_SCOPE_PREFIX) and len(name) > len(_SCOPE_PREFIX):
+            suffix = name[len(_SCOPE_PREFIX) :]
+            if suffix[0].isupper():
+                return "scope", suffix[0].lower() + suffix[1:]
+        return None
+
+    @staticmethod
+    def _collectBehaviours(
+        owner: type,
+    ) -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
+        """
+        Discover accessors, mutators, and local scopes of a model.
+
+        Parameters
+        ----------
+        owner : type
+            Class being created.
+
+        Returns
+        -------
+        tuple of dict
+            Accessors, mutators, and local scopes, each mapping their
+            public key to the declaring method name.
+        """
+        registries: dict[str, dict[str, str]] = {
+            "accessor": {},
+            "mutator": {},
+            "scope": {},
+        }
+        for base in reversed(owner.__mro__):
+            for name, value in vars(base).items():
+                # Scopes are declared as classmethods/staticmethods, whose
+                # raw descriptors are not always callable themselves.
+                if not callable(value) and not isinstance(
+                    value, (classmethod, staticmethod),
+                ):
+                    continue
+                entry = ModelMeta._behaviourEntry(name)
+                if entry is not None:
+                    kind, key = entry
+                    registries[kind][key] = name
+        return registries["accessor"], registries["mutator"], registries["scope"]
+
+    @staticmethod
+    def _inheritGlobalScopes(owner: type) -> dict[str, Callable[[Any], None]]:
+        """
+        Copy the global scopes declared by ancestor models.
+
+        Parameters
+        ----------
+        owner : type
+            Class being created.
+
+        Returns
+        -------
+        dict of str to Callable
+            Global scopes the new class starts with.
+        """
+        scopes: dict[str, Callable[[Any], None]] = {}
+        for base in reversed(owner.__mro__[1:]):
+            base_meta = base.__dict__.get("__meta__")
+            if base_meta is not None:
+                scopes.update(base_meta.global_scopes)
+        return scopes
+
+    @staticmethod
+    def _inheritEvents(owner: type) -> dict[str, list[Callable[..., Any]]]:
+        """
+        Copy the lifecycle listeners declared by ancestor models.
+
+        Parameters
+        ----------
+        owner : type
+            Class being created.
+
+        Returns
+        -------
+        dict of str to list of Callable
+            Listeners the new class starts with, detached from the
+            ancestor lists so registering never leaks upwards.
+        """
+        events: dict[str, list[Callable[..., Any]]] = {}
+        for base in reversed(owner.__mro__[1:]):
+            base_meta = base.__dict__.get("__meta__")
+            if base_meta is None:
+                continue
+            for event, listeners in base_meta.events.items():
+                events.setdefault(event, []).extend(listeners)
+        return events
