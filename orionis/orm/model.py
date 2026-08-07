@@ -32,7 +32,6 @@ _INTERNAL_ATTRIBUTES: frozenset[str] = frozenset({
     "_relations",
 })
 
-
 class Model(
     AttributesMixin,
     StateMixin,
