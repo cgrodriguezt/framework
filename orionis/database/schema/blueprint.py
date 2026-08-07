@@ -12,7 +12,8 @@ if TYPE_CHECKING:
     from orionis.orm.schema.column import ColumnDefinition
 
 class Blueprint:
-    """Fluent collector of column definitions for a single table.
+    """
+    Fluent collector of column definitions for a single table.
 
     Instances are yielded by ``Schema.create(name)`` when used as an
     async context manager (``async with schema.create(name) as table:``),
@@ -27,7 +28,8 @@ class Blueprint:
     __slots__ = ("__columns", "__constraints", "__factory_cache")
 
     def __init__(self) -> None:
-        """Initialize the blueprint with no columns declared yet.
+        """
+        Initialize the blueprint with no columns declared yet.
 
         Returns
         -------
@@ -41,7 +43,8 @@ class Blueprint:
         self.__factory_cache: dict[str, Callable[..., ColumnDefinition]] = {}
 
     def __getattr__(self, name: str) -> Callable[..., ColumnDefinition]:
-        """Proxy a column-factory call to :class:`Column`, recording it.
+        """
+        Proxy a column-factory call to :class:`Column`, recording it.
 
         This is what powers calls such as ``table.string("username")`` or
         ``table.boolean("is_admin")``: any factory exposed by
@@ -83,7 +86,8 @@ class Blueprint:
         return _build
 
     def timestamps(self, *, timezone: bool = False) -> None:
-        """Add nullable ``created_at`` and ``updated_at`` columns.
+        """
+        Add nullable ``created_at`` and ``updated_at`` columns.
 
         Parameters
         ----------
@@ -99,7 +103,8 @@ class Blueprint:
         self.dateTime("updated_at", timezone=timezone).nullable()
 
     def comment(self, text: str) -> Comment:
-        """Attach a table-level comment.
+        """
+        Attach a table-level comment.
 
         Parameters
         ----------
@@ -122,7 +127,8 @@ class Blueprint:
         ref_column: str,
         name: str | None = None,
     ) -> ForeignKey:
-        """Declare a foreign key constraint on this table.
+        """
+        Declare a foreign key constraint on this table.
 
         Parameters
         ----------
@@ -150,7 +156,8 @@ class Blueprint:
         name: str | None = None,
         unique: bool = False,
     ) -> Index:
-        """Declare an index over one or more columns.
+        """
+        Declare an index over one or more columns.
 
         Parameters
         ----------
@@ -172,7 +179,8 @@ class Blueprint:
         return definition
 
     def primaryKey(self, *columns: str) -> PrimaryKey:
-        """Declare a (composite) primary key over one or more columns.
+        """
+        Declare a (composite) primary key over one or more columns.
 
         Parameters
         ----------
@@ -189,7 +197,8 @@ class Blueprint:
         return definition
 
     def unique(self, *columns: str, name: str | None = None) -> Unique:
-        """Declare a unique constraint over one or more columns.
+        """
+        Declare a unique constraint over one or more columns.
 
         Parameters
         ----------
@@ -209,7 +218,8 @@ class Blueprint:
         return definition
 
     def columns(self) -> tuple[ColumnDefinition, ...]:
-        """Return the columns declared so far, in declaration order.
+        """
+        Return the columns declared so far, in declaration order.
 
         Returns
         -------
@@ -223,7 +233,8 @@ class Blueprint:
     ) -> tuple[
         ColumnDefinition | Comment | ForeignKey | Index | PrimaryKey | Unique, ...,
     ]:
-        """Return every column and table-level constraint declared so far.
+        """
+        Return every column and table-level constraint declared so far.
 
         Returns
         -------
