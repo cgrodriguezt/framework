@@ -3,7 +3,6 @@ from orionis.console.args.argument import Argument
 from orionis.console.commands.migrate.base_command import MigrationCommand
 from orionis.database.migrations.migrator import Migrator
 
-
 class MigrateRefreshCommand(MigrationCommand):
     """Roll back migrations and immediately apply them again."""
 
