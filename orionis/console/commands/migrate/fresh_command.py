@@ -1,7 +1,6 @@
 from orionis.console.commands.migrate.base_command import MigrationCommand
 from orionis.database.migrations.migrator import Migrator
 
-
 class MigrateFreshCommand(MigrationCommand):
     """Drop the tracking table and apply every migration from scratch."""
 
