@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from orionis.database.migrations.events import MigrationEvents
 
-
 class IMigrator(ABC):
     """
     Contract for the database migration runner.
