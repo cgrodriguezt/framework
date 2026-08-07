@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 # Name of the table used to track already-applied migrations.
 _MIGRATIONS_TABLE: str = "migrations"
 
-
 def _build_migrations_table(table: str) -> TableDefinition:
     """
     Build the table definition for the migrations tracking table.
@@ -65,13 +64,11 @@ def _build_migrations_table(table: str) -> TableDefinition:
         primary_key="id",
     )
 
-
 # The tracking table shape is fixed; build it once instead of re-allocating
 # four ColumnDefinition instances on every run.
 _MIGRATIONS_TABLE_DEFINITION: TableDefinition = _build_migrations_table(
     _MIGRATIONS_TABLE,
 )
-
 
 class Migrator(IMigrator):
     """
