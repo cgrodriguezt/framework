@@ -5,6 +5,7 @@ from orionis.database.contracts.connection_manager import IConnectionManager
 from orionis.database.contracts.migration import Migration
 from orionis.database.contracts.migrator import IMigrator
 from orionis.database.exceptions import MigrationNotFoundException
+from orionis.database.migrations.events import NO_EVENTS, MigrationEvents
 from orionis.foundation.contracts.application import IApplication
 from orionis.introspection.modules.inspector import ModuleInspector
 from orionis.introspection.modules.reflection import ReflectionModule
@@ -13,11 +14,11 @@ from orionis.orm.schema.table import TableDefinition
 from orionis.orm.schema.types import BigInteger, Integer, String
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
     from pathlib import Path
 
 # Name of the table used to track already-applied migrations.
 _MIGRATIONS_TABLE: str = "migrations"
+
 
 def _build_migrations_table(table: str) -> TableDefinition:
     """
@@ -64,13 +65,25 @@ def _build_migrations_table(table: str) -> TableDefinition:
         primary_key="id",
     )
 
+
 # The tracking table shape is fixed; build it once instead of re-allocating
-# four ColumnDefinition instances on every migrate()/rollback() call.
+# four ColumnDefinition instances on every run.
 _MIGRATIONS_TABLE_DEFINITION: TableDefinition = _build_migrations_table(
     _MIGRATIONS_TABLE,
 )
 
+
 class Migrator(IMigrator):
+    """
+    Runner applying and reverting the application migrations.
+
+    Migrations are discovered under ``database/migrations`` and applied
+    in filename order, which is chronological because filenames carry a
+    zero-padded sequential prefix. Each migration runs inside its own
+    transaction together with its tracking record, so a failure never
+    leaves the tracking table claiming a migration that did not fully
+    apply.
+    """
 
     # ruff: noqa: TC001
 
@@ -100,74 +113,62 @@ class Migrator(IMigrator):
         self.__conn_manager = conn_manager
         self.__discovered_cache: dict[str, type[Migration]] | None = None
 
+    # ── Public operations ───────────────────────────────────────────────────
+
     async def migrate(
         self,
         *,
-        on_start: Callable[[str], None] | None = None,
-        on_success: Callable[[str, float], None] | None = None,
-        on_error: Callable[[str, float], None] | None = None,
+        connection: str | None = None,
+        events: MigrationEvents | None = None,
     ) -> list[str]:
         """
         Apply every migration that has not been run yet.
 
         Parameters
         ----------
-        on_start : callable, optional
-            Invoked with the migration name right before it runs.
-        on_success : callable, optional
-            Invoked with the migration name and elapsed seconds after it
-            applies successfully.
-        on_error : callable, optional
-            Invoked with the migration name and elapsed seconds when its
-            ``up`` method raises, right before the exception propagates.
+        connection : str or None, optional
+            Named connection to migrate, or ``None`` for the default one.
+        events : MigrationEvents or None, optional
+            Progress callbacks reported for each migration.
 
         Returns
         -------
         list of str
             Names of the migrations applied, in the order they ran.
-        """
-        connection = self.__conn_manager.connection()
-        await self.__ensureMigrationsTable(connection)
 
-        discovered = self.__discover()
-        ran = await self.__getRan(connection)
+        Raises
+        ------
+        Exception
+            Any exception raised by a migration ``up`` method aborts the
+            run and propagates to the caller.
+        """
+        target = self.__connection(connection)
+        await self.__ensureMigrationsTable(target)
+
+        ran = await self.__getRan(target)
         ran_names = {row["migration"] for row in ran}
         pending = [
-            (name, cls) for name, cls in discovered.items() if name not in ran_names
+            (name, cls)
+            for name, cls in self.__discover().items()
+            if name not in ran_names
         ]
-
         if not pending:
             return []
 
         batch = self.__nextBatch(ran)
+        reporter = events or NO_EVENTS
         applied: list[str] = []
-        for name, cls in pending:
-            if on_start is not None:
-                on_start(name)
-
-            started_at = time.perf_counter()
-            try:
-                instance = cls()
-                await instance.up()
-                await self.__insertRecord(connection, name, batch)
-            except Exception:
-                if on_error is not None:
-                    on_error(name, time.perf_counter() - started_at)
-                raise
-
-            if on_success is not None:
-                on_success(name, time.perf_counter() - started_at)
+        for name, migration_cls in pending:
+            await self.__runStep(target, name, migration_cls, batch, reporter)
             applied.append(name)
-
         return applied
 
     async def rollback(
         self,
         steps: int = 1,
         *,
-        on_start: Callable[[str], None] | None = None,
-        on_success: Callable[[str, float], None] | None = None,
-        on_error: Callable[[str, float], None] | None = None,
+        connection: str | None = None,
+        events: MigrationEvents | None = None,
     ) -> list[str]:
         """
         Revert the most recently applied migration batches.
@@ -177,20 +178,15 @@ class Migrator(IMigrator):
         steps : int, optional
             Number of batches to roll back, starting from the most
             recent one. Defaults to ``1``.
-        on_start : callable, optional
-            Invoked with the migration name right before it is reverted.
-        on_success : callable, optional
-            Invoked with the migration name and elapsed seconds after it
-            reverts successfully.
-        on_error : callable, optional
-            Invoked with the migration name and elapsed seconds when its
-            ``down`` method raises, right before the exception propagates.
+        connection : str or None, optional
+            Named connection to roll back, or ``None`` for the default.
+        events : MigrationEvents or None, optional
+            Progress callbacks reported for each migration.
 
         Returns
         -------
         list of str
-            Names of the migrations reverted, in the order they were
-            rolled back.
+            Names of the migrations reverted, most recent first.
 
         Raises
         ------
@@ -202,50 +198,292 @@ class Migrator(IMigrator):
         if not isinstance(steps, int) or isinstance(steps, bool) or steps < 1:
             error_msg = "The 'steps' argument must be a positive integer."
             raise ValueError(error_msg)
+        return await self.__revert(steps, connection, events)
 
-        connection = self.__conn_manager.connection()
-        await self.__ensureMigrationsTable(connection)
+    async def reset(
+        self,
+        *,
+        connection: str | None = None,
+        events: MigrationEvents | None = None,
+    ) -> list[str]:
+        """
+        Revert every migration recorded on the connection.
 
-        ran = await self.__getRan(connection)
+        Parameters
+        ----------
+        connection : str or None, optional
+            Named connection to reset, or ``None`` for the default one.
+        events : MigrationEvents or None, optional
+            Progress callbacks reported for each migration.
+
+        Returns
+        -------
+        list of str
+            Names of the migrations reverted, most recent first.
+
+        Raises
+        ------
+        MigrationNotFoundException
+            If a recorded migration has no matching migration file.
+        """
+        return await self.__revert(None, connection, events)
+
+    async def refresh(
+        self,
+        steps: int | None = None,
+        *,
+        connection: str | None = None,
+        events: MigrationEvents | None = None,
+    ) -> list[str]:
+        """
+        Roll back migrations and immediately apply them again.
+
+        Parameters
+        ----------
+        steps : int or None, optional
+            Number of batches to roll back first; ``None`` rolls back
+            every recorded migration.
+        connection : str or None, optional
+            Named connection to refresh, or ``None`` for the default.
+        events : MigrationEvents or None, optional
+            Progress callbacks reported for each migration.
+
+        Returns
+        -------
+        list of str
+            Names of the migrations re-applied, in the order they ran.
+
+        Raises
+        ------
+        ValueError
+            If ``steps`` is not a positive integer.
+        """
+        if steps is None:
+            await self.reset(connection=connection, events=events)
+        else:
+            await self.rollback(steps, connection=connection, events=events)
+        return await self.migrate(connection=connection, events=events)
+
+    async def fresh(
+        self,
+        *,
+        connection: str | None = None,
+        events: MigrationEvents | None = None,
+    ) -> list[str]:
+        """
+        Drop the tracking table and apply every migration from scratch.
+
+        Unlike :meth:`refresh`, the tracking table itself is dropped, so
+        the whole history is rebuilt as a single first batch.
+
+        Parameters
+        ----------
+        connection : str or None, optional
+            Named connection to rebuild, or ``None`` for the default.
+        events : MigrationEvents or None, optional
+            Progress callbacks reported for each migration.
+
+        Returns
+        -------
+        list of str
+            Names of the migrations applied, in the order they ran.
+        """
+        target = self.__connection(connection)
+        await self.reset(connection=connection, events=events)
+        await target.dropTable(_MIGRATIONS_TABLE)
+        return await self.migrate(connection=connection, events=events)
+
+    async def status(
+        self,
+        *,
+        connection: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Report which migrations are applied and which are pending.
+
+        Parameters
+        ----------
+        connection : str or None, optional
+            Named connection to inspect, or ``None`` for the default.
+
+        Returns
+        -------
+        list of dict
+            One entry per discovered migration with ``migration``,
+            ``ran`` and ``batch`` keys, in chronological order.
+        """
+        target = self.__connection(connection)
+        await self.__ensureMigrationsTable(target)
+        batches = {
+            row["migration"]: row["batch"] for row in await self.__getRan(target)
+        }
+        return [
+            {
+                "migration": name,
+                "ran": name in batches,
+                "batch": batches.get(name),
+            }
+            for name in self.__discover()
+        ]
+
+    # ── Internal orchestration ──────────────────────────────────────────────
+
+    async def __revert(
+        self,
+        steps: int | None,
+        connection: str | None,
+        events: MigrationEvents | None,
+    ) -> list[str]:
+        """
+        Roll back the recorded migrations of the selected batches.
+
+        Parameters
+        ----------
+        steps : int or None
+            Number of most recent batches to revert; ``None`` reverts
+            every recorded migration.
+        connection : str or None
+            Named connection to roll back, or ``None`` for the default.
+        events : MigrationEvents or None
+            Progress callbacks reported for each migration.
+
+        Returns
+        -------
+        list of str
+            Names of the migrations reverted, most recent first.
+
+        Raises
+        ------
+        MigrationNotFoundException
+            If a recorded migration has no matching migration file.
+        """
+        target = self.__connection(connection)
+        await self.__ensureMigrationsTable(target)
+
+        ran = await self.__getRan(target)
         if not ran:
             return []
 
-        target_batches = set(
-            sorted({row["batch"] for row in ran}, reverse=True)[:steps],
-        )
-        to_rollback = sorted(
-            (row for row in ran if row["batch"] in target_batches),
-            key=lambda row: row["id"],
-            reverse=True,
-        )
-
+        rows = self.__selectBatches(ran, steps)
         discovered = self.__discover()
-        rolled_back: list[str] = []
-        for row in to_rollback:
+        reporter = events or NO_EVENTS
+        reverted: list[str] = []
+        for row in rows:
             name = row["migration"]
             migration_cls = discovered.get(name)
             if migration_cls is None:
                 error_msg = f"Migration class for '{name}' could not be found."
                 raise MigrationNotFoundException(error_msg)
+            await self.__runStep(target, name, migration_cls, None, reporter)
+            reverted.append(name)
+        return reverted
 
-            if on_start is not None:
-                on_start(name)
+    @staticmethod
+    def __selectBatches(
+        ran: list[dict[str, Any]],
+        steps: int | None,
+    ) -> list[dict[str, Any]]:
+        """
+        Pick the recorded rows belonging to the batches being reverted.
 
-            started_at = time.perf_counter()
-            try:
+        Parameters
+        ----------
+        ran : list of dict
+            Every recorded migration.
+        steps : int or None
+            Number of most recent batches to select; ``None`` selects
+            all of them.
+
+        Returns
+        -------
+        list of dict
+            Selected rows, most recently applied first.
+        """
+        if steps is None:
+            selected = ran
+        else:
+            newest = sorted({row["batch"] for row in ran}, reverse=True)[:steps]
+            targets = set(newest)
+            selected = [row for row in ran if row["batch"] in targets]
+        return sorted(selected, key=lambda row: row["id"], reverse=True)
+
+    async def __runStep(
+        self,
+        connection: IConnection,
+        name: str,
+        migration_cls: type[Migration],
+        batch: int | None,
+        events: MigrationEvents,
+    ) -> None:
+        """
+        Run one migration and its tracking write atomically.
+
+        Parameters
+        ----------
+        connection : IConnection
+            Connection the migration runs against.
+        name : str
+            Migration name.
+        migration_cls : type of Migration
+            Migration class to instantiate and run.
+        batch : int or None
+            Batch number to record when applying; ``None`` reverts the
+            migration instead.
+        events : MigrationEvents
+            Progress callbacks reported for this migration.
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        Exception
+            Any exception raised by the migration propagates after the
+            transaction is rolled back and the failure is reported.
+        """
+        events.started(name)
+        started_at = time.perf_counter()
+        try:
+            # The schema change and its tracking record share one
+            # transaction, so a failure can never record a migration
+            # that did not fully apply on engines with transactional DDL.
+            async with connection.transaction():
                 instance = migration_cls()
-                await instance.down()
-                await self.__deleteRecord(connection, name)
-            except Exception:
-                if on_error is not None:
-                    on_error(name, time.perf_counter() - started_at)
-                raise
+                if batch is None:
+                    await instance.down()
+                    await self.__deleteRecord(connection, name)
+                else:
+                    await instance.up()
+                    await self.__insertRecord(connection, name, batch)
+        except Exception:
+            events.failed(name, time.perf_counter() - started_at)
+            raise
+        events.succeeded(name, time.perf_counter() - started_at)
 
-            if on_success is not None:
-                on_success(name, time.perf_counter() - started_at)
-            rolled_back.append(name)
+    # ── Discovery ───────────────────────────────────────────────────────────
 
-        return rolled_back
+    def __connection(self, name: str | None) -> IConnection:
+        """
+        Resolve the connection migrations run against.
+
+        Parameters
+        ----------
+        name : str or None
+            Named connection, or ``None`` for the default one.
+
+        Returns
+        -------
+        IConnection
+            Connection bound to its configuration.
+
+        Raises
+        ------
+        ConnectionNotFoundException
+            If the connection is not declared in the configuration.
+        """
+        return self.__conn_manager.connection(name)
 
     def __migrationsPath(self) -> Path:
         """
@@ -254,8 +492,8 @@ class Migrator(IMigrator):
         Returns
         -------
         Path
-            Absolute path to the ``database/migrations``
-            directory under the application base path.
+            Absolute path to the ``database/migrations`` directory under
+            the application base path.
         """
         return self.__app.path("database") / "migrations"
 
@@ -298,6 +536,8 @@ class Migrator(IMigrator):
         self.__discovered_cache = dict(sorted(found.items()))
         return self.__discovered_cache
 
+    # ── Tracking table ──────────────────────────────────────────────────────
+
     async def __ensureMigrationsTable(self, connection: IConnection) -> None:
         """
         Create the migrations tracking table if it does not already exist.
@@ -338,7 +578,8 @@ class Migrator(IMigrator):
             """,
         )
 
-    def __nextBatch(self, ran: list[dict[str, Any]]) -> int:
+    @staticmethod
+    def __nextBatch(ran: list[dict[str, Any]]) -> int:
         """
         Compute the batch number to assign to a new migration run.
 
