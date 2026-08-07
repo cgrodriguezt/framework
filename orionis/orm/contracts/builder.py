@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from orionis.orm.model import Model
     from orionis.support.types.collection import Collection
 
-
 class IModelQueryBuilder(IQueryBuilderBase):
     """
     Contract for the query builder bound to a model class.
