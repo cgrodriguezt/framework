@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 # Default page size used by pagination.
 _DEFAULT_PER_PAGE: int = 15
 
-
 class RawQueryBuilder(QueryBuilderBase, IRawQueryBuilder):
     """
     Fluent query builder over a plain table name.
