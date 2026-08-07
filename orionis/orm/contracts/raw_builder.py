@@ -1,33 +1,36 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from abc import abstractmethod
+from typing import TYPE_CHECKING, Any, Self
+from orionis.orm.contracts.base_builder import IQueryBuilderBase
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-    from orionis.database.entities.result import InsertResult
-    from orionis.orm.schema.table import TableDefinition
+    from orionis.orm.collections.paginator import Paginator
     from orionis.support.types.collection import Collection
 
-class IRawQueryBuilder(ABC):
+
+class IRawQueryBuilder(IQueryBuilderBase):
     """
-    Contract for the fluent, model-less query builder over a table name.
+    Contract for the model-less query builder over a plain table name.
 
-    Fluent methods return the builder itself for chaining; terminal
-    methods execute the accumulated query against the resolved
-    connection and return plain dictionaries instead of model instances.
+    It inherits the whole query language from :class:`IQueryBuilderBase`
+    and only adds what is specific to running without a model: choosing
+    the target table and connection, and returning plain dictionaries
+    instead of hydrated instances.
     """
 
-    # ── Projection ───────────────────────────────────────────────────────────
+    # ruff: noqa: ANN401
+
+    __slots__ = ()
 
     @abstractmethod
-    def select(self, *columns: str) -> IRawQueryBuilder:
+    def connection(self, name: str) -> Self:
         """
-        Restrict the query projection to the given columns.
+        Change the connection this builder runs against.
 
         Parameters
         ----------
-        *columns : str
-            Column names to project; empty selects every column.
+        name : str
+            Named connection to run the query against.
 
         Returns
         -------
@@ -36,311 +39,22 @@ class IRawQueryBuilder(ABC):
         """
 
     @abstractmethod
-    def distinct(self) -> IRawQueryBuilder:
+    def table(self, name: str, *, alias: str | None = None) -> Self:
         """
-        Collapse duplicate rows from the query results.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    # ── Where clauses ────────────────────────────────────────────────────────
-
-    @abstractmethod
-    def where(
-        self,
-        column: str | dict[str, Any],
-        *args: Any,  # noqa: ANN401
-    ) -> IRawQueryBuilder:
-        """
-        Add an AND-combined filtering condition.
+        Change the table this builder queries against.
 
         Parameters
         ----------
-        column : str or dict
-            Column name, or a mapping of column/value equality pairs.
-        *args : Any
-            Either the bound value, or an operator followed by a value.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    @abstractmethod
-    def orWhere(
-        self,
-        column: str | dict[str, Any],
-        *args: Any,  # noqa: ANN401
-    ) -> IRawQueryBuilder:
-        """
-        Add an OR-combined filtering condition.
-
-        Parameters
-        ----------
-        column : str or dict
-            Column name, or a mapping of column/value equality pairs.
-        *args : Any
-            Either the bound value, or an operator followed by a value.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    @abstractmethod
-    def whereIn(self, column: str, values: Iterable[Any]) -> IRawQueryBuilder:
-        """
-        Filter rows whose column value belongs to the given set.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        values : Iterable
-            Accepted values.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    @abstractmethod
-    def whereNotIn(self, column: str, values: Iterable[Any]) -> IRawQueryBuilder:
-        """
-        Filter rows whose column value is outside the given set.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-        values : Iterable
-            Rejected values.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    @abstractmethod
-    def whereNull(self, column: str) -> IRawQueryBuilder:
-        """
-        Filter rows whose column value is ``NULL``.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    @abstractmethod
-    def whereNotNull(self, column: str) -> IRawQueryBuilder:
-        """
-        Filter rows whose column value is not ``NULL``.
-
-        Parameters
-        ----------
-        column : str
-            Column name to filter by.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    # ── Joins ────────────────────────────────────────────────────────────────
-
-    @abstractmethod
-    def join(
-        self,
-        table: str | TableDefinition,
-        first: str,
-        operator: str,
-        second: str,
-        *,
-        alias: str | None = None,
-    ) -> IRawQueryBuilder:
-        """
-        Add an INNER JOIN to the query.
-
-        Parameters
-        ----------
-        table : str or TableDefinition
-            Table name to join, or its full definition when it declares
-            a real schema (for instance ``Model.__meta__.table``).
-        first : str
-            Left-hand column of the ON condition.
-        operator : str
-            Comparison operator relating both sides.
-        second : str
-            Right-hand column of the ON condition.
+        name : str
+            Logical table name, without the connection prefix.
         alias : str or None, optional
-            Alias the joined table is referred to by inside the query.
+            Alias the table is referred to by inside the query.
 
         Returns
         -------
         IRawQueryBuilder
             The same builder, enabling fluent chaining.
         """
-
-    @abstractmethod
-    def leftJoin(
-        self,
-        table: str | TableDefinition,
-        first: str,
-        operator: str,
-        second: str,
-        *,
-        alias: str | None = None,
-    ) -> IRawQueryBuilder:
-        """
-        Add a LEFT OUTER JOIN to the query.
-
-        Parameters
-        ----------
-        table : str or TableDefinition
-            Table name to join, or its full definition.
-        first : str
-            Left-hand column of the ON condition.
-        operator : str
-            Comparison operator relating both sides.
-        second : str
-            Right-hand column of the ON condition.
-        alias : str or None, optional
-            Alias the joined table is referred to by inside the query.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    @abstractmethod
-    def crossJoin(
-        self,
-        table: str | TableDefinition,
-        *,
-        alias: str | None = None,
-    ) -> IRawQueryBuilder:
-        """
-        Add a CROSS JOIN to the query.
-
-        Parameters
-        ----------
-        table : str or TableDefinition
-            Table name to join, or its full definition.
-        alias : str or None, optional
-            Alias the joined table is referred to by inside the query.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    # ── Ordering, grouping, pagination ──────────────────────────────────────
-
-    @abstractmethod
-    def orderBy(self, column: str, direction: str = "asc") -> IRawQueryBuilder:
-        """
-        Add an ordering rule to the query.
-
-        Parameters
-        ----------
-        column : str
-            Column to sort by.
-        direction : str, optional
-            ``"asc"`` or ``"desc"``.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    @abstractmethod
-    def groupBy(self, *columns: str) -> IRawQueryBuilder:
-        """
-        Add grouping columns to the query.
-
-        Parameters
-        ----------
-        *columns : str
-            Columns to group by.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    @abstractmethod
-    def having(
-        self,
-        column: str,
-        *args: Any,  # noqa: ANN401
-    ) -> IRawQueryBuilder:
-        """
-        Add a post-grouping condition to the query.
-
-        Parameters
-        ----------
-        column : str
-            Column name the condition applies to.
-        *args : Any
-            Either the bound value, or an operator followed by a value.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    @abstractmethod
-    def limit(self, value: int) -> IRawQueryBuilder:
-        """
-        Limit the number of rows returned by the query.
-
-        Parameters
-        ----------
-        value : int
-            Maximum number of rows, must not be negative.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    @abstractmethod
-    def offset(self, value: int) -> IRawQueryBuilder:
-        """
-        Skip the given number of rows.
-
-        Parameters
-        ----------
-        value : int
-            Number of rows to skip, must not be negative.
-
-        Returns
-        -------
-        IRawQueryBuilder
-            The same builder, enabling fluent chaining.
-        """
-
-    # ── Retrieval terminals ──────────────────────────────────────────────────
 
     @abstractmethod
     async def get(self) -> Collection:
@@ -365,60 +79,51 @@ class IRawQueryBuilder(ABC):
         """
 
     @abstractmethod
-    async def count(self) -> int:
+    async def value(self, column: str) -> Any:
         """
-        Count the rows matched by the query.
-
-        Returns
-        -------
-        int
-            Number of matching rows.
-        """
-
-    # ── Mutation terminals ───────────────────────────────────────────────────
-
-    @abstractmethod
-    async def insert(
-        self,
-        values: dict[str, Any] | list[dict[str, Any]],
-    ) -> InsertResult:
-        """
-        Insert one or many rows into the table.
+        Return a single column value of the first matching row.
 
         Parameters
         ----------
-        values : dict or list of dict
-            Column values for one row, or a list of rows.
+        column : str
+            Column whose value is returned.
 
         Returns
         -------
-        InsertResult
-            Result carrying the generated key and affected row count.
+        Any
+            Column value, or ``None`` without matches.
         """
 
     @abstractmethod
-    async def update(self, values: dict[str, Any]) -> int:
+    async def pluck(self, column: str) -> Collection:
         """
-        Mass update the rows matched by the query.
+        Return one column of every matching row.
 
         Parameters
         ----------
-        values : dict
-            Column values to assign.
+        column : str
+            Column whose values are collected.
 
         Returns
         -------
-        int
-            Number of affected rows.
+        Collection
+            Collection of column values.
         """
 
     @abstractmethod
-    async def delete(self) -> int:
+    async def paginate(self, page: int = 1, per_page: int = 15) -> Paginator:
         """
-        Delete the rows matched by the query.
+        Execute the query returning a length-aware page of results.
+
+        Parameters
+        ----------
+        page : int, optional
+            Page number starting at 1. Defaults to the first page.
+        per_page : int, optional
+            Number of items per page. Defaults to 15.
 
         Returns
         -------
-        int
-            Number of affected rows.
+        Paginator
+            Page of rows with pagination metadata.
         """
